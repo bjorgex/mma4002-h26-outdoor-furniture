@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Kaia Front Page</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -307,6 +308,40 @@ a { color: inherit; }
   padding: 6px 8px;
 }
 #cfg .adminform input::placeholder { color: var(--ink-soft); }
+
+/* ---- 2D side editor, admin only ---- */
+#cfg .se-grid { display: grid; gap: 14px; }
+@media (min-width: 860px) { #cfg .se-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
+#cfg .se-canvas { border: 1px solid var(--line); background: var(--surface); }
+#cfg #se-svg { display: block; width: 100%; height: auto; max-height: 78vh; touch-action: none; user-select: none; }
+#cfg .se-help { margin: 0; padding: 6px 10px; border-top: 1px solid var(--line-soft); font-family: var(--util); font-size: 10.5px; letter-spacing: .04em; color: var(--ink-soft); }
+#cfg .se-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+#cfg .se-panel > div:not(.btnrow):not(.se-tablewrap) { display: flex; flex-direction: column; gap: 4px; }
+#cfg .se-panel input[type=number], #cfg .se-table input, #cfg .se-panel textarea {
+  font: inherit; font-size: 13px; width: 100%; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 0; padding: 4px 6px;
+}
+#cfg .se-panel textarea { font-family: var(--util); font-size: 11px; resize: vertical; }
+#cfg .se-tablewrap { max-height: 260px; overflow-y: auto; border: 1px solid var(--line); }
+#cfg .se-table { min-width: 0; }
+#cfg .se-table th, #cfg .se-table td { padding: 3px 8px; }
+#cfg .se-table thead th { position: sticky; top: 0; }
+#cfg .se-table tr.sel td { background: #ead9c8; }
+#cfg .se-table td:first-child { font-family: var(--util); color: var(--ink-soft); width: 32px; }
+#se-svg .grid { stroke: #e2ded5; stroke-width: 1; }
+#se-svg .grid.major { stroke: #d2cdc1; }
+#se-svg .guide { fill: none; stroke: #7A4B2A; stroke-width: 2; stroke-dasharray: 8 6; opacity: .55; }
+#se-svg .ground { stroke: #1B1F1D; stroke-width: 2; }
+#se-svg .glabel { font-family: 'IBM Plex Mono', monospace; font-size: 16px; fill: #5B615E; }
+#se-svg .bar { fill: none; stroke: #9aa09c; stroke-linecap: round; stroke-linejoin: round; opacity: .55; cursor: copy; }
+#se-svg .bar.on { stroke: #1B1F1D; opacity: .85; }
+#se-svg .spine { fill: none; stroke: #7A4B2A; stroke-width: 2; pointer-events: none; }
+#se-svg .pt { fill: #F7F5F1; stroke: #7A4B2A; stroke-width: 3; cursor: grab; }
+#se-svg .pt.sel { fill: #7A4B2A; }
+#se-svg .readout { font-family: 'IBM Plex Mono', monospace; font-size: 18px; fill: #1B1F1D; }
+@media (pointer: coarse) {
+  #cfg .se-panel input, #cfg .se-panel textarea { min-height: 44px; font-size: 16px; }
+}
 @media (pointer: coarse) {
   #cfg .adminform input { min-height: 44px; font-size: 16px; }
 }
@@ -615,6 +650,45 @@ a { color: inherit; }
       </div>
     </div>
   </div>
+
+  <section class="sideedit" id="side-edit" data-admin hidden>
+    <h2>Side editor · 2D elevation</h2>
+    <div class="se-grid">
+      <div class="se-canvas">
+        <svg id="se-svg" viewBox="-120 -1000 900 1060" role="application" aria-label="Side elevation editor" tabindex="0"></svg>
+        <p class="se-help"><span class="mouse-only">Drag a point · double-click a bar to add a point · right-click or Delete removes it · arrows nudge 1 mm, shift 10</span><span class="touch-only">Drag a point · double-tap a bar to add a point · select a point and press Remove point</span></p>
+      </div>
+      <div class="se-panel">
+        <div>
+          <label for="se-member">Member</label>
+          <select id="se-member"></select>
+        </div>
+        <div class="se-row">
+          <label for="se-r">Bar radius mm</label>
+          <input type="number" id="se-r" min="3" max="60" step="1">
+        </div>
+        <div class="btnrow">
+          <button type="button" id="se-add-bar">Add bar</button>
+          <button type="button" id="se-del-bar">Delete bar</button>
+          <button type="button" id="se-del-pt">Remove point</button>
+        </div>
+        <div class="se-tablewrap">
+          <table class="se-table">
+            <thead><tr><th>#</th><th>Depth mm</th><th>Height mm</th></tr></thead>
+            <tbody id="se-pts"></tbody>
+          </table>
+        </div>
+        <div class="btnrow">
+          <button type="button" id="se-export">Copy JSON</button>
+          <button type="button" id="se-import">Apply JSON</button>
+          <button type="button" id="se-reset">Reset side</button>
+        </div>
+        <textarea id="se-json" rows="5" spellcheck="false" aria-label="Side profile as JSON"></textarea>
+        <output id="se-msg" class="pickcount"></output>
+      </div>
+    </div>
+    <p class="note">Edits apply to the selected side, rebuild the 3D bench live and are kept in this browser only. Copy the JSON to move a profile into the source. Height 0 is the top of the foot. On parametric sides the arm, web and ornaments stay procedural; the legs and any added bars are yours to draw.</p>
+  </section>
 
   <p class="note" id="foot-note">The leg turns and runs along the ground as a sled runner, tips lifted clear.</p>
 
@@ -1055,6 +1129,17 @@ const SIDES = {
               legF:[[52,0],[58,20],[88,245],[124,350],[150,452]], legR:[[578,0],[572,20],[544,255],[502,350],[470,452]]}
 };
 
+/* the 2D side editor (admin only) edits these fields in place. Keep a copy of the
+   shipped profiles for "reset", and lay any edits saved in this browser over them. */
+const SIDE_EDIT_KEYS = ["bar", "legF", "legR", "trace", "scrolls", "extra"];
+const pickSide = S => JSON.parse(JSON.stringify(
+  Object.fromEntries(SIDE_EDIT_KEYS.filter(k => S[k] !== undefined).map(k => [k, S[k]]))));
+const SIDES_ORIG = Object.fromEntries(Object.entries(SIDES).map(([k, S]) => [k, pickSide(S)]));
+function loadSideEdits(){
+  try { return JSON.parse(localStorage.getItem("kaia-side-edits") || "{}") || {}; } catch(e){ return {}; }
+}
+Object.entries(loadSideEdits()).forEach(([k, v]) => { if(SIDES[k] && v) Object.assign(SIDES[k], v); });
+
 const bead = (d, y, r, flat) => {
   const g = new THREE.SphereGeometry(r, 20, 14);
   g.scale(flat*1.15, 1, 1);
@@ -1233,6 +1318,11 @@ function refMembers(S, LF, LR, hasBack, top){
   return out;
 }
 
+/* bars added in the 2D side editor to a parametric side — lifted like the legs */
+function extraMembers(S, lift){
+  return (S.extra || []).flatMap(m => m.pts.length > 1 ? tubeMember(lift(m.pts), m.r, S.flat) : []);
+}
+
 function sideMembers(){
   const S = SIDES[cfg.side];
   const hasBack = cfg.back !== "none";
@@ -1280,6 +1370,7 @@ function sideMembers(){
   if(S.style === "ref"){
     out.push(...refMembers(S, LF, LR, hasBack, top));
     out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
+    out.push(...extraMembers(S, lift));
     return out;
   }
 
@@ -1300,6 +1391,7 @@ function sideMembers(){
   }
   out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
   if(S.underarm && cfg.back === "high") out.push(...underarmMembers(S));
+  out.push(...extraMembers(S, lift));
 
   return out;
 }
@@ -1803,6 +1895,7 @@ const SIDE_FOOT = {
   sorlandet:"taper", alesund:"flare", sunnmore:"taper", borgund:"blade",
   giske:"cuff", aksla:"taper", valderoy:"runner", ellingsoy:"cuff", godoy:"wedge"
 };
+let sideEditorSync = () => {};
 function setSide(key){
   cfg.side = key;
   cfg.foot = SIDE_FOOT[key] || "taper";
@@ -1813,6 +1906,7 @@ function setSide(key){
   document.getElementById("side-count").textContent =
     `${keys.indexOf(key)+1} / ${keys.length} · ${SIDES[key].label}`;
   build();
+  sideEditorSync();
 }
 sideSel.addEventListener("change", e => setSide(e.target.value));
 function stepSide(delta){
@@ -1929,6 +2023,246 @@ document.getElementById("b-foot").addEventListener("click", () => { orbit.theta=
 document.getElementById("b-three").addEventListener("click", resetView);
 document.getElementById("b-reset").addEventListener("click", resetView);
 
+/* ---------- 2D side editor (admin only) ----------
+   Draws the selected side as an elevation — depth across, height up, the same
+   coordinates the SIDES table holds — and edits those arrays in place, so the
+   3D bench is rebuilt from exactly what is on screen. */
+(function sideEditor(){
+  const svg = document.getElementById("se-svg");
+  if(!svg) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const memberSel = document.getElementById("se-member");
+  const rIn = document.getElementById("se-r");
+  const tbody = document.getElementById("se-pts");
+  const jsonBox = document.getElementById("se-json");
+  const msg = document.getElementById("se-msg");
+  let active = 0, selPt = -1, drag = null, rebuildTimer = null;
+
+  const S = () => SIDES[cfg.side];
+  const round = v => Math.round(v);
+  /* everything the editor can touch on this side, as one flat list */
+  function members(){
+    const s = S(), out = [
+      {name:"Front leg", pts:s.legF, getR:() => s.bar, setR:v => { s.bar = v; }, min:2},
+      {name:"Rear leg",  pts:s.legR, getR:() => s.bar, setR:v => { s.bar = v; }, min:2}
+    ];
+    const bars = s.style === "trace" ? s.trace : (s.extra || []);
+    bars.forEach((m, i) => out.push({name:`Bar ${i+1}`, pts:m.pts, getR:() => m.r, setR:v => { m.r = v; }, min:2, bar:m, list:bars}));
+    (s.scrolls || []).forEach((sc, i) => out.push({name:`Scroll ${i+1} · centre`, pts:[sc.at], scroll:sc,
+      getR:() => sc.r, setR:v => { sc.r = v; }, min:1, single:true}));
+    return out;
+  }
+  const cur = () => members()[active] || members()[0];
+
+  function save(){
+    const all = loadSideEdits();
+    all[cfg.side] = pickSide(S());
+    try { localStorage.setItem("kaia-side-edits", JSON.stringify(all)); } catch(e){}
+  }
+  /* rebuilding the 3D side is not free — at most every 90 ms while dragging */
+  function changed(now){
+    save();
+    clearTimeout(rebuildTimer);
+    if(now) build(); else rebuildTimer = setTimeout(build, 90);
+  }
+
+  function el(tag, attrs, parent){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+  }
+  const path = pts => pts.map((q, i) => (i ? "L" : "M") + q[0] + " " + (-q[1])).join(" ");
+  /* the same Catmull-Rom the tube sweep uses, so the preview bends where the casting bends */
+  function smooth(pts, closed){
+    if(pts.length < 3) return path(pts);
+    const c = new THREE.CatmullRomCurve3(pts.map(q => new THREE.Vector3(q[0], q[1], 0)), !!closed, "catmullrom", 0.5);
+    return path(c.getPoints(pts.length * 14).map(v => [v.x, v.y]));
+  }
+  const scrollPts = sc => scrollCtrl(sc.at[0], sc.at[1], sc.R, sc.R*0.12, sc.turns, Math.PI*0.1);
+
+  function draw(){
+    svg.textContent = "";
+    for(let x=-100; x<=760; x+=20) el("line", {x1:x, y1:40, x2:x, y2:-980, class: x % 100 ? "grid" : "grid major"});
+    for(let y=-40; y<=980; y+=20) el("line", {x1:-120, y1:-y, x2:780, y2:-y, class: y % 100 ? "grid" : "grid major"});
+    el("line", {x1:-120, y1:0, x2:780, y2:0, class:"ground"});
+    el("text", {x:-112, y:-8, class:"glabel"}).textContent = "0 · foot top";
+    // guides every side shares: seat dish, back curve, arm height
+    const seat = []; for(let d=D0; d<=D1; d+=10) seat.push([d, seatY(d)]);
+    el("path", {d:path(seat), class:"guide"});
+    const back = []; for(let y=BACK_BASE; y<=BACK_TOP; y+=10) back.push([postD(y), y]);
+    el("path", {d:path(back), class:"guide"});
+    el("line", {x1:120, y1:-700, x2:560, y2:-700, class:"guide"});
+    el("text", {x:D0, y:-seatY(D0)-12, class:"glabel"}).textContent = "seat";
+    el("text", {x:postD(BACK_TOP)+10, y:-BACK_TOP, class:"glabel"}).textContent = "back";
+    el("text", {x:124, y:-708, class:"glabel"}).textContent = "arm 700";
+
+    const list = members(), m = list[active];
+    list.forEach((mm, i) => {
+      const pts = mm.scroll ? scrollPts(mm.scroll) : mm.pts;
+      const p = el("path", {d:smooth(pts), class: i === active ? "bar on" : "bar", "stroke-width": Math.max(4, mm.getR()*2)});
+      p.addEventListener("pointerdown", e => { if(i !== active){ e.stopPropagation(); select(i, -1); } });
+      p.addEventListener("dblclick", e => insertAt(e, i));
+    });
+    if(!m) return;
+    if(!m.single) el("path", {d:path(m.pts), class:"spine"});
+    m.pts.forEach((q, j) => {
+      const c = el("circle", {cx:q[0], cy:-q[1], r: j === selPt ? 11 : 9, class: j === selPt ? "pt sel" : "pt"});
+      c.addEventListener("pointerdown", e => startDrag(e, j));
+      c.addEventListener("contextmenu", e => { e.preventDefault(); removePoint(j); });
+    });
+    if(selPt >= 0 && m.pts[selPt]){
+      const q = m.pts[selPt];
+      el("text", {x:q[0]+16, y:-q[1]-16, class:"readout"}).textContent = `${q[0]}, ${q[1]}`;
+    }
+  }
+
+  function toMM(e){
+    const p = svg.createSVGPoint();
+    p.x = e.clientX; p.y = e.clientY;
+    const q = p.matrixTransform(svg.getScreenCTM().inverse());
+    return [round(q.x), round(-q.y)];
+  }
+  function startDrag(e, j){
+    e.preventDefault(); e.stopPropagation();
+    selPt = j;
+    drag = {id:e.pointerId};
+    svg.setPointerCapture(e.pointerId);
+    svg.focus({preventScroll:true});
+    draw(); table();
+  }
+  svg.addEventListener("pointermove", e => {
+    if(!drag || e.pointerId !== drag.id) return;
+    const q = cur().pts[selPt], p = toMM(e);
+    q[0] = Math.max(-100, Math.min(760, p[0]));
+    q[1] = Math.max(0, Math.min(980, p[1]));
+    draw(); table(); changed(false);
+  });
+  const endDrag = e => { if(drag && e.pointerId === drag.id){ drag = null; changed(true); } };
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+  svg.addEventListener("contextmenu", e => e.preventDefault());
+
+  /* a new point goes into the segment nearest the click, so the bar stays in order */
+  function insertAt(e, i){
+    const m = members()[i];
+    if(!m || m.single) return;
+    e.preventDefault();
+    const p = toMM(e), pts = m.pts;
+    let best = 0, bd = Infinity;
+    for(let k=0; k<pts.length-1; k++){
+      const a = pts[k], b = pts[k+1], dx = b[0]-a[0], dy = b[1]-a[1];
+      const t = Math.max(0, Math.min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy) / ((dx*dx + dy*dy) || 1)));
+      const d = Math.hypot(a[0] + t*dx - p[0], a[1] + t*dy - p[1]);
+      if(d < bd){ bd = d; best = k; }
+    }
+    pts.splice(best + 1, 0, p);
+    active = i; selPt = best + 1;
+    refresh(); changed(true);
+  }
+  function removePoint(j){
+    const m = cur();
+    if(m.pts.length <= m.min){ msg.textContent = `${m.name} needs at least ${m.min} points`; return; }
+    m.pts.splice(j, 1);
+    selPt = Math.min(j, m.pts.length - 1);
+    refresh(); changed(true);
+  }
+
+  svg.addEventListener("keydown", e => {
+    const m = cur();
+    if(selPt < 0 || !m.pts[selPt]) return;
+    const step = e.shiftKey ? 10 : 1, q = m.pts[selPt];
+    const mv = {ArrowLeft:[-step,0], ArrowRight:[step,0], ArrowUp:[0,step], ArrowDown:[0,-step]}[e.key];
+    if(mv){ e.preventDefault(); q[0] += mv[0]; q[1] = Math.max(0, q[1] + mv[1]); refresh(); changed(false); }
+    else if(e.key === "Delete" || e.key === "Backspace"){ e.preventDefault(); removePoint(selPt); }
+  });
+
+  function table(){
+    const m = cur();
+    tbody.textContent = "";
+    m.pts.forEach((q, j) => {
+      const tr = document.createElement("tr");
+      if(j === selPt) tr.className = "sel";
+      tr.innerHTML = `<td>${j+1}</td><td><input type="number" step="1" value="${q[0]}" aria-label="Point ${j+1} depth"></td>` +
+                     `<td><input type="number" step="1" min="0" value="${q[1]}" aria-label="Point ${j+1} height"></td>`;
+      tr.querySelectorAll("input").forEach((inp, k) => {
+        inp.addEventListener("focus", () => { if(selPt !== j){ selPt = j; draw(); tbody.querySelectorAll("tr").forEach((r, n) => r.classList.toggle("sel", n === j)); } });
+        inp.addEventListener("change", () => {
+          const v = Number(inp.value);
+          if(!isFinite(v)) return;
+          q[k] = k ? Math.max(0, round(v)) : round(v);
+          draw(); changed(true);
+        });
+      });
+      tbody.appendChild(tr);
+    });
+  }
+  function refresh(){
+    const list = members();
+    if(active >= list.length) active = 0;
+    memberSel.innerHTML = list.map((m, i) => `<option value="${i}"${i === active ? " selected" : ""}>${m.name} · ${m.pts.length} pt</option>`).join("");
+    const m = list[active];
+    rIn.value = m.getR();
+    document.getElementById("se-del-bar").disabled = !m.list;
+    draw(); table();
+  }
+  function select(i, j){ active = i; selPt = j; msg.textContent = ""; refresh(); }
+
+  memberSel.addEventListener("change", () => select(+memberSel.value, -1));
+  rIn.addEventListener("change", () => {
+    const v = Number(rIn.value);
+    if(!(v >= 3 && v <= 60)){ rIn.value = cur().getR(); return; }
+    cur().setR(v); draw(); changed(true);
+  });
+  document.getElementById("se-add-bar").addEventListener("click", () => {
+    const s = S();
+    const list = s.style === "trace" ? s.trace : (s.extra = s.extra || []);
+    list.push({r:10, pts:[[260, 330], [360, 330]]});
+    select(members().findIndex(m => m.bar === list[list.length-1]), 1);
+    changed(true);
+  });
+  document.getElementById("se-del-bar").addEventListener("click", () => {
+    const m = cur();
+    if(!m.list) return;
+    m.list.splice(m.list.indexOf(m.bar), 1);
+    select(Math.max(0, active - 1), -1);
+    changed(true);
+  });
+  document.getElementById("se-del-pt").addEventListener("click", () => {
+    if(selPt < 0){ msg.textContent = "Select a point first"; return; }
+    removePoint(selPt);
+  });
+  document.getElementById("se-export").addEventListener("click", () => {
+    jsonBox.value = JSON.stringify(pickSide(S()));
+    jsonBox.select();
+    const done = () => { msg.textContent = `${SIDES[cfg.side].label} copied as JSON`; };
+    if(navigator.clipboard) navigator.clipboard.writeText(jsonBox.value).then(done, () => { msg.textContent = "Selected — copy it with Ctrl/Cmd+C"; });
+    else msg.textContent = "Selected — copy it with Ctrl/Cmd+C";
+  });
+  document.getElementById("se-import").addEventListener("click", () => {
+    let v;
+    try { v = JSON.parse(jsonBox.value); } catch(e){ msg.textContent = "That is not valid JSON"; return; }
+    const okPts = a => Array.isArray(a) && a.length >= 2 && a.every(q => Array.isArray(q) && q.length === 2 && q.every(isFinite));
+    if(!v || !okPts(v.legF) || !okPts(v.legR)){ msg.textContent = "The JSON needs legF and legR point lists"; return; }
+    Object.assign(S(), Object.fromEntries(SIDE_EDIT_KEYS.filter(k => v[k] !== undefined).map(k => [k, v[k]])));
+    select(0, -1); changed(true);
+    msg.textContent = "Applied";
+  });
+  document.getElementById("se-reset").addEventListener("click", () => {
+    if(!confirm(`Reset ${SIDES[cfg.side].label} to the shipped profile?`)) return;
+    const s = S();
+    SIDE_EDIT_KEYS.forEach(k => { delete s[k]; });
+    Object.assign(s, JSON.parse(JSON.stringify(SIDES_ORIG[cfg.side])));
+    const all = loadSideEdits(); delete all[cfg.side];
+    try { localStorage.setItem("kaia-side-edits", JSON.stringify(all)); } catch(e){}
+    select(0, -1); build();
+    msg.textContent = "Reset to the shipped profile";
+  });
+
+  sideEditorSync = () => { active = 0; selPt = -1; msg.textContent = ""; refresh(); };
+  sideEditorSync();
+})();
+
 /* ---------- loop ---------- */
 function resize(){
   const w = stage.clientWidth, h = stage.clientHeight;
@@ -1943,8 +2277,8 @@ build();
 </script>
 
 <script>
-/* Plank angles are a design tool, not a customer control. This hides them
-   behind a sign-in. It is a convenience gate: the comparison happens in the
+/* Plank angles and the 2D side editor are design tools, not customer
+   controls. This hides them behind a sign-in. It is a convenience gate: the comparison happens in the
    browser, so treat the credentials as public. Runs after the configurator
    script, which builds the slider list. */
 (function () {
@@ -1957,13 +2291,16 @@ build();
   var out  = document.getElementById("admin-out");
   var msg  = document.getElementById("admin-msg");
 
+  var gated = document.querySelectorAll("#cfg [data-admin]");
+
   function apply(on) {
     cell.hidden = !on;
+    Array.prototype.forEach.call(gated, function (g) { g.hidden = !on; });
     user.hidden = on;
     pass.hidden = on;
     go.hidden = on;
     out.hidden = !on;
-    msg.textContent = on ? "Signed in · plank angles unlocked" : "";
+    msg.textContent = on ? "Signed in · plank angles and side editor unlocked" : "";
     try {
       if (on) { localStorage.setItem("kaia-admin", "1"); }
       else { localStorage.removeItem("kaia-admin"); }

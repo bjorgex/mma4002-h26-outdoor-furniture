@@ -44,8 +44,20 @@ it is set, and the address the page happens to be served from when it is not.
 
 ## Admin sign-in
 
-The plank-angle sliders are a design tool, not a customer control, so they sit
-behind a sign-in — user `ntnu`, password `mma4002`.
+The plank-angle sliders and the **2D side editor** are design tools, not
+customer controls, so they sit behind a sign-in — user `ntnu`, password
+`mma4002`.
+
+The side editor draws the selected side as an elevation (depth across, height
+up, 0 = top of the foot) with the seat, back and arm-height guides shared by
+every side. Drag a point to move it, double-click a bar to add a point,
+right-click or <kbd>Delete</kbd> to remove one, and use the arrow keys to nudge
+by 1 mm (<kbd>Shift</kbd> for 10). The point table takes exact values. The 3D
+bench rebuilds as you edit. On the traced side every bar is editable; on the
+parametric sides the legs are, and you can add extra bars, while the arm, web
+and ornaments stay procedural. Edits are kept in that browser only — use
+**Copy JSON** to take a profile into `SIDES` in `index.html`, and **Reset side**
+to go back to the shipped one.
 
 **This is a convenience gate, not security.** The check runs in the browser, so
 anyone who opens the page source can read the password. It keeps the sliders out
