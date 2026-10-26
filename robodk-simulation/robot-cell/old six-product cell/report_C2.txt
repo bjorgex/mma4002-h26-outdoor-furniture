@@ -1,0 +1,17 @@
+ 1 S1 left onto the J1 datum                               OK
+ 2 seat plank 1: into the comb, push into S1 left          OK
+ 3 seat plank 2: into the comb, push into S1 left          OK
+ 4 seat plank 3: into the comb, push into S1 left          OK
+ 5 seat plank 4: into the comb, push into S1 left          OK
+ 6 S1 right: lower, push on                                OK
+ 7 flip the seat module upright onto J2                    OK
+ 8 S5 left onto the J1 datum                               OK
+ 9 back plank 1: into the comb, push into S5 left          OK
+10 back plank 2: into the comb, push into S5 left          OK
+11 back plank 3: into the comb, push into S5 left          OK
+12 S5 right: lower, push on                                OK
+13 back module: pegs straight down into S1's sockets       L hits Omron TM5-900+Table
+14 C2 onto the AMR                                         J hits Omron TM5-900+Table
+15 AMR drives the product away                             OK
+cycle time (simulated, 100 mm/s, 60 deg/s): 283 s
+largest part position error vs the designed assembly: 0.001 mm

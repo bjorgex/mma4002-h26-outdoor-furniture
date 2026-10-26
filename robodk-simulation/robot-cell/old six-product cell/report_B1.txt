@@ -1,0 +1,13 @@
+ 1 S1 left onto the J1 datum                               OK
+ 2 seat plank 1: into the comb, push into S1 left          OK
+ 3 seat plank 2: into the comb, push into S1 left          OK
+ 4 seat plank 3: into the comb, push into S1 left          OK
+ 5 seat plank 4: into the comb, push into S1 left          OK
+ 6 S1 right: lower, push on                                OK
+ 7 flip the seat module upright onto J2                    OK
+ 8 ornament L: peg straight down into the socket           OK
+ 9 ornament R: peg straight down into the socket           OK
+10 B1 onto the AMR                                         OK
+11 AMR drives the product away                             OK
+cycle time (simulated, 100 mm/s, 60 deg/s): 133 s
+largest part position error vs the designed assembly: 0.000 mm

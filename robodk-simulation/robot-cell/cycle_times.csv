@@ -1,0 +1,3 @@
+logged,version,source,instructions,cycle_s,path_m,collisions,fingertips_out_mm,guide to A,planks,guide to B,frame 1 + planks,inner half out,outer half out,bench to AMR,home,method
+2026-10-17T04:26:00,v3,measure,255,239.8,15.93,,,32.5,124.5,34.8,46.4,,,,1.6,"one double-sided guide B->A->B, frame 1 + planks flipped into frame 2; guide stays trapped, no hand-over"
+2026-10-17T04:26:00,v4,measure,342,345.1,21.46,,,33.7,124.5,35.7,46.4,39.2,34.5,27.7,3.4,"v3 with the guide cut in two halves (taken out onto a pad), bench set down on the AMR"

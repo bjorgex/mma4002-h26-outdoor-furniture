@@ -1,0 +1,26 @@
+ 1 post 2 onto the J1 B datum                              OK
+ 2 rear plank 1: into the comb (B), push into post 2       OK
+ 3 rear plank 2: into the comb (B), push into post 2       OK
+ 4 rear plank 3: into the comb (B), push into post 2       OK
+ 5 rear plank 4: into the comb (B), push into post 2       OK
+ 6 post 3: lower, push on                                  OK
+ 7 post 0 onto the J1 A datum                              OK
+ 8 front plank 1: into the comb (A), push into post 0      OK
+ 9 front plank 2: into the comb (A), push into post 0      OK
+10 front plank 3: into the comb (A), push into post 0      OK
+11 front plank 4: into the comb (A), push into post 0      OK
+12 post 1: lower, push on                                  OK
+13 left plank 1: straight down into the front posts        OK
+14 left plank 2: straight down into the front posts        OK
+15 left plank 3: straight down into the front posts        OK
+16 left plank 4: straight down into the front posts        OK
+17 right plank 1: straight down into the front posts       OK
+18 right plank 2: straight down into the front posts       OK
+19 right plank 3: straight down into the front posts       OK
+20 right plank 4: straight down into the front posts       OK
+21 rear wall module: turned over, down onto the side planks L hits J1 build nest+J1 riser+J2 finish+J2 riser+Omron TM5-900
+22 planter: stood up onto J2                               J hits J2 finish+J2 riser+Omron TM5-900
+23 planter onto the AMR                                    OK
+24 AMR drives the product away                             OK
+cycle time (simulated, 100 mm/s, 60 deg/s): 393 s
+largest part position error vs the designed assembly: 0.000 mm

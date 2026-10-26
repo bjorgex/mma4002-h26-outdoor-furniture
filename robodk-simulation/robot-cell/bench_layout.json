@@ -1,0 +1,90 @@
+{
+ "tip_mm": 160.0,
+ "work_frame": [
+  [
+   -1.0,
+   0.00042,
+   0.00116,
+   -206.43707
+  ],
+  [
+   -0.00042,
+   -1.0,
+   -0.00047,
+   152.98623
+  ],
+  [
+   0.00116,
+   -0.00047,
+   1.0,
+   -4.46049
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "size": [
+  269.8,
+  309.6
+ ],
+ "corners_in_work_frame": {
+  "right down": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "right up": [
+   274.1,
+   -0.0,
+   0.0
+  ],
+  "left down": [
+   -2.09,
+   309.62,
+   0.0
+  ],
+  "left up": [
+   269.81,
+   317.93,
+   0.79
+  ]
+ },
+ "gap": 8,
+ "gripper_body": [
+  0,
+  0
+ ],
+ "rack": {
+  "size": [
+   90,
+   60
+  ],
+  "pitch": 30
+ },
+ "note": "[x, y, rot_deg] in the work frame: for jig and nests the frame's side-coordinate origin, for the rack its own origin (planks 3 along its x, 2 rows along its y)",
+ "layout": {
+  "jig": [
+   166.11,
+   80.5,
+   0
+  ],
+  "nest A": [
+   72.11,
+   192.5,
+   0
+  ],
+  "nest B": [
+   99.89,
+   101.5,
+   180
+  ],
+  "rack": [
+   3.0,
+   205.0,
+   0
+  ]
+ }
+}
