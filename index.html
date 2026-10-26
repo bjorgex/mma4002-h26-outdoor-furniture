@@ -832,11 +832,33 @@ const matShield = new THREE.MeshStandardMaterial({color:SHIELD_COLOR, roughness:
    needed to view it right-side up, applied the same way everywhere below. */
 function toWorld([px, pz]){ return {y: -pz, z: -px}; }
 
+/* round every sharp corner of a traced polygon with a small fillet, the way
+   a press-brake bend actually looks — radius capped per corner so a short
+   edge (like the backrest tip's end cap) never overruns into its neighbour.
+   Display only: it rounds how the straight-line trace is drawn, not the
+   CAD's own points. */
+const CORNER_RADIUS = 3;
+function roundedOuter(shape, points, radius){
+  const n = points.length;
+  for(let i=0;i<n;i++){
+    const prev = points[(i-1+n)%n], cur = points[i], next = points[(i+1)%n];
+    const toPrev = [prev[0]-cur[0], -prev[1]-(-cur[1])];
+    const toNext = [next[0]-cur[0], -next[1]-(-cur[1])];
+    const lenPrev = Math.hypot(toPrev[0], toPrev[1]), lenNext = Math.hypot(toNext[0], toNext[1]);
+    const r = Math.min(radius, lenPrev*0.45, lenNext*0.45);
+    const a = [cur[0] + toPrev[0]/lenPrev*r, -cur[1] + toPrev[1]/lenPrev*r];
+    const b = [cur[0] + toNext[0]/lenNext*r, -cur[1] + toNext[1]/lenNext*r];
+    if(i === 0) shape.moveTo(a[0], a[1]);
+    else shape.lineTo(a[0], a[1]);
+    shape.quadraticCurveTo(cur[0], -cur[1], b[0], b[1]);
+  }
+  shape.closePath();
+}
+
 function frameShape(variant){
   const outer = PROFILE[variant];
   const s = new THREE.Shape();
-  outer.forEach((p, i) => i === 0 ? s.moveTo(p[0], -p[1]) : s.lineTo(p[0], -p[1]));
-  s.closePath();
+  roundedOuter(s, outer, CORNER_RADIUS);
   SEAT_SLOTS.forEach(slot => {
     const h = new THREE.Path();
     slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], -p[1]) : h.lineTo(p[0], -p[1]));
@@ -849,7 +871,7 @@ function frameShape(variant){
     h.closePath();
     s.holes.push(h);
   });
-  const g = new THREE.ExtrudeGeometry(s, {depth:FRAME_DEPTH, bevelEnabled:false, curveSegments:1});
+  const g = new THREE.ExtrudeGeometry(s, {depth:FRAME_DEPTH, bevelEnabled:false, curveSegments:8});
   g.translate(0, 0, -FRAME_DEPTH/2);
   g.rotateY(Math.PI/2);         // local extrude axis (z) -> world X, the bench's length
   return g;
