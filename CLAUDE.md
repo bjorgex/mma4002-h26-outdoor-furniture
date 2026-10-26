@@ -14,23 +14,26 @@ There is no build, lint, or test tooling in this repo (no `package.json`, no `re
 no CI config). The site is a static file you open directly; the Python files are run individually
 as scripts.
 
-## `index.html` — the Kaia front page and 3D configurator
+## `index.html` — the Outdoor Furniture front page and 3D configurator
 
 One self-contained file (page + three.js configurator + QR code), no build step, no local
 dependencies. It pulls two things from the open web at runtime: three.js r128 from cdnjs and
 Archivo/IBM Plex Mono from Google Fonts. Everything else, including the QR encoder, is inlined.
-There is no model-loading code anywhere in it (no GLTFLoader/STLLoader/etc.) — the entire bench,
-every side design, and every plank is procedurally generated three.js geometry, driven by the
-`cfg` object and the `SIDES` table.
+There is no model-loading code anywhere in it (no GLTFLoader/STLLoader/etc.) — the frame and every
+plank is procedurally generated three.js geometry, traced from the real CAD (see `PROFILE`,
+`SEAT_SLOTS`, `BACK_SLOTS` near the top of the configurator script) and driven by the `cfg` object.
 
+- One bent flat-bar frame, two states (`cfg.back`: `none` / `high` for the backrest arm) and one
+  decoration choice (`cfg.decoration`: `laser` / `shield`) on the centre seat plank — no side
+  variants, no plank-angle customization, no admin gate.
 - Run it: open the file directly, or `python3 -m http.server 8000` to serve it.
 - Publish: GitHub Pages, branch `main`, root folder. Then set `SITE_URL` near the bottom of the
   file to the published address — the QR code encodes that.
-- The plank-angle sliders sit behind a client-side sign-in gate (see README.md) — a UX convenience,
-  not a security boundary; never put anything behind it that needs real protection.
-- `index_assignment1_old.html` is an archived snapshot of this file, kept for reference while a
-  simplified rebuild (single side design, laser-cut-or-logo-shield plank option instead of the
-  current side/angle customization) is in progress.
+- Sizes in the configurator match the CAD demonstrator model as modelled (see `BENCH_LEN`,
+  `FRAME_DEPTH` etc.) — deliberately not rescaled to a real-world spec; a `STAGE` constant scales
+  only the environment/camera/lights to suit, not the frame or planks.
+- `index_assignment1_old.html` is an archived snapshot of the earlier cast-iron, ten-side-design,
+  plank-angle-slider configurator, kept for reference.
 
 ## `3d-modeling-and-simulation/` — CAD, concept models, and the RoboDK cell
 
@@ -75,3 +78,31 @@ locations. `assignment-2-product-architectures/` now holds only that assignment'
 
 - **Miro** is used for team collaboration and diagramming — e.g. value stream maps.
 - **Overleaf** is used for writing the assignment reports.
+
+## Coordinator workflow (`coord`)
+
+This is a group project — Bjørge isn't the only one pushing to this repo (see `git log`). When
+he types `coord` in a terminal or VS Code Claude side panel opened in this repo, become the
+coordinator for the work session: read and follow `WORKFLOW.md` (background work-stream
+sessions, review queue, diary, checkpoint commits). After that, any message he sends is handled
+per `WORKFLOW.md` — no further keyword needed.
+
+## `Outdoor-Furniture-Project-Overview.pptx` — the overarching project deck
+
+A living, visual-first summary of the whole project, kept at the repo root. It is **not** the
+graded Assignment 5 Industrial Review Board deck (that lives in
+`assignment-5-industrial-review-board-presentation/` once it exists) — this one is an
+always-current overview pulling together the product concept, CAD/simulation work, lean
+analysis, and the configurator, for whoever wants the current state of the project without
+reading every assignment PDF.
+
+- **Favor visuals over text**: renders of the 3D models (CAD exports under
+  `3d-modeling-and-simulation/`), diagrams from the assignment reports (flow charts, VSM), and
+  screenshots of `index.html`, over paragraphs or dense bullet lists.
+- **Don't regenerate it on every change.** Update it when something substantive lands — a
+  finished assignment, a new CAD/simulation milestone, a meaningfully different configurator —
+  not for every commit. When it's unclear whether a change is worth adding, ask rather than
+  guessing.
+- Built with the `pptx` skill (pptxgenjs). Rendering fresh CAD screenshots for it uses a
+  build123d/`ocp_vscode` Python environment — see whichever venv is current for this repo (check
+  for one locally before assuming none exists).

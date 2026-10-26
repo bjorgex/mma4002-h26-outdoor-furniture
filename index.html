@@ -1,10 +1,11 @@
-<title>Kaia Front Page</title>
+<meta charset="utf-8">
+<title>Outdoor Furniture</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
 <style>
 /* ---------------------------------------------------------------
-   KAIA — front page. One committed visual world: the side elevation
+   OUTDOOR FURNITURE — front page. One committed visual world: the side elevation
    as ground, monochrome, every colour painted explicitly.
    --------------------------------------------------------------- */
 
@@ -112,7 +113,7 @@ a { color: inherit; }
 }
 .spec li b { color: var(--ink); font-weight: 500; }
 
-/* the side elevation, plotted from the traced coordinates, used as ground */
+/* the side elevation, plotted from the traced profile coordinates, used as ground */
 .art-cell {
   position: absolute;
   right: -9%;
@@ -276,13 +277,10 @@ a { color: inherit; }
   #cfg .pickrow { grid-template-columns: 46px 1fr 46px; gap: 8px; }
   #cfg .pickrow button { padding: 0; font-size: 14px; }
   #cfg input[type="range"] { height: 44px; }
-  #cfg .tiltrow { grid-template-columns: 62px 1fr 46px; }
-  #cfg .tiltrow input[type="range"] { height: 40px; }
   #cfg .btnrow { gap: 10px; }
 }
 /* a nested scroller inside a scrolling page is a trap on a phone */
 @media (max-width: 620px) {
-  #cfg .tiltlist { max-height: none; overflow-y: visible; }
   #cfg .controls > div { padding: 13px 14px; }
 }
 .touch-only { display: none; }
@@ -290,32 +288,9 @@ a { color: inherit; }
   .touch-only { display: inline; }
   .mouse-only { display: none; }
 }
-
-/* ===================== admin sign-in ===================== */
-/* A gate on the plank angles, not a security boundary — the check runs in
-   the page, so anyone who reads the source can see the password. It keeps
-   the sliders out of a visitor's way; it does not protect anything. */
-#cfg .adminform { display: flex; flex-direction: column; gap: 6px; }
-#cfg .adminform input {
-  font: inherit;
-  font-size: 14px;
-  width: 100%;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 0;
-  padding: 6px 8px;
-}
-#cfg .adminform input::placeholder { color: var(--ink-soft); }
-@media (pointer: coarse) {
-  #cfg .adminform input { min-height: 44px; font-size: 16px; }
-}
 </style>
 
 <style>
-/* ====== configurator, scoped under #cfg ====== */
-#cfg{color-scheme:light;padding-inline:0;padding-block:0;margin-top:clamp(24px,4vh,40px)}
-
 /* ====== configurator, scoped under #cfg ====== */
 #cfg{color-scheme:light;padding-inline:0;padding-block:0;margin-top:clamp(24px,4vh,40px)}
 #cfg{
@@ -378,21 +353,6 @@ a { color: inherit; }
     border:1px solid var(--line);border-radius:0;padding:6px 10px;cursor:pointer;
   }
 #cfg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-#cfg .tiltcell{grid-column:span 2}
-@media (max-width:620px){
-#cfg .tiltcell{grid-column:span 1}
-}
-#cfg .tiltlist{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;max-height:190px;overflow-y:auto}
-@media (max-width:620px){
-#cfg .tiltlist{grid-template-columns:1fr}
-}
-#cfg .tiltrow{display:grid;grid-template-columns:62px 1fr 42px;align-items:center;gap:8px}
-#cfg .tiltrow span, #cfg .tiltrow output{
-    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);
-    font-variant-numeric:tabular-nums;
-  }
-#cfg .tiltrow output{text-align:right;color:var(--ink)}
-#cfg .tiltrow input[type=range]{margin:0}
 #cfg .pickrow{display:grid;grid-template-columns:34px 1fr 34px;gap:6px;align-items:center}
 #cfg .pickrow button{padding:6px 0;font-size:12px;line-height:1}
 #cfg .pickcount{
@@ -412,11 +372,9 @@ a { color: inherit; }
 #cfg h2{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 #cfg .note{font-size:13px;color:var(--ink-soft);border-left:2px solid var(--hl);padding-left:12px;margin:0;max-width:78ch}
 #cfg footer{font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:14px}
-
 </style>
 
 <style>
-
 /* ===== phone: the model has to stay on screen while you change things =====
    On a narrow screen the viewport sat above the controls, so every change
    scrolled the bench out of sight. It now pins to the top of the screen and
@@ -435,20 +393,19 @@ a { color: inherit; }
   }
   #cfg .hud { font-size: 10px; left: 10px; bottom: 8px; line-height: 1.35; }
   #cfg .badge { right: 10px; top: 8px; }
-  /* the two long notes and the bill of material are reading matter, not
-     controls - let them sit below without fighting the pinned viewport */
+  /* the two notes and the bill of material are reading matter, not controls -
+     let them sit below without fighting the pinned viewport */
   #cfg .note, #cfg section, #cfg footer { position: relative; z-index: 1; }
 }
 @media (max-width: 760px) and (orientation: landscape) {
   #cfg .stage { height: 62vh; height: 62svh; }
 }
-
 </style>
 
 <section class="hero">
 
   <div class="topline">
-    <span>Kaia</span>
+    <span>Outdoor Furniture</span>
     <span class="sep">/</span>
     <span>Urban furniture</span>
     <span class="sep">/</span>
@@ -456,32 +413,26 @@ a { color: inherit; }
   </div>
 
   <div class="stage-copy">
-    <h1 class="mark">KAIA</h1>
+    <h1 class="mark">OUTDOOR FURNITURE</h1>
     <p class="lede">
-      Cast side frames and timber boards for public space.
-      <strong>One side, one machined channel</strong> — boards slide in
-      lengthwise, from a bench for two to a bench for eight.
+      One bent flat-bar frame, laser-cut and press-brake formed, with timber
+      boards dropped straight into its slots.
+      <strong>No cast sides, no assembly fasteners in the frame</strong> —
+      just a bench end and a chair end from the same bar.
     </p>
     <ul class="spec">
-      <li>Seat <b>450</b></li>
-      <li>Module <b>90</b></li>
-      <li>Channel <b>32 × 32</b></li>
-      <li>Lengths <b>600–2400</b></li>
+      <li>Frame <b>bent flat bar</b></li>
+      <li>Planks <b>slot-fit</b></li>
+      <li>Back <b>none / high</b></li>
+      <li>Mark <b>laser-cut / logo shield</b></li>
     </ul>
   </div>
 
   <div class="art-cell">
-    <svg class="plate" viewBox="-40 -40 760 960" role="img" aria-label="Side elevation of the Kaia bench frame">
-      <g transform="translate(0,880) scale(1,-1)">
+    <svg class="plate" viewBox="-40 -40 760 960" role="img" aria-label="Profile of the Outdoor Furniture bent-bar frame">
+      <g transform="translate(40,500) scale(5.3,-5.3)">
         <g class="bars">
-          <polyline stroke-width="46" points="2,0 52,190 82,296 128,386 150,450"></polyline>
-          <polyline stroke-width="46" points="664,0 606,190 522,380 470,452"></polyline>
-          <polyline stroke-width="52" points="470,452 482,540 498,640 518,748 536,828 542,864"></polyline>
-          <polyline stroke-width="20" points="70,232 240,268 420,268 600,232"></polyline>
-          <polyline stroke-width="52" points="150,452 208,474 278,486 336,486 392,476 472,450"></polyline>
-          <polyline stroke-width="26" points="520,640 506,586"></polyline>
-          <polyline stroke-width="16" points="214,656 360,656 426,662 462,684 476,716 488,754 502,792 514,834 524,852 526,872 544,882 580,880 586,872 592,850"></polyline>
-          <polyline stroke-width="16" points="150,452 180,490 208,516 228,550 240,590 234,630 198,650 158,644 128,622 116,590 122,558 154,542 182,546 196,568 206,592 180,604 160,590"></polyline>
+          <polygon stroke-width="1.6" points="56.38,9.9 41.61,-2.5 -41.61,-2.5 -56.38,9.9 -68.3,77.5 -58.14,77.5 -46.53,11.63 -41.61,7.5 41.61,7.5 46.53,11.63 58.15,77.5 68.3,77.5"></polygon>
         </g>
       </g>
     </svg>
@@ -501,10 +452,10 @@ a { color: inherit; }
     <div>
       <h2>Configurator</h2>
       <p class="intro">
-        Pick a side, a timber layout and a length. The foot comes with the
-        side — it is cast as one piece with the leg. The channel, the tenons
-        and the cube spacers follow automatically, and every variant is the
-        same cast side and the same 60 × 35 board.
+        One frame, two states: with or without the backrest arm. The only
+        thing that changes per order is how it is marked — laser-cut straight
+        into the top plank, or a separate logo shield fixed on top of it.
+        Shown at its modelled demonstrator size, not a final production spec.
       </p>
     </div>
     <figure class="qr">
@@ -521,16 +472,15 @@ a { color: inherit; }
   <div id="cfg">
 
 <div class="wrap">
-  
 
   <div class="stage" id="stage">
-    <p class="badge" id="badge">1800 mm</p>
+    <p class="badge" id="badge"></p>
     <p class="hud"><span class="mouse-only">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom · arrow keys pan</span><span class="touch-only">One finger to orbit · two fingers to pan and pinch to zoom</span></p>
   </div>
 
   <div class="controls">
     <div>
-      <label>Metal finish</label>
+      <label>Frame finish</label>
       <div class="swatches" id="sw-metal"></div>
     </div>
     <div>
@@ -538,31 +488,12 @@ a { color: inherit; }
       <div class="swatches" id="sw-wood"></div>
     </div>
     <div>
-      <label for="c-len">Product · length</label>
-      <select id="c-len">
-        <option value="600">600 mm · single chair</option>
-        <option value="1200">1200 mm · 2 seats</option>
-        <option value="1500">1500 mm</option>
-        <option value="1800" selected>1800 mm · standard</option>
-        <option value="2400">2400 mm · 4 seats</option>
-      </select>
+      <label for="c-back">Backrest</label>
+      <select id="c-back"><option value="none">None · bench seat only</option><option value="high" selected>High · backrest arm</option></select>
     </div>
     <div>
-      <label for="c-layout">Timber layout</label>
-      <select id="c-layout"></select>
-    </div>
-    <div>
-      <label for="c-back">Back</label>
-      <select id="c-back"><option value="none">None</option><option value="low">Low</option><option value="high" selected>High + scroll arms</option></select>
-    </div>
-    <div>
-      <label for="c-side">Side design</label>
-      <div class="pickrow">
-        <button type="button" id="b-side-prev" aria-label="Previous side design">▲</button>
-        <select id="c-side"></select>
-        <button type="button" id="b-side-next" aria-label="Next side design">▼</button>
-      </div>
-      <output id="side-count" class="pickcount"></output>
+      <label for="c-decoration">Mark on the top plank</label>
+      <select id="c-decoration"><option value="laser" selected>Laser-cut</option><option value="shield">Logo shield</option></select>
     </div>
     <div>
       <label for="c-env">Surroundings</label>
@@ -574,28 +505,11 @@ a { color: inherit; }
     </div>
     <div>
       <label for="c-lift">Lift off ground</label>
-      <input type="range" id="c-lift" min="0" max="1500" step="50" value="0">
+      <input type="range" id="c-lift" min="0" max="250" step="10" value="0">
     </div>
     <div>
       <label for="c-explode">Explode</label>
       <input type="range" id="c-explode" min="0" max="100" value="0">
-    </div>
-    <div class="admincell">
-      <label>Admin</label>
-      <form id="admin-form" class="adminform">
-        <input type="text" id="admin-user" name="user" placeholder="user" autocomplete="username" aria-label="Admin user">
-        <input type="password" id="admin-pass" name="pass" placeholder="password" autocomplete="current-password" aria-label="Admin password">
-        <div class="btnrow">
-          <button type="submit" id="admin-in">Sign in</button>
-          <button type="button" id="admin-out" hidden>Sign out</button>
-        </div>
-        <output id="admin-msg" class="pickcount"></output>
-      </form>
-    </div>
-    <div class="tiltcell" hidden>
-      <label>Plank angles · degrees from horizontal</label>
-      <div id="tilt-list" class="tiltlist"></div>
-      <div class="btnrow"><button type="button" id="b-tilt-reset">Reset angles</button></div>
     </div>
     <div>
       <label>Interface</label>
@@ -607,7 +521,6 @@ a { color: inherit; }
       <label>View</label>
       <div class="btnrow">
         <button type="button" id="b-view">Side</button>
-        <button type="button" id="b-foot">Foot</button>
         <button type="button" id="b-joint">Joint</button>
         <button type="button" id="b-under">Underside</button>
         <button type="button" id="b-reset">Reset</button>
@@ -616,21 +529,21 @@ a { color: inherit; }
     </div>
   </div>
 
-  <p class="note" id="foot-note">The leg turns and runs along the ground as a sled runner, tips lifted clear.</p>
+  <p class="note">Traced straight from the CAD: one flat bar runs from the ground up each end, bends into the seat rail, and — with the backrest selected — keeps going into a diagonal brace that carries the back planks. No separate foot, no cast parts; the bar reaches the ground on its own.</p>
 
-  <p class="note">Reference for the side profile: Victorian and Norwegian cast bench ends — swept front leg, rolled spiral arm, pierced web between the legs, and a foot that grows out of the leg rather than sitting under it as a plate. A cast side of this size runs about 16 kg per end.</p>
+  <p class="note">Three seat planks and, with a backrest, three more along the brace, each a single board dropped into a slotted pocket in the frame — no tenons, no spacer cubes. The centre seat plank is the one that takes the laser-cut mark or the logo shield. Sizes shown match the CAD demonstrator model as modelled, not a finished production specification.</p>
 
   <section>
     <h2>Bill of material</h2>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Part</th><th>Process</th><th>Size mm</th><th>Qty</th></tr></thead>
+        <thead><tr><th>Part</th><th>Process</th><th>Size (model units)</th><th>Qty</th></tr></thead>
         <tbody id="bom"></tbody>
       </table>
     </div>
   </section>
 
-  <footer>Seat 450 mm at the centre, dished to 478 at the edges — a shallow dish rather than a deep cradle. The two front planks carry an extra 11° and 4° of nose-down droop so the front edge falls away from the back of the knee, and the two rear planks are tipped 6° and 14° further down toward the back, so the seat settles into the backrest instead of rising into it. Back shaped as an S: it comes 30 mm forward of the seat rear at the lumbar (about 590 mm up), then reclines to roughly 30° at the top edge, 850 mm above ground. Each back plank is rotated to the local tangent, so the stack follows the spine rather than a flat board. Side profile 45 mm thick. The foot is not a separate choice: each side design is cast with the foot that belongs to it, so the leg and the foot are one piece of iron. The fixing hole is modelled on the ring, whose open centre is the fixing point; on skid and wishbone it would be cored in the same place. No ground fixing is shown yet. Planks 60 × 35 at 75 mm pitch measured along the curve, so every gap stays the same width instead of opening into a wedge, each rotated to the local tangent of the dish — 0° at the centre rising to about 20° at the front and rear plank — so the seat is a continuous curved surface rather than a row of flat steps, reduced at each end to a tenon with a square 30 × 30 section — the channel is square too, so the tenon cannot rock or jam as it slides, so the full section stops proud of the side and the joint reads as a shoulder, not as timber disappearing into a slot. Pitch = tenon 40 along the groove + 30 mm spacer cube = 70. Lift the bench and orbit below it to inspect the underside of the seat rail and the cored hole in each foot — the ground hides itself once the camera passes under.</footer>
+  <footer>Frame: one bar, laser-cut flat then press-brake bent through the seat (and, with a backrest, through the brace behind it) — the same bar section throughout, two per bench. Seat and back planks sit in slotted pockets cut straight into that bar, 0.2 units of clearance per side, nothing else holding them. The centre seat plank carries whichever mark was ordered: a laser-engraved pattern, or a separate logo shield fixed on top of the plank. Lift the bench and orbit below it to see the underside of the seat and how the planks sit in their pockets.</footer>
 </div>
   </div>
 </section>
@@ -707,80 +620,48 @@ if(typeof THREE === "undefined"){
   return;
 }
 
-/* ---------- parameters, mm ---------- */
-let GRD=140;
-const                        // top of the foot: the side profile starts here
-      SEAT=450, SEAT_E=478, D0=40, D1=470, DEPTH=610,
-      BACK_TOP=850, RAKE=15*Math.PI/180,
-      SLAT_H=35, PLATE=45,
-      TEN_H=30, TEN_L=30, CUBE=30, LIP=30, FOOT_Z=0.72, FOOT_HOLE=11;
-/* the timber layout: same channel, same cubes, different board widths */
-const LAYOUTS = {
-  slats:  {label:"Slats · 5 × 60 seat, 4 × 60 back",  sw:60,  spitch:75,  srows:5, bw:60,  bpitch:75,  brows:4},
-  boards: {label:"Boards · 3 × 150 seat, one back board", sw:150, spitch:158, srows:3, bw:300, bpitch:310, brows:1}
-};
-let SLAT_W = 60, PITCH = 75, TEN_W = 40;
+/* =====================================================================
+   THE FRAME — traced straight off BenchWOBackrestV2.STEP and
+   BenchInterfaceV2.STEP (3d-modeling-and-simulation/bench-cad/), by
+   slicing the frame solid at a fixed station along its length and
+   reading the cut's outer wire and its slot pockets. Nothing here is
+   drawn by eye; every number below is a CAD coordinate. These are the
+   demonstrator's own modelled sizes — not a real-world production spec,
+   so nothing is rescaled. */
 
-const seatY = d => SEAT + (SEAT_E-SEAT)*Math.pow((d-(D0+D1)/2)/((D1-D0)/2),2);
-/* walk a curve and return equally spaced stations — pitch measured along the curve,
-   not along an axis, so the gaps between planks stay parallel instead of opening into wedges */
-function curveStations(kind, count, pitch){
-  const P = pitch || PITCH;
-  const pts = [];
-  if(kind === "seat"){
-    for(let d=D0; d<=D1; d+=2) pts.push({d, y: seatY(d), t: Math.atan(seatSlope(d))});
-  }else{
-    for(let y=BACK_BASE+20; y<=BACK_TOP-10; y+=2) pts.push({d: postD(y), y, t: Math.atan(backSlope(y))});
-  }
-  pts[0].s = 0;
-  for(let i=1;i<pts.length;i++)
-    pts[i].s = pts[i-1].s + Math.hypot(pts[i].d - pts[i-1].d, pts[i].y - pts[i-1].y);
-  const total = pts[pts.length-1].s;
-  const n = Math.max(1, Math.min(count, Math.floor(total / P) + 1));
-  const s0 = (total - (n-1)*P) / 2;                          // centre the run on the curve
-  const out = [];
-  for(let i=0;i<n;i++){
-    const target = s0 + i*P;
-    let k = pts.findIndex(q => q.s >= target);
-    out.push(pts[k < 0 ? pts.length-1 : k]);
-  }
-  return out;
-}
+const FRAME_DEPTH = 10;     // the bar's own width (extrusion length along the bench)
+const BENCH_LEN   = 250;    // distance between the two frame ends, end to end
 
-const seatSlope = d => 2*(SEAT_E-SEAT)*(d-(D0+D1)/2)/Math.pow((D1-D0)/2, 2);
-const BACK_BASE = 470, BACK_OUT = 86, BACK_EXP = 1.7, LUMBAR = 24, LUMBAR_SPAN = 0.62;
-const backT = y => Math.min(1, Math.max(0, (y - BACK_BASE) / (BACK_TOP - BACK_BASE)));
-/* the back is an S: it comes forward at the lumbar, then reclines toward the top edge */
-const postD = y => {
-  const t = backT(y);
-  return D1 - 6 + BACK_OUT*Math.pow(t, BACK_EXP)
-             - LUMBAR*Math.sin(Math.PI*Math.min(1, t/LUMBAR_SPAN));
+/* outer boundary of the bent bar, one cross-section, (profile-x, profile-z) */
+const PROFILE = {
+  none: [[56.38,9.9],[41.61,-2.5],[-41.61,-2.5],[-56.38,9.9],[-68.3,77.5],[-58.14,77.5],
+         [-46.53,11.63],[-41.61,7.5],[41.61,7.5],[46.53,11.63],[58.15,77.5],[68.3,77.5]],
+  high: [[46.53,-6.63],[41.61,-2.5],[-41.61,-2.5],[-56.38,9.9],[-68.3,77.5],[-58.14,77.5],
+         [-46.53,11.63],[-41.61,7.5],[41.61,7.5],[46.53,11.63],[58.15,77.5],[68.3,77.5],
+         [55.54,5.1],[55.54,-0.1],[71.85,-92.65],[69.83,-95.55],[64.9,-96.41],[62.01,-94.39]]
 };
-const backSlope = y => {
-  const t = Math.max(backT(y), 0.001), span = BACK_TOP - BACK_BASE;
-  const power = BACK_OUT*BACK_EXP*Math.pow(t, BACK_EXP-1);
-  const lump = t < LUMBAR_SPAN
-    ? LUMBAR*(Math.PI/LUMBAR_SPAN)*Math.cos(Math.PI*t/LUMBAR_SPAN)
-    : 0;
-  return (power - lump) / span;
-};
-
-const METALS = [
-  ["Cast black",   0x15171A], ["Graphite",   0x3A4043],
-  ["Heritage green",0x17372B], ["Oxide red",  0x5E2A21], ["Signal blue", 0x305BAB]
+/* the 3 seat-plank pockets, shared by both frame states */
+const SEAT_SLOTS = [
+  [[-17.3,5.2],[-42.7,5.2],[-42.7,-0.2],[-17.3,-0.2]],
+  [[12.7,5.2],[-12.7,5.2],[-12.7,-0.2],[12.7,-0.2]],
+  [[42.7,5.2],[17.3,5.2],[17.3,-0.2],[42.7,-0.2]]
 ];
-const WOODS = [
-  ["Natural pine", 0xD9B380], ["Oiled oak",  0xB08149],
-  ["Teak brown",   0x8A5A33], ["Ålesund yellow", 0xD9A93C],
-  ["Heritage red", 0x7E2B21], ["Grey wash",  0x9E9C92],
-  ["Park green",   0x3D5F38], ["Bottle green", 0x2A412C]
+/* the 3 back-plank pockets along the brace — "high" only */
+const BACK_SLOTS = [
+  [[53.93,-4.22],[48.61,-5.16],[53.02,-30.17],[58.34,-29.23]],
+  [[53.82,-34.7],[58.23,-59.72],[63.55,-58.78],[59.14,-33.76]],
+  [[59.03,-64.25],[63.44,-89.26],[68.76,-88.32],[64.35,-63.31]]
 ];
+const PLANK_W = 25, PLANK_T = 5;   // every plank, seat or back, is the same section
 
-const cfg = {metal:0, wood:1, layout:"slats", iface:false, side:"frogner", tiltSeat:[], tiltBack:[], length:1800, back:"high", explode:0, lift:0, foot:"taper", env:"allee", light:"midday"};
+/* the stage (camera, lights, trees, ground) is tuned for a human-scale bench;
+   this scales all of that around whatever size the frame actually models,
+   instead of rescaling the frame itself */
+const STAGE = BENCH_LEN / 1800;
 
 /* ---------- scene ---------- */
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(38, 16/10, 50, 60000);
+const camera = new THREE.PerspectiveCamera(38, 16/10, 0.05, 60000);
 const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
@@ -790,16 +671,16 @@ stage.appendChild(renderer.domElement);
 const hemi = new THREE.HemisphereLight(0xffffff, 0x8f979d, 0.7);
 scene.add(hemi);
 const key = new THREE.DirectionalLight(0xfff4e4, 1.0);
-key.position.set(1900, 2800, 2100);
+key.position.set(1900*STAGE, 2800*STAGE, 2100*STAGE);
 key.castShadow = true;
 key.shadow.mapSize.set(2048,2048);
-Object.assign(key.shadow.camera, {left:-3600, right:3600, top:3600, bottom:-3600, near:100, far:16000});
+Object.assign(key.shadow.camera, {left:-600*STAGE, right:600*STAGE, top:600*STAGE, bottom:-600*STAGE, near:1, far:16000*STAGE});
 scene.add(key);
 const rim = new THREE.DirectionalLight(0xd8e6ff, 0.4);
-rim.position.set(-1700, 1100, -1500);
+rim.position.set(-1700*STAGE, 1100*STAGE, -1500*STAGE);
 scene.add(rim);
-const lampLight = new THREE.PointLight(0xffc27a, 0, 9000, 2);
-lampLight.position.set(3100, 3300, 250);
+const lampLight = new THREE.PointLight(0xffc27a, 0, 9000*STAGE, 2);
+lampLight.position.set(3100*STAGE, 3300*STAGE, 250*STAGE);
 scene.add(lampLight);
 
 /* sky: a gradient painted on a canvas, no external asset */
@@ -817,17 +698,17 @@ function skyTexture(top, bottom){
 
 const LIGHTS = {
   midday:  {key:[0xfff2e0, 0.92, 3000, 4200, 2600], hemi:[0xa9c6ea, 0x5d6a48, 0.5], rim:0.26,
-            sky:["#7FA8D4","#CBD9DE"], fog:0xc3d0d6, fogD:0.00005, lamp:0, shadow:.17},
+            sky:["#7FA8D4","#CBD9DE"], fog:0xc3d0d6, fogD:0.00005/STAGE, lamp:0, shadow:.17},
   golden:  {key:[0xffc17a, 1.0, -3600, 1600, 2800], hemi:[0xf6d3ab, 0x5f4e33, 0.36], rim:0.16,
-            sky:["#8FAECE","#EBC99F"], fog:0xdcbf98, fogD:0.00006, lamp:0.3, shadow:.22},
+            sky:["#8FAECE","#EBC99F"], fog:0xdcbf98, fogD:0.00006/STAGE, lamp:0.3, shadow:.22},
   evening: {key:[0x7f93c8, 0.16, -2400, 2600, -2000], hemi:[0x28324d, 0x171d16, 0.26], rim:0.08,
-            sky:["#101C33","#2E374B"], fog:0x1d2740, fogD:0.00007, lamp:2.6, shadow:.08}
+            sky:["#101C33","#2E374B"], fog:0x1d2740, fogD:0.00007/STAGE, lamp:2.6, shadow:.08}
 };
 
 function applyLight(){
   const p = LIGHTS[cfg.light];
   key.color.setHex(p.key[0]); key.intensity = p.key[1];
-  key.position.set(p.key[2], p.key[3], p.key[4]);
+  key.position.set(p.key[2]*STAGE, p.key[3]*STAGE, p.key[4]*STAGE);
   hemi.color.setHex(p.hemi[0]); hemi.groundColor.setHex(p.hemi[1]); hemi.intensity = p.hemi[2];
   rim.intensity = p.rim;
   lampLight.intensity = cfg.env === "allee" ? p.lamp * 1.0 : 0;
@@ -842,9 +723,9 @@ function applyLight(){
   if(lampHead) lampHead.material.emissiveIntensity = cfg.light === "evening" ? 1.6 : 0.15;
 }
 
-const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(26000,26000), new THREE.ShadowMaterial({opacity:.17}));
+const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(26000*STAGE,26000*STAGE), new THREE.ShadowMaterial({opacity:.17}));
 shadowCatcher.rotation.x = -Math.PI/2;
-shadowCatcher.position.y = 0.5;
+shadowCatcher.position.y = 0.5*STAGE;
 shadowCatcher.receiveShadow = true;
 scene.add(shadowCatcher);
 
@@ -857,9 +738,9 @@ function rnd(i, k){ const x = Math.sin(i*127.1 + k*311.7) * 43758.5453; return x
 
 function tree(i, dark){
   const g = new THREE.Group();
-  const h = 2200 + rnd(i,1)*700;
+  const h = (2200 + rnd(i,1)*700)*STAGE;
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(62 + rnd(i,2)*26, 112 + rnd(i,3)*30, h, 9),
+    new THREE.CylinderGeometry((62 + rnd(i,2)*26)*STAGE, (112 + rnd(i,3)*30)*STAGE, h, 9),
     new THREE.MeshStandardMaterial({color: dark ? 0x241f1a : 0x463629, roughness:.95}));
   trunk.position.y = h/2;
   trunk.castShadow = true;
@@ -867,9 +748,9 @@ function tree(i, dark){
   const leaf = new THREE.MeshStandardMaterial({
     color: dark ? 0x22331f : [0x5F7A3A, 0x6E8A44, 0x53702F][Math.abs(i)%3], roughness:.92, flatShading:true});
   for(let j=0;j<4;j++){
-    const r = 760 + rnd(i,4+j)*440;
+    const r = (760 + rnd(i,4+j)*440)*STAGE;
     const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), leaf);
-    blob.position.set((rnd(i,10+j)-0.5)*900, h + 420 + rnd(i,20+j)*760, (rnd(i,30+j)-0.5)*900);
+    blob.position.set((rnd(i,10+j)-0.5)*900*STAGE, h + (420 + rnd(i,20+j)*760)*STAGE, (rnd(i,30+j)-0.5)*900*STAGE);
     blob.castShadow = true;
     g.add(blob);
   }
@@ -882,769 +763,330 @@ function buildEnv(){
   if(cfg.env !== "allee") return;
   const dark = cfg.light === "evening";
 
-  const grass = new THREE.Mesh(new THREE.PlaneGeometry(70000, 70000),
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(70000*STAGE, 70000*STAGE),
     new THREE.MeshStandardMaterial({color: dark ? 0x202a19 : 0x4E6135, roughness:.98}));
   grass.rotation.x = -Math.PI/2;
   grass.receiveShadow = true;
   envGroup.add(grass);
 
-  const path = new THREE.Mesh(new THREE.BoxGeometry(70000, 40, 2900),
+  const path = new THREE.Mesh(new THREE.BoxGeometry(70000*STAGE, 40*STAGE, 2900*STAGE),
     new THREE.MeshStandardMaterial({color: dark ? 0x33312c : 0x736C5E, roughness:.95}));
-  path.position.set(0, 20, 1900);
+  path.position.set(0, 20*STAGE, 1900*STAGE);
   path.receiveShadow = true;
   envGroup.add(path);
 
-  const apron = new THREE.Mesh(new THREE.BoxGeometry(cfg.length + 1800, 44, 1500),
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(BENCH_LEN + 1800*STAGE, 44*STAGE, 1500*STAGE),
     new THREE.MeshStandardMaterial({color: dark ? 0x3b3832 : 0x7F7869, roughness:.92}));
-  apron.position.set(0, 22, 120);
+  apron.position.set(0, 22*STAGE, 120*STAGE);
   apron.receiveShadow = true;
   envGroup.add(apron);
 
   for(let i=-5; i<=5; i++){
     if(Math.abs(i) < 1) continue;
-    const back = tree(i+20, dark);  back.position.set(i*4000 + 400, 0, -5200);
+    const back = tree(i+20, dark);  back.position.set(i*4000*STAGE + 400*STAGE, 0, -5200*STAGE);
     envGroup.add(back);
-    const front = tree(i+40, dark); front.position.set(i*4000 - 1600, 0, 11000);
+    const front = tree(i+40, dark); front.position.set(i*4000*STAGE - 1600*STAGE, 0, 11000*STAGE);
     envGroup.add(front);
   }
 
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(55, 80, 3300, 12),
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(55*STAGE, 80*STAGE, 3300*STAGE, 12),
     new THREE.MeshStandardMaterial({color:0x15171A, roughness:.5, metalness:.6}));
-  post.position.set(3100, 1650, 250);
+  post.position.set(3100*STAGE, 1650*STAGE, 250*STAGE);
   post.castShadow = true;
   envGroup.add(post);
-  lampHead = new THREE.Mesh(new THREE.CylinderGeometry(70, 220, 300, 12),
+  lampHead = new THREE.Mesh(new THREE.CylinderGeometry(70*STAGE, 220*STAGE, 300*STAGE, 12),
     new THREE.MeshStandardMaterial({color:0x2A2C30, emissive:0xffc27a, emissiveIntensity:0.15, roughness:.4}));
-  lampHead.position.set(3100, 3400, 250);
+  lampHead.position.set(3100*STAGE, 3400*STAGE, 250*STAGE);
   envGroup.add(lampHead);
 }
 
 const root = new THREE.Group();
 scene.add(root);
 
+const METALS = [
+  ["Cast black",   0x15171A], ["Graphite",   0x3A4043],
+  ["Heritage green",0x17372B], ["Oxide red",  0x5E2A21], ["Signal blue", 0x305BAB]
+];
+const WOODS = [
+  ["Natural pine", 0xD9B380], ["Oiled oak",  0xB08149],
+  ["Teak brown",   0x8A5A33], ["Ålesund yellow", 0xD9A93C],
+  ["Heritage red", 0x7E2B21], ["Grey wash",  0x9E9C92],
+  ["Park green",   0x3D5F38], ["Bottle green", 0x2A412C]
+];
+const SHIELD_COLOR = 0xC9A24B;
+
+const cfg = {metal:0, wood:1, back:"high", decoration:"laser", explode:0, lift:0, iface:false, env:"allee", light:"midday"};
+
 const matMetal = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.55});
 const matWood  = new THREE.MeshStandardMaterial({color:WOODS[cfg.wood][1],  roughness:.78, metalness:.03});
-const matChannel = new THREE.MeshStandardMaterial({color:0x4FB3C9, roughness:.5, metalness:0, transparent:true, opacity:.42, depthWrite:false});
 const matGhost = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.35, transparent:true, opacity:.26, depthWrite:false});
+const matShield = new THREE.MeshStandardMaterial({color:SHIELD_COLOR, roughness:.3, metalness:.75});
 
-/* ---------- helpers ---------- */
-function plate(shape, t, bevel){
-  const bv = bevel || 2.5;
-  const g = new THREE.ExtrudeGeometry(shape, {depth:t, bevelEnabled:true, bevelThickness:bv, bevelSize:bv, bevelSegments:bevel ? 5 : 2, curveSegments:26});
-  g.translate(0,0,-t/2);
-  return g;
-}
+/* ---------- geometry from the traced profile ---------- */
 
-/* ---------- the side: one cast profile, built from swept round bars ----------
-   Extruded flat profiles came out faceted. A cast bench end is a rounded bar, so each
-   member is now a TUBE swept along a smooth spline and squashed across the bench into an
-   oval section: smooth shading, no visible facets, and a section that reads as cast iron. */
+/* profile-space (x,z) -> world (z,y); the bench's own length becomes world X.
+   This is purely how the part is placed on the stage — every distance and
+   angle below comes straight from the CAD, untouched. */
+function toWorld([px, pz]){ return {y: pz, z: -px}; }
 
-function tubeMember(pts, r, flat, closed){
-  const path = pts.map(q => new THREE.Vector3(0, q[1], -q[0]));
-  const curve = new THREE.CatmullRomCurve3(path, !!closed, "catmullrom", 0.5);
-  const g = new THREE.TubeGeometry(curve, Math.max(40, pts.length*14), r, 20, !!closed);
-  g.scale(flat, 1, 1);
-  const out = [{g}];
-  if(!closed){                                   // round caps, so the bar ends are not open
-    [pts[0], pts[pts.length-1]].forEach(q => {
-      const c = new THREE.SphereGeometry(r, 18, 12);
-      c.scale(flat, 1, 1);
-      c.translate(0, q[1], -q[0]);
-      out.push({g: c});
-    });
-  }
-  return out;
-}
-const shapeMember = (sh, t, dx) => [{g: plate(sh, t, 4), orient:true, dx: dx || 0}];
-
-/* spiral scroll, as a control path for a swept bar */
-function scrollCtrl(cx, cy, r0, r1, turns, start){
-  const out = [], n = 26;
-  for(let i=0;i<=n;i++){
-    const k = i/n, a = start + turns*Math.PI*2*k, r = r0 + (r1-r0)*k;
-    out.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]);
-  }
-  return out;
-}
-function annulus(cx, cy, ro, ri){
+function frameShape(variant){
+  const outer = PROFILE[variant];
   const s = new THREE.Shape();
-  s.absarc(cx, cy, ro, 0, Math.PI*2, false);
-  const h = new THREE.Path();
-  h.absarc(cx, cy, ri, 0, Math.PI*2, true);
-  s.holes.push(h);
-  return s;
-}
-function stroke(ctrl, w, samples, cap){
-  const curve = new THREE.SplineCurve(ctrl.map(p => new THREE.Vector2(p[0], p[1])));
-  const pts = curve.getPoints(samples || 40);
-  const left = [], right = [];
-  for(let i=0;i<pts.length;i++){
-    const a = pts[Math.max(0,i-1)], b = pts[Math.min(pts.length-1,i+1)];
-    const t = new THREE.Vector2(b.x-a.x, b.y-a.y).normalize();
-    const n = new THREE.Vector2(-t.y, t.x).multiplyScalar(w/2);
-    left.push(new THREE.Vector2(pts[i].x+n.x, pts[i].y+n.y));
-    right.push(new THREE.Vector2(pts[i].x-n.x, pts[i].y-n.y));
-  }
-  if(!cap) return new THREE.Shape(left.concat(right.reverse()));
-  const arc = (p, n, from, to) => {
-    const out = [];
-    for(let i=1;i<8;i++){
-      const th = from + (to-from)*i/8;
-      out.push(new THREE.Vector2(
-        p.x + n.x*Math.cos(th) - n.y*Math.sin(th),
-        p.y + n.x*Math.sin(th) + n.y*Math.cos(th)));
-    }
-    return out;
-  };
-  const last = pts[pts.length-1], first = pts[0];
-  const nEnd = new THREE.Vector2(left[left.length-1].x - last.x, left[left.length-1].y - last.y);
-  const nStart = new THREE.Vector2(left[0].x - first.x, left[0].y - first.y);
-  return new THREE.Shape(left.concat(arc(last, nEnd, 0, -Math.PI))
-                             .concat(right.reverse())
-                             .concat(arc(first, nStart, Math.PI, 0)));
-}
-
-/* ---------- ten traditional sides ----------
-   All ten share the seat line, the back curve, the arm height and the foot position, so the
-   plank interface and the assembly are identical. Only the character changes. */
-const SIDES = {
-  /* traced off the reference photograph: one cast piece runs from the ground up the front
-     leg, curls into the arm volute, sweeps back along the arm and up into the back post;
-     the rear leg branches off at the seat rail, and a thin arched brace ties the two legs. */
-  referanse: {label:"Referanse · foto", bar:23, flat:.64, arm:null, web:null, orn:null,
-              style:"ref", tie:true,
-              legF:[[2,0],[52,190],[112,400],[150,452]], legR:[[664,0],[606,190],[522,380],[470,452]]},
-  /* traced by hand in the profile studio, 22 Sep — coordinates straight from the export */
-  tracet: {label:"Referanse · tracet", bar:23, flat:.64, style:"trace", tie:false,
-    legF:[[2,0],[52,190],[82,296],[128,386],[150,450]],
-    legR:[[664,0],[606,190],[522,380],[470,452]],
-    trace:[
-      {r:8,  pts:[[150,452],[180,490],[208,516],[228,550],[240,590],[234,630],[198,650],[158,644],[128,622],[116,590],[122,558],[154,542],[182,546],[196,568],[206,592],[180,604],[160,590]]},
-      {r:22, pts:[[470,452],[482,540],[498,640],[518,748],[536,828],[542,864]]},
-      {r:10, pts:[[70,232],[240,268],[420,268],[600,232]]},
-      {r:13, pts:[[520,640],[506,586]]},
-      {r:9,  pts:[[152,454],[150,452],[208,474],[278,486],[336,486],[392,476],[472,450]]},
-      {r:8,  pts:[[214,656],[360,656],[426,662],[462,684],[476,716],[488,754],[502,792],[514,834],[524,852],[526,872],[544,882],[580,880],[586,872],[592,850],[570,844],[568,848],[568,852],[564,860],[562,860]]}
-    ],
-    scrolls:[{r:14, at:[96,732], R:54, turns:1.05}]},
-  frogner:   {label:"Frogner · scroll cluster", bar:19, flat:.66, arm:"scroll", web:null, orn:null,
-              underarm:"cluster", tie:true,
-              legF:[[-34,0],[38,180],[108,330],[150,452]], legR:[[652,0],[580,190],[506,340],[470,452]]},
-  kvadratur: {label:"Kvadraturen · plain sweep", bar:22, flat:.62, arm:"roll", web:null, orn:null,
-              underarm:"single", tie:true,
-              legF:[[-12,0],[50,190],[112,335],[150,452]], legR:[[630,0],[566,195],[504,340],[470,452]]},
-  sorlandet: {label:"Sørlandet · light scrolls", bar:17, flat:.68, arm:"scroll", web:null, orn:null,
-              underarm:"cluster", tie:true, bead:true,
-              legF:[[-22,0],[44,186],[110,332],[150,452]], legR:[[642,0],[574,192],[505,338],[470,452]]},
-  alesund:   {label:"Ålesund II · swept scroll", bar:25, flat:.62, arm:"scroll", web:"arch", orn:"roundel", bead:true,
-              legF:[[56,0],[62,20],[92,250],[126,350],[150,452]], legR:[[574,0],[570,20],[540,260],[500,350],[470,452]]},
-  sunnmore:  {label:"Sunnmøre · twin + scroll", bar:16, flat:.70, arm:"scroll", web:"arch", orn:"roundelS", twin:30, bead:true,
-              legF:[[66,0],[74,220],[112,350],[150,452]], legR:[[564,0],[554,225],[508,350],[470,452]]},
-  borgund:   {label:"Borgund · harp", bar:16, flat:.70, arm:"roll", web:"harp", orn:null, twin:34,
-              legF:[[70,0],[80,220],[118,350],[150,452]], legR:[[560,0],[548,225],[502,350],[470,452]]},
-  giske:     {label:"Giske · double scroll", bar:23, flat:.64, arm:"double", web:"scrollweb", orn:null, bead:true,
-              legF:[[58,0],[70,230],[110,345],[150,452]], legR:[[572,0],[558,235],[508,348],[470,452]]},
-  aksla:     {label:"Aksla · trefoil", bar:17, flat:.70, arm:"scroll", web:"arch", orn:"trefoil", twin:28, bead:true,
-              legF:[[68,0],[78,220],[116,350],[150,452]], legR:[[562,0],[550,225],[504,350],[470,452]]},
-  valderoy:  {label:"Valderøy · paired scrolls", bar:22, flat:.65, arm:"scroll", web:"scrollweb", orn:"roundelS",
-              legF:[[58,0],[68,225],[110,348],[150,452]], legR:[[572,0],[560,230],[510,348],[470,452]]},
-  ellingsoy: {label:"Ellingsøy · spindles", bar:21, flat:.66, arm:"roll", web:"spindles", orn:null, bead:true,
-              legF:[[62,0],[74,225],[114,350],[150,452]], legR:[[568,0],[554,230],[506,350],[470,452]]},
-  godoy:     {label:"Godøy · grand scroll", bar:29, flat:.60, arm:"scroll", web:"ringarch", orn:"roundel", bead:true,
-              legF:[[52,0],[58,20],[88,245],[124,350],[150,452]], legR:[[578,0],[572,20],[544,255],[502,350],[470,452]]}
-};
-
-const bead = (d, y, r, flat) => {
-  const g = new THREE.SphereGeometry(r, 20, 14);
-  g.scale(flat*1.15, 1, 1);
-  g.translate(0, y, -d);
-  return [{g}];
-};
-
-/* Sample a member's own curve, so nothing is ever placed by eye.
-   atHeight() returns the point where a leg actually is at a given height;
-   onCurve() returns the point where a web curve actually is at a given depth. */
-function atHeight(pts, y){
-  const c = new THREE.SplineCurve(pts.map(q => new THREE.Vector2(q[1], q[0]))); // (height, depth)
-  const sm = c.getPoints(80);
-  for(let i=1;i<sm.length;i++){
-    if((sm[i-1].x - y)*(sm[i].x - y) <= 0){
-      const t = (y - sm[i-1].x) / ((sm[i].x - sm[i-1].x) || 1);
-      return [sm[i-1].y + t*(sm[i].y - sm[i-1].y), y];
-    }
-  }
-  return [sm[sm.length-1].y, y];
-}
-function onCurve(pts, d){
-  const c = new THREE.SplineCurve(pts.map(q => new THREE.Vector2(q[0], q[1])));
-  const sm = c.getPoints(120);
-  let best = sm[0];
-  sm.forEach(p => { if(Math.abs(p.x - d) < Math.abs(best.x - d)) best = p; });
-  return [d, best.y];
-}
-const shiftTo = (pts, target) => {
-  const dx = target[0] - pts[0][0], dy = target[1] - pts[0][1];
-  return pts.map(q => [q[0] + dx, q[1] + dy]);
-};
-/* an arch that starts and finishes exactly on the two legs */
-function archPts(LF, LR, y, rise){
-  const a = atHeight(LF, y), b = atHeight(LR, y);
-  const mid = (a[0] + b[0]) / 2;
-  return [a, [a[0] + (mid-a[0])*0.45, y + rise*0.72], [mid, y + rise], [b[0] - (b[0]-mid)*0.45, y + rise*0.72], b];
-}
-
-function armMembers(S){
-  const r = S.bar*0.86, f = S.flat, out = [];
-  const aY = 700, aD = postD(aY);
-  if(S.arm === "scroll"){
-    out.push(...tubeMember([[aD,aY],[430,690],[290,684],[214,692]], r, f));
-    out.push(...tubeMember(scrollCtrl(140, 700, 78, 20, 1.15, -0.25), r*0.7, f));
-    out.push(...tubeMember([[152,474],[146,566],[142,662]], r*0.8, f));
-  }else if(S.arm === "roll"){
-    out.push(...tubeMember([[aD,aY],[420,690],[262,684],[186,690]], r, f));
-    out.push(...tubeMember(scrollCtrl(150, 690, 46, 18, 0.8, -0.2), r*0.7, f));
-    out.push(...tubeMember([[160,474],[152,570],[150,664]], r*0.8, f));
-  }else if(S.arm === "straight"){
-    out.push(...tubeMember([[aD,aY],[400,694],[220,698],[158,700]], r, f));
-    out.push(...tubeMember([[158,700],[154,600],[156,474]], r*0.8, f));
-  }else if(S.arm === "double"){
-    out.push(...tubeMember([[aD,aY],[430,690],[290,684],[214,692]], r, f));
-    out.push(...tubeMember(scrollCtrl(140, 700, 78, 20, 1.15, -0.25), r*0.7, f));
-    out.push(...tubeMember([[152,474],[146,566],[142,662]], r*0.8, f));
-    out.push(...tubeMember(scrollCtrl(196, 520, 52, 14, 1.0, Math.PI*0.9), r*0.6, f));
-  }else if(S.arm === "loop"){
-    out.push(...tubeMember([[aD,aY],[420,690],[300,682],[236,690]], r, f));
-    out.push(...tubeMember(scrollCtrl(168, 692, 66, 60, 1, 0), r*0.62, f, true));
-    out.push(...tubeMember([[168,474],[160,572],[158,632]], r*0.8, f));
-  }
-  return out;
-}
-
-/* the triangle between arm and seat rail — where these benches put all their ornament */
-function underarmMembers(S){
-  const r = S.bar*0.6, f = S.flat, out = [];
-  const armY = 686;
-  const rail = d => seatY(Math.min(D1, Math.max(D0, d))) + SLAT_H/2 - 26;
-  if(S.underarm === "single"){
-    out.push(...tubeMember([[330,armY],[268,618],[240,556],[262,rail(262)]], r, f));
-  }
-  if(S.underarm === "cluster"){
-    out.push(...tubeMember([[430,armY],[374,624],[330,558],[306,rail(306)]], r, f));
-    out.push(...tubeMember([[312,armY],[266,618],[238,556],[232,rail(232)]], r, f));
-    out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0, -46, 0.88, Math.PI*0.08), [360, armY-8]), r*0.8, f));
-    out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0,  46, -0.88, Math.PI*0.92), [250, armY-8]), r*0.8, f));
-  }
-  return out;
-}
-
-function webMembers(S, LF, LR){
-  const r = S.bar*0.7, f = S.flat, out = [];
-  const arch = archPts(LF, LR, 250, 72);
-  const tieAt = y => [atHeight(LF, y), atHeight(LR, y)];
-
-  if(S.web === "arch"){
-    out.push(...tubeMember(arch, r, f));
-  }else if(S.web === "cross"){
-    const lo = tieAt(150), hi = tieAt(330);
-    out.push(...tubeMember([lo[0], hi[1]], r*0.8, f));
-    out.push(...tubeMember([hi[0], lo[1]], r*0.8, f));
-  }else if(S.web === "wave"){
-    const a = atHeight(LF, 246), b = atHeight(LR, 246);
-    const span = b[0] - a[0];
-    out.push(...tubeMember([a,
-      [a[0] + span*0.25, 246 + 76], [a[0] + span*0.5, 246 + 4],
-      [a[0] + span*0.75, 246 + 76], b], r*0.8, f));
-  }else if(S.web === "harp" || S.web === "spindles"){
-    const tie = tieAt(168);
-    out.push(...tubeMember(arch, r*0.85, f));
-    out.push(...tubeMember([tie[0], [(tie[0][0]+tie[1][0])/2, 168], tie[1]], r*0.7, f));
-    const n = S.web === "harp" ? 5 : 3;
-    const d0 = arch[0][0] + 46, d1 = arch[4][0] - 46;
-    for(let i=0;i<n;i++){
-      const d = d0 + (d1 - d0)*(i + 0.5)/n;
-      const top = onCurve(arch, d);
-      out.push(...tubeMember([[d, 168], [d, top[1]]], r*0.45, f));
-      if(S.web === "spindles") out.push(...bead(d, (168 + top[1])/2, r*0.75, f));
-    }
-  }else if(S.web === "scrollweb"){
-    out.push(...tubeMember(arch, r*0.8, f));
-    [0.3, 0.7].forEach((k, i) => {
-      const d = arch[0][0] + (arch[4][0] - arch[0][0])*k;
-      const anchor = onCurve(arch, d);
-      const sp = scrollCtrl(0, 0, 0, -64, i ? -1.05 : 1.05, i ? Math.PI : 0);
-      out.push(...tubeMember(shiftTo(sp, anchor), r*0.6, f));
-    });
-  }else if(S.web === "ringarch"){
-    out.push(...tubeMember(arch, r*0.85, f));
-    const peak = arch[2], R = 52;
-    const ring = scrollCtrl(peak[0], peak[1] - R, R, R, 1, Math.PI/2);
-    out.push(...tubeMember(ring, r*0.55, f, true));
-  }
-  return out;
-}
-
-function ornMembers(S, LF, LR){
-  const out = [];
-  const arch = archPts(LF, LR, 250, 72);
-  const peak = arch[2];
-  if(S.orn === "roundel")  out.push(...shapeMember(annulus(peak[0], peak[1] - 46, 46, 26), S.bar*1.3));
-  if(S.orn === "roundelS") out.push(...shapeMember(annulus(peak[0], peak[1] - 34, 34, 19), S.bar*1.4));
-  if(S.orn === "trefoil"){
-    out.push(...shapeMember(annulus(peak[0], peak[1] - 30, 30, 16), S.bar*1.6));
-    [-58, 58].forEach(o => out.push(...shapeMember(
-      annulus(peak[0] + o, onCurve(arch, peak[0] + o)[1] - 26, 24, 12), S.bar*1.5)));
-  }
-  if(S.orn === "bead") out.push(...bead(peak[0], peak[1], S.bar*1.5, S.flat));
-  return out;
-}
-
-let FOOT_D = [56, DEPTH - 36];
-// where the cross tie rod actually meets the side frame — sampled off the rear leg
-let TIE_POS = [330, 214];
-/* the reference bench: leg -> volute -> arm -> back post as one continuous cast run */
-function refMembers(S, LF, LR, hasBack, top){
-  const out = [], r = S.bar, f = S.flat;
-  const armY = 702;
-
-  // front leg carried on into the arm: up, a short turn, then a long near-level run back
-  const headF = LF[LF.length-1];
-  const armRun = [headF, [150, 552], [146, 624], [164, 676],
-                  [214, armY], [300, armY + 8], [400, armY + 10], [478, armY - 4], [510, armY - 40]];
-  out.push(...tubeMember(armRun, r*0.9, f));
-
-  // the volute: a flat spiral tucked under the front of the arm, centred over the front leg
-  out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0, -54, 1.05, Math.PI*0.1), [176, 660]), r*0.62, f));
-
-  // rear leg carried on up into the back post, finishing in a rounded head
-  if(hasBack){
-    const headR = LR[LR.length-1];
-    const postRun = [headR, [482, 540], [498, 640], [518, 748], [536, 828], [542, top + 14]];
-    out.push(...tubeMember(postRun, r*0.98, f));
-    out.push(...bead(542, top + 14, r*1.1, f));
-    // the short knuckle that props the arm against the post
-    out.push(...tubeMember([[510, armY - 40], [520, 640], [506, 586]], r*0.55, f));
-  }
-
-  // the thin arched brace low between the legs, with its central boss
-  const brace = archPts(LF, LR, 232, 46);
-  out.push(...tubeMember(brace, r*0.42, f));
-  out.push(...bead(brace[2][0], brace[2][1], r*0.8, f));
-  return out;
-}
-
-function sideMembers(){
-  const S = SIDES[cfg.side];
-  const hasBack = cfg.back !== "none";
-  const top = cfg.back === "low" ? 690 : BACK_TOP;
-  const out = [];
-
-  /* a hand-traced profile: every member comes from the studio export, nothing placed by eye */
-  if(S.style === "trace"){
-    const lift = p => p.map(q => [q[0], q[1] <= 2 ? GRD - 46 : q[1] + GRD*0.12]);
-    const LFt = lift(S.legF), LRt = lift(S.legR);
-    FOOT_D = [LFt[0][0], LRt[0][0]];
-    out.push(...tubeMember(LFt, S.bar, S.flat));
-    out.push(...tubeMember(LRt, S.bar, S.flat));
-    S.trace.forEach(m => {
-      if(!hasBack && m.pts[m.pts.length-1][1] > 520) return;   // drop the back run when there is no back
-      out.push(...tubeMember(lift(m.pts), m.r, S.flat));
-    });
-    (S.scrolls || []).forEach(sc => out.push(...tubeMember(
-      lift(scrollCtrl(sc.at[0], sc.at[1], sc.R, sc.R*0.12, sc.turns, Math.PI*0.1)), sc.r, S.flat)));
-    return out;
-  }
-
-  // seat rail — identical on every side. The groove is cut INTO this bar, so there is no
-  // separate wall or lip: the bar is deep enough to hide the plank ends from outside.
-  const rail = [];
-  for(let d=D0-16; d<=D1+16; d+=30)
-    rail.push([d, seatY(Math.min(D1,Math.max(D0,d))) + SLAT_H/2 - 4]);
-  out.push(...tubeMember(rail, 33, S.flat*1.05));
-
-  // legs, lifted to stand in the chosen foot
-  const lift = p => p.map(q => [q[0], q[1] === 0 ? GRD - 46 : q[1] + GRD*0.12]);
-  const LF = lift(S.legF), LR = lift(S.legR);
-  FOOT_D = [LF[0][0], LR[0][0]];
-  { const ty = LF[0][1] + 200; const a = atHeight(LR, ty); TIE_POS = [a[0], a[1]]; }
-  if(S.twin){
-    [-S.twin, S.twin].forEach(o => {
-      out.push(...tubeMember(LF.map(q => [q[0]+o*0.5, q[1]]), S.bar, S.flat));
-      out.push(...tubeMember(LR.map(q => [q[0]-o*0.5, q[1]]), S.bar, S.flat));
-    });
-  }else{
-    out.push(...tubeMember(LF, S.bar, S.flat));
-    out.push(...tubeMember(LR, S.bar*0.95, S.flat));
-  }
-
-  if(S.style === "ref"){
-    out.push(...refMembers(S, LF, LR, hasBack, top));
-    out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
-    return out;
-  }
-
-  // back post, following the curved back
-  if(hasBack){
-    const post = [];
-    for(let y=450; y<=top; y+=50) post.push([postD(y) - 16, y]);
-    post.push([postD(top) - 16, top]);
-    out.push(...tubeMember(post, 31, S.flat*1.05));
-    out.push(...shapeMember(annulus(postD(top)-2, top-6, S.bar*1.5, 0.01), S.bar*1.6));
-    out.push(...armMembers(S).filter(() => cfg.back === "high"));
-  }
-
-  if(S.bead){
-    const cf = atHeight(LF, 424), cr = atHeight(LR, 424);
-    out.push(...bead(cf[0], cf[1], S.bar*1.3, S.flat));
-    out.push(...bead(cr[0], cr[1], S.bar*1.3, S.flat));
-  }
-  out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
-  if(S.underarm && cfg.back === "high") out.push(...underarmMembers(S));
-
-  return out;
-}
-
-/* ---------- ten feet to choose between ---------- */
-/* each returns a list of parts: {g: geometry, p:[dx,dy,dz], r:[rx,ry,rz]}
-   positions are relative to the point where the leg meets the ground.
-   ORIENT = [0, Math.PI/2, 0] puts an extruded 2D profile in the depth/height plane. */
-const ORIENT = [0, Math.PI/2, 0];
-const lathe = (pts, seg, sz) => {
-  const g = new THREE.LatheGeometry(pts.map(q => new THREE.Vector2(q[0], q[1])), seg || 40);
-  if(sz) g.scale(1, 1, sz);
-  g.computeVertexNormals();
+  outer.forEach((p, i) => i === 0 ? s.moveTo(p[0], p[1]) : s.lineTo(p[0], p[1]));
+  s.closePath();
+  SEAT_SLOTS.forEach(slot => {
+    const h = new THREE.Path();
+    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], p[1]) : h.lineTo(p[0], p[1]));
+    h.closePath();
+    s.holes.push(h);
+  });
+  if(variant === "high") BACK_SLOTS.forEach(slot => {
+    const h = new THREE.Path();
+    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], p[1]) : h.lineTo(p[0], p[1]));
+    h.closePath();
+    s.holes.push(h);
+  });
+  const g = new THREE.ExtrudeGeometry(s, {depth:FRAME_DEPTH, bevelEnabled:false, curveSegments:1});
+  g.translate(0, 0, -FRAME_DEPTH/2);
+  g.rotateY(Math.PI/2);         // local extrude axis (z) -> world X, the bench's length
   return g;
-};
+}
 
-const FEET = {
-  taper: {
-    label: "Taper", H:44, size:"96 × 62 pad, 26 high",
-    note: "Barely a foot — the leg tapers and meets the ground on a small oval pad",
-    parts(){
-      const pts = [[9,0],[9,44],[26,44]];
-      for(let i=1;i<=10;i++){ const t=i/10; pts.push([26 + 22*Math.pow(t,1.6), 44*(1-t)]); }
-      pts.push([48, 0], [9, 0]);
-      return [{g: lathe(pts, 36, 0.66)}];
-    }
-  },
-  skid: {
-    label: "Skid", H:44, size:"280 × 98 runner, 40 section, 44 wide",
-    note: "The leg turns and runs along the ground as a slim sled runner with rounded, lifted tips",
-    parts(){
-      return [{g: plate(stroke([[-120,78],[-84,38],[0,24],[84,38],[120,78]], 40, 34, true), 44, 6), r:ORIENT}];
-    }
-  },
-
-  /* --- the five below keep the same rule as taper and skid: the foot is the leg
-     arriving at the ground, never an ornament bolted onto the bottom of it. --- */
-
-  flare: {
-    label: "Flare", H:120, size: "Ø88 at the ground, 120 high",
-    note: "No separate foot at all — the leg section widens into the ground over the last 120 mm",
-    parts(){
-      const pts = [[0,0],[44,0]];
-      for(let i=1;i<=14;i++){ const t=i/14; pts.push([44 - 31*Math.pow(t,0.55), 120*t]); }
-      return [{g: lathe(pts, 40, 0.74)}];
-    }
-  },
-
-  blade: {
-    label: "Blade", H:56, size: "188 across × 42, 56 high",
-    note: "The leg flattens across the bench into a thin blade standing on its edge",
-    parts(){
-      const pts = [[0,0],[94,0]];
-      for(let i=1;i<=12;i++){ const t=i/12; pts.push([94 - 72*Math.pow(t,0.8), 56*t]); }
-      return [{g: lathe(pts, 40, 0.23)}];
-    }
-  },
-
-  runner: {
-    label: "Runner", H:52, size: "190 fore-aft runner, 46 wide",
-    note: "A short runner under each leg, flat on the ground, tips only just eased",
-    parts(){
-      return [{g: plate(stroke([[-95,34],[-58,23],[0,20],[58,23],[95,34]], 36, 30, true), 46, 5), r:ORIENT}];
-    }
-  },
-
-  cuff: {
-    label: "Cuff", H:76, size: "Ø104 collar, 76 high",
-    note: "One low cast collar where the leg reaches the ground, and nothing else",
-    parts(){
-      const pts = [[0,0],[38,0],[46,9],[52,24],[49,41],[30,50],[22,60],[18,76]];
-      return [{g: lathe(pts, 40, 0.8)}];
-    }
-  },
-
-  wedge: {
-    label: "Wedge", H:130, size: "200 ground line fore-aft, 40 wide",
-    note: "The leg splays fore and aft into a shallow wedge with a long flat ground line",
-    parts(){
-      const sh = new THREE.Shape();
-      sh.moveTo(-100, 0);
-      sh.quadraticCurveTo(-50, 24, -20, 130);
-      sh.lineTo(20, 130);
-      sh.quadraticCurveTo(50, 24, 100, 0);
-      sh.closePath();
-      return [{g: plate(sh, 40, 6), r:ORIENT}];
-    }
+/* a pocket's own corners give the plank's exact centre and the angle its
+   long (25-unit) edge sits at — the same routine for seat and back pockets */
+function slotPlacement(slotCAD){
+  const w = slotCAD.map(toWorld);
+  let cy = 0, cz = 0;
+  w.forEach(p => { cy += p.y; cz += p.z; });
+  cy /= w.length; cz /= w.length;
+  let best = null;
+  for(let i=0;i<w.length;i++){
+    const a = w[i], b = w[(i+1)%w.length];
+    const len = Math.hypot(b.y-a.y, b.z-a.z);
+    if(!best || len > best.len) best = {len, dy:b.y-a.y, dz:b.z-a.z};
   }
-};
-
-function footParts(){ return FEET[cfg.foot].parts(); }
-
-/* the groove: drawn as a translucent volume so the slide reads when the interface is on */
-function channelParts(){
-  const top = cfg.back === "low" ? 690 : BACK_TOP;
-  const out = [];
-  const seatLine = [];
-  for(let d=D0-16; d<=D1+16; d+=24) seatLine.push([d, seatY(Math.min(D1,Math.max(D0,d))) + SLAT_H/2]);
-  out.push(plate(stroke(seatLine, TEN_H + 6, 30), TEN_L + 6));
-  if(cfg.back !== "none"){
-    const backLine = [];
-    for(let y=520; y<=top-20; y+=30) backLine.push([postD(y) - 22, y]);
-    out.push(plate(stroke(backLine, TEN_H + 6, 24), TEN_L + 6));
-  }
-  return out;
+  const theta = Math.atan2(-best.dy, best.dz);
+  return {y:cy, z:cz, theta};
 }
 
 /* ---------- build ---------- */
 let parts = [];
-let seatParts = [], seatCubeParts = [], backParts = [], backCubeParts = [];
 function clear(){
   while(root.children.length) root.remove(root.children[0]);
   parts.forEach(m => m.geometry.dispose());
   parts = [];
 }
-function add(geom, mat, pos, rot, layer){
+function add(geom, mat, pos, rot, layer, iface){
   const m = new THREE.Mesh(geom, mat);
   m.castShadow = m.receiveShadow = true;
   m.position.set(pos[0], pos[1], pos[2]);
-  if(rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+  if(rot) m.rotation.x = rot;
   m.userData.layer = layer; m.userData.baseY = pos[1];
+  if(iface) m.userData.iface = true;
   parts.push(m); root.add(m);
+  return m;
+}
+
+function plankMesh(slotCAD, mat, layer){
+  const p = slotPlacement(slotCAD);
+  const geo = new THREE.BoxGeometry(BENCH_LEN, PLANK_T, PLANK_W);
+  const m = add(geo, mat, [0, p.y, p.z], p.theta, layer);
+  return m;
+}
+
+/* the logo shield: a small raised plaque on top of the centre seat plank */
+function shieldMesh(){
+  const w = 11, h = 7, r = 1.4, t = 1.1;
+  const s = new THREE.Shape();
+  s.moveTo(-w/2+r, -h/2);
+  s.lineTo(w/2-r, -h/2); s.quadraticCurveTo(w/2, -h/2, w/2, -h/2+r);
+  s.lineTo(w/2, h/2-r);  s.quadraticCurveTo(w/2, h/2, w/2-r, h/2);
+  s.lineTo(-w/2+r, h/2); s.quadraticCurveTo(-w/2, h/2, -w/2, h/2-r);
+  s.lineTo(-w/2, -h/2+r);s.quadraticCurveTo(-w/2, -h/2, -w/2+r, -h/2);
+  const g = new THREE.ExtrudeGeometry(s, {depth:t, bevelEnabled:true, bevelThickness:.25, bevelSize:.25, bevelSegments:3, curveSegments:8});
+  g.rotateX(-Math.PI/2);
+  const centre = slotPlacement(SEAT_SLOTS[1]);
+  return add(g, matShield, [0, centre.y + PLANK_T/2 + 0.02, centre.z], 0, 2.5);
+}
+
+/* the laser-cut mark: a dark decal on the top plank's face, no extra part */
+function laserTexture(){
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,256,256);
+  ctx.strokeStyle = "rgba(40,24,12,0.9)";
+  ctx.fillStyle = "rgba(40,24,12,0.9)";
+  ctx.lineWidth = 10;
+  ctx.beginPath(); ctx.arc(128,128,78,0,Math.PI*2); ctx.stroke();
+  ctx.font = "700 108px Georgia, serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("K", 128, 140);
+  return new THREE.CanvasTexture(c);
+}
+function laserMesh(){
+  const geo = new THREE.PlaneGeometry(9, 9);
+  const mat = new THREE.MeshStandardMaterial({map: laserTexture(), transparent:true, roughness:.9, metalness:0, depthWrite:false});
+  geo.rotateX(-Math.PI/2);
+  const centre = slotPlacement(SEAT_SLOTS[1]);
+  const m = add(geo, mat, [0, centre.y + PLANK_T/2 + 0.03, centre.z], 0, 2.5);
+  m.castShadow = false;
   return m;
 }
 
 function build(){
   clear();
-  GRD = FEET[cfg.foot].H;
-  const L = cfg.length;
-  const hasBack = cfg.back !== "none";
-  const topBack = cfg.back === "low" ? 690 : BACK_TOP;
+  const hasBack = cfg.back === "high";
+  /* ground reference comes from the leg/seat points shared by both variants (PROFILE.none),
+     not from "high"'s own lowest point — that lowest point is the tip of the backrest brace,
+     a loop that curves back up to close near the seat rail rather than a separate ground
+     contact, so it is not a floor reference. See the open question flagged to the user. */
+  const ground = -Math.min(...PROFILE.none.map(p => p[1]));
 
-  // the two sides — the only structure
-  const members = sideMembers();
-  [[0, 1], [L, -1]].forEach(([x, sgn]) => members.forEach(m => {
-    const mesh = add(m.g.clone(), matMetal, [x + (m.dx || 0)*sgn, 0, 0],
-                     m.orient ? [0, Math.PI/2, 0] : null, 1);
+  const frameGeo = frameShape(cfg.back);
+  [-1, 1].forEach(sgn => {
+    const mesh = add(frameGeo.clone(), matMetal, [sgn*(BENCH_LEN/2 - FRAME_DEPTH/2), 0, 0], null, 1);
     mesh.userData.side = true;
-  }));
-
-  // the feet, directly under the two legs of each side
-  // the groove, one per side, sitting just inside the inner face
-  channelParts().forEach(g => [[0,1],[L,-1]].forEach(([x,sgn]) => {
-    const m = add(g.clone(), matChannel, [x + (PLATE/2 - 16)*sgn, 0, 0], [0, Math.PI/2, 0], 1);
-    m.userData.iface = true;
-    m.castShadow = false;
-  }));
-
-  // tie rod: the thin bar that ties the two sides together low down
-  if(SIDES[cfg.side].tie){
-    const [tD, tY] = TIE_POS;
-    const rod = new THREE.CylinderGeometry(11, 11, L + PLATE*0.6, 16);
-    rod.rotateZ(Math.PI/2);
-    add(rod, matMetal, [L/2, tY, -tD], null, 1);
-    const collar = new THREE.SphereGeometry(21, 18, 12);
-    collar.scale(1.5, 1, 1);
-    add(collar, matMetal, [L/2, tY, -tD], null, 1);
-  }
-
-  const fparts = footParts();
-  const feetD = FEET[cfg.foot].perSide ? [0] : FOOT_D;
-  [0, L].forEach(x => feetD.forEach(d => fparts.forEach(pt =>
-    add(pt.g.clone(), matMetal,
-        [x + (pt.p ? pt.p[0] : 0), (pt.p ? pt.p[1] : 0), -d + (pt.p ? pt.p[2] : 0)],
-        pt.r || null, 0))));
-
-  // seat planks: full 60 x 35 section between the sides, 40 x 24 tenon into the channel
-  const inner = L - PLATE;            // clear distance between the inner faces
-  const tenX = [PLATE/2 - TEN_L/2, L - PLATE/2 + TEN_L/2];
-  const LY = LAYOUTS[cfg.layout];
-  SLAT_W = LY.sw; PITCH = LY.spitch; TEN_W = Math.min(LY.sw - 20, 120);
-  const BW = LY.bw, BTEN = Math.min(LY.bw - 20, 260);
-  seatParts = []; seatCubeParts = []; backParts = []; backCubeParts = [];
-  const seatStations = curveStations("seat", LY.srows, LY.spitch);
-  const nSeat = seatStations.length;
-  seatStations.forEach((st, i) => {
-    if(cfg.tiltSeat[i] === undefined) cfg.tiltSeat[i] = (cfg.layout === "boards" ? DROOP_BOARDS : DROOP)[i] || 0;
-    const t = st.t + cfg.tiltSeat[i];
-    const y = st.y + (SLAT_H/2)*Math.cos(t);
-    const z = -st.d + (SLAT_H/2)*Math.sin(t);
-    const group = {st, meshes:[]};
-    group.meshes.push(add(new THREE.BoxGeometry(inner - 2, SLAT_H, SLAT_W), matWood, [L/2, y, z], [t,0,0], 2));
-    tenX.forEach(tx => {
-      const m = add(new THREE.BoxGeometry(TEN_L, TEN_H, TEN_W), matWood, [tx, y, z], [t,0,0], 2);
-      m.userData.iface = true;
-      group.meshes.push(m);
-    });
-    seatParts.push(group);
   });
 
-  // spacer cubes, one midway along the curve between neighbouring planks
-  for(let i=1; i<seatStations.length; i++){
-    const a = seatStations[i-1], b = seatStations[i];
-    const t = (a.t + cfg.tiltSeat[i-1] + b.t + cfg.tiltSeat[i])/2;
-    const y = (a.y + b.y)/2 + (SLAT_H/2)*Math.cos(t);
-    const z = -(a.d + b.d)/2 + (SLAT_H/2)*Math.sin(t);
-    const group = {a, b, meshes:[]};
-    tenX.forEach(tx => {
-      const m = add(new THREE.BoxGeometry(TEN_L, TEN_H, CUBE), matMetal, [tx, y, z], [t,0,0], 2);
-      m.userData.iface = true;
-      group.meshes.push(m);
-    });
-    seatCubeParts.push(group);
-  }
+  SEAT_SLOTS.forEach(slot => plankMesh(slot, matWood, 2));
+  if(hasBack) BACK_SLOTS.forEach(slot => plankMesh(slot, matWood, 3));
 
-  // back planks: same rule, stations measured along the curved back
-  const rows = cfg.back === "none" ? 0
-             : cfg.back === "low" ? Math.max(1, Math.round(LY.brows/2)) : LY.brows;
-  const backStations = rows ? curveStations("back", rows, LY.bpitch) : [];
-  const nBack = backStations.length;
-  backStations.forEach((st, i) => {
-    if(cfg.tiltBack[i] === undefined) cfg.tiltBack[i] = 0;
-    const tilt = -st.t + cfg.tiltBack[i];     // face turns back with the curve, not forward
-    const z = -st.d + 22*Math.cos(tilt);
-    const y = st.y - 22*Math.sin(tilt);
-    const group = {st, meshes:[]};
-    group.meshes.push(add(new THREE.BoxGeometry(inner - 2, BW, SLAT_H), matWood, [L/2, y, z], [tilt,0,0], 3));
-    tenX.forEach(tx => {
-      const m = add(new THREE.BoxGeometry(TEN_L, BTEN, TEN_H), matWood, [tx, y, z], [tilt,0,0], 3);
-      m.userData.iface = true;
-      group.meshes.push(m);
-    });
-    backParts.push(group);
-  });
-  for(let i=1; i<backStations.length; i++){
-    const a = backStations[i-1], b = backStations[i];
-    const t = (-a.t + cfg.tiltBack[i-1] + -b.t + cfg.tiltBack[i])/2;
-    const z = -(a.d + b.d)/2 + 22*Math.cos(t);
-    const y = (a.y + b.y)/2 - 22*Math.sin(t);
-    const group = {a, b, meshes:[]};
-    tenX.forEach(tx => {
-      const m = add(new THREE.BoxGeometry(TEN_L, CUBE, TEN_H), matMetal, [tx, y, z], [t,0,0], 3);
-      m.userData.iface = true;
-      group.meshes.push(m);
-    });
-    backCubeParts.push(group);
-  }
+  if(cfg.decoration === "shield") shieldMesh();
+  else laserMesh();
 
+  root.position.set(0, cfg.lift*STAGE + ground, 0);
   buildEnv();
   applyLight();
-  root.position.set(-L/2, cfg.lift, DEPTH/2);
   applyExplode();
   applyInterface();
-  buildTiltUI();
-  if(!framed){ fit(L); framed = true; }
-  bom(nSeat, nBack, L);
-  document.getElementById("badge").textContent = `${L === 600 ? "Chair" : "Bench"} · ${L} mm · ${cfg.back === "none" ? "backless" : cfg.back === "low" ? "low back" : "high back"}`;
+  if(!framed){ fit(); framed = true; }
+  bom(hasBack);
+  document.getElementById("badge").textContent =
+    `Demonstrator · ${hasBack ? "with backrest" : "backless"} · ${cfg.decoration === "shield" ? "logo shield" : "laser-cut"}`;
 }
 
-/* the tenons and cubes live inside the side; show them only on request,
-   and always while the bench is exploded */
+/* the frame goes translucent on request, so the plank pockets read through it */
 function applyInterface(){
   const on = cfg.iface || cfg.explode > 0;
-  parts.forEach(m => {
-    if(m.userData.iface) m.visible = on;
-    if(m.userData.side) m.material = on ? matGhost : matMetal;
-  });
+  parts.forEach(m => { if(m.userData.side) m.material = on ? matGhost : matMetal; });
   const b = document.getElementById("b-iface");
   if(b) b.setAttribute("aria-pressed", String(on));
 }
 
 function applyExplode(){
-  const k = cfg.explode/100 * 620;
-  parts.forEach(m => { m.position.y = m.userData.baseY + k*m.userData.layer; });
+  const k = cfg.explode/100 * 90 * STAGE;
+  parts.forEach(m => { m.position.y = m.userData.baseY + k*(m.userData.layer - 1); });
 }
 
-/* ---------- per-plank angles ---------- */
-function place3(m, x, y, z, t){
-  m.position.set(x, y, z);
-  m.rotation.x = t;
-  m.userData.baseY = y;
-}
-function refreshPlanks(){
-  const L = cfg.length;
-  seatParts.forEach((g, i) => {
-    const t = g.st.t + cfg.tiltSeat[i];
-    const y = g.st.y + (SLAT_H/2)*Math.cos(t);
-    const z = -g.st.d + (SLAT_H/2)*Math.sin(t);
-    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
-  });
-  seatCubeParts.forEach((g, k) => {
-    const t = (g.a.t + cfg.tiltSeat[k] + g.b.t + cfg.tiltSeat[k+1])/2;
-    const y = (g.a.y + g.b.y)/2 + (SLAT_H/2)*Math.cos(t);
-    const z = -(g.a.d + g.b.d)/2 + (SLAT_H/2)*Math.sin(t);
-    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
-  });
-  backParts.forEach((g, i) => {
-    const t = -g.st.t + cfg.tiltBack[i];
-    const y = g.st.y - 22*Math.sin(t);
-    const z = -g.st.d + 22*Math.cos(t);
-    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
-  });
-  backCubeParts.forEach((g, k) => {
-    const t = (-g.a.t + cfg.tiltBack[k] + -g.b.t + cfg.tiltBack[k+1])/2;
-    const y = (g.a.y + g.b.y)/2 - 22*Math.sin(t);
-    const z = -(g.a.d + g.b.d)/2 + 22*Math.cos(t);
-    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
-  });
-  applyExplode();
+/* ---------- bill of material ---------- */
+function bom(hasBack){
+  const rows = [
+    ["Frame", "Laser-cut flat bar, press-brake bent", `${FRAME_DEPTH} wide bar, ${PROFILE[cfg.back].length}-point bend`, 2],
+    ["Seat plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${BENCH_LEN}`, 3],
+    ["Back plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${BENCH_LEN}`, hasBack ? 3 : 0],
+    ["Logo shield", "Cast or machined plaque, fixed on top", "11 × 7 × 1.1", cfg.decoration === "shield" ? 1 : 0],
+  ].filter(r => r[3] > 0);
+  document.getElementById("bom").innerHTML = rows.map(r =>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join("");
 }
 
-const DROOP = [-0.20, -0.07, 0, -0.11, -0.25];
-/* wide boards sit flat, the way the reference bench does — no per-plank droop */
-const DROOP_BOARDS = [0, 0, 0, 0, 0];   // default droop, front to rear, radians
-const DEG = 180/Math.PI;
-function buildTiltUI(){
-  const host = document.getElementById("tilt-list");
-  if(!host) return;
-  const row = (label, arr, i, base) => {
-    const id = `tl-${label}`;
-    return `<div class="tiltrow">
-      <span>${label}</span>
-      <input type="range" id="${id}" min="-30" max="30" step="1" value="${Math.round(arr[i]*DEG)}"
-             aria-label="${label} angle">
-      <output id="${id}-out">${(base + arr[i]*DEG).toFixed(0)}°</output>
-    </div>`;
+/* ---------- swatches ---------- */
+function swatches(host, list, current, onPick){
+  host.innerHTML = list.map((c,i) =>
+    `<button type="button" title="${c[0]}" aria-label="${c[0]}" aria-pressed="${i===current}"
+      style="background:#${c[1].toString(16).padStart(6,'0')}"></button>`).join("");
+  host.querySelectorAll("button").forEach((b,i) => b.addEventListener("click", () => {
+    onPick(i);
+    host.querySelectorAll("button").forEach((x,j) => x.setAttribute("aria-pressed", String(i===j)));
+  }));
+}
+swatches(document.getElementById("sw-metal"), METALS, cfg.metal, i => {
+  cfg.metal = i; matMetal.color.setHex(METALS[i][1]); matGhost.color.setHex(METALS[i][1]);
+});
+swatches(document.getElementById("sw-wood"), WOODS, cfg.wood, i => {
+  cfg.wood = i; matWood.color.setHex(WOODS[i][1]);
+});
+
+/* ---------- controls ---------- */
+document.getElementById("c-back").addEventListener("change", e => { cfg.back = e.target.value; framed = false; build(); });
+document.getElementById("c-decoration").addEventListener("change", e => { cfg.decoration = e.target.value; build(); });
+document.getElementById("c-env").addEventListener("change", e => { cfg.env = e.target.value; buildEnv(); applyLight(); });
+document.getElementById("c-light").addEventListener("change", e => { cfg.light = e.target.value; buildEnv(); applyLight(); });
+
+/* ---------- ▲/▼ steppers on every picker ---------- */
+function addArrows(id){
+  const sel = document.getElementById(id);
+  if(!sel || sel.parentElement.classList.contains("pickrow")) return;
+  const row = document.createElement("div");
+  row.className = "pickrow";
+  sel.parentNode.insertBefore(row, sel);
+  const prev = document.createElement("button"), next = document.createElement("button");
+  prev.type = next.type = "button";
+  prev.textContent = "▲"; next.textContent = "▼";
+  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
+  row.append(prev, sel, next);
+  const out = document.createElement("output");
+  out.className = "pickcount";
+  row.parentNode.insertBefore(out, row.nextSibling);
+  const read = () => { out.textContent = `${sel.selectedIndex+1} / ${sel.options.length} · ${sel.options[sel.selectedIndex].textContent}`; };
+  const step = d => {
+    sel.selectedIndex = (sel.selectedIndex + d + sel.options.length) % sel.options.length;
+    sel.dispatchEvent(new Event("change", {bubbles:true}));
+    read();
   };
-  host.innerHTML =
-    seatParts.map((g,i) => row(`Seat ${i+1}`, cfg.tiltSeat, i, g.st.t*DEG)).join("") +
-    backParts.map((g,i) => row(`Back ${i+1}`, cfg.tiltBack, i, -g.st.t*DEG)).join("");
-
-  seatParts.forEach((g,i) => {
-    const el = document.getElementById(`tl-Seat ${i+1}`);
-    el.addEventListener("input", e => {
-      cfg.tiltSeat[i] = (+e.target.value)/DEG;
-      document.getElementById(`tl-Seat ${i+1}-out`).textContent =
-        (g.st.t*DEG + (+e.target.value)).toFixed(0) + "°";
-      refreshPlanks();
-    });
-  });
-  backParts.forEach((g,i) => {
-    const el = document.getElementById(`tl-Back ${i+1}`);
-    el.addEventListener("input", e => {
-      cfg.tiltBack[i] = (+e.target.value)/DEG;
-      document.getElementById(`tl-Back ${i+1}-out`).textContent =
-        (-g.st.t*DEG + (+e.target.value)).toFixed(0) + "°";
-      refreshPlanks();
-    });
-  });
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  sel.addEventListener("change", read);
+  read();
 }
+["c-back", "c-decoration", "c-env", "c-light"].forEach(addArrows);
+
+/* the two colour rows get the same arrows, stepping through the swatches */
+function addSwatchArrows(hostId){
+  const host = document.getElementById(hostId);
+  if(!host || host.parentElement.classList.contains("pickrow")) return;
+  const row = document.createElement("div");
+  row.className = "pickrow";
+  host.parentNode.insertBefore(row, host);
+  const prev = document.createElement("button"), next = document.createElement("button");
+  prev.type = next.type = "button";
+  prev.textContent = "▲"; next.textContent = "▼";
+  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
+  row.append(prev, host, next);
+  const out = document.createElement("output");
+  out.className = "pickcount";
+  row.parentNode.insertBefore(out, row.nextSibling);
+  const btns = () => Array.from(host.querySelectorAll("button"));
+  const read = () => {
+    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
+    out.textContent = `${i+1} / ${b.length} · ${b[i].title}`;
+  };
+  const step = d => {
+    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
+    b[(i + d + b.length) % b.length].click();
+    read();
+  };
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  host.addEventListener("click", read);
+  read();
+}
+["sw-metal", "sw-wood"].forEach(addSwatchArrows);
+document.getElementById("c-lift").addEventListener("input", e => {
+  cfg.lift = +e.target.value;
+  build();
+});
+document.getElementById("c-explode").addEventListener("input", e => { cfg.explode = +e.target.value; applyExplode(); applyInterface(); });
+document.getElementById("b-iface").addEventListener("click", () => {
+  cfg.iface = !cfg.iface;
+  applyInterface();
+});
 
 /* ---------- camera ---------- */
 let framed = false;
-const orbit = {theta:-0.62, phi:1.34, dist:7600, target:new THREE.Vector3(0,1150,0)};
-function fit(L){ orbit.dist = cfg.env === "allee" ? Math.max(6600, L*1.8 + 4400) : Math.max(2800, L*1.6 + 2200); place(); }
+const orbit = {theta:-0.62, phi:1.34, dist:7600*STAGE, target:new THREE.Vector3(0,1150*STAGE,0)};
+function fit(){ orbit.dist = cfg.env === "allee" ? Math.max(6600*STAGE, BENCH_LEN*1.8 + 4400*STAGE) : Math.max(2800*STAGE, BENCH_LEN*1.6 + 2200*STAGE); place(); }
 function place(){
   const {theta, phi, dist, target} = orbit;
   const below = phi > 1.60;
@@ -1676,7 +1118,7 @@ function pan(dx, dy){
   place();
 }
 function zoom(f){
-  orbit.dist = Math.min(20000, Math.max(500, orbit.dist * f));
+  orbit.dist = Math.min(20000*STAGE, Math.max(10*STAGE, orbit.dist * f));
   place();
 }
 
@@ -1739,7 +1181,7 @@ el.addEventListener("wheel", e => {
 el.tabIndex = 0;
 el.setAttribute("aria-label", "3D view of the bench. Arrow keys pan, plus and minus zoom, 0 resets the view.");
 el.addEventListener("keydown", e => {
-  const step = 60;
+  const step = 60*STAGE;
   if(e.key === "ArrowLeft")  pan(step, 0);
   else if(e.key === "ArrowRight") pan(-step, 0);
   else if(e.key === "ArrowUp")    pan(0, step);
@@ -1754,178 +1196,25 @@ el.addEventListener("keydown", e => {
 function resetView(){
   orbit.theta = -0.62;
   orbit.phi = 1.34;
-  orbit.target.set(0, (cfg.env === "allee" ? 1150 : 420) + cfg.lift*0.6 + cfg.explode*3.4, 0);
-  fit(cfg.length);
+  orbit.target.set(0, ((cfg.env === "allee" ? 1150 : 420) + cfg.lift*0.6)*STAGE + cfg.explode*0.9*STAGE, 0);
+  fit();
 }
-
-/* ---------- bill of material ---------- */
-function bom(nSeat, nBack, L){
-  const rows = [
-    [`Side — ${SIDES[cfg.side].label}`,
-      `Cast · ~16 kg · ${FEET[cfg.foot].label.toLowerCase()} foot cast in`,
-      `${DEPTH} × ${cfg.back==="none"?520:BACK_TOP} × ${PLATE}`, 2],
-    ["Seat plank", "Timber, one piece", `${SLAT_W} × ${SLAT_H} × ${L - PLATE + 2*TEN_L}, tenon ${TEN_W} × ${TEN_H}`, nSeat],
-    ["Back board", "Timber, one piece", `${LAYOUTS[cfg.layout].bw} × ${SLAT_H} × ${L - PLATE + 2*TEN_L}, tenon ${Math.min(LAYOUTS[cfg.layout].bw-20,260)} × ${TEN_H}`, nBack],
-    ["Spacer cube", "Cast or cut bar", `${CUBE} × ${TEN_H} × ${TEN_L} — true cube`, 2*Math.max(0, nSeat - 1) + 2*Math.max(0, nBack - 1)],
-    ["Seat rail with groove", "Cast, integral with the side", `Ø66 × ${Math.round(66*0.65)} bar, 38 square groove`, 2],
-    ["Channel end stop", "Cast, integral with the side", "closed end of the groove", 2],
-  ].filter(r => r[3] > 0);
-  document.getElementById("bom").innerHTML = rows.map(r =>
-    `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join("");
-}
-
-/* ---------- swatches ---------- */
-function swatches(host, list, current, onPick){
-  host.innerHTML = list.map((c,i) =>
-    `<button type="button" title="${c[0]}" aria-label="${c[0]}" aria-pressed="${i===current}"
-      style="background:#${c[1].toString(16).padStart(6,'0')}"></button>`).join("");
-  host.querySelectorAll("button").forEach((b,i) => b.addEventListener("click", () => {
-    onPick(i);
-    host.querySelectorAll("button").forEach((x,j) => x.setAttribute("aria-pressed", String(i===j)));
-  }));
-}
-swatches(document.getElementById("sw-metal"), METALS, cfg.metal, i => {
-  cfg.metal = i; matMetal.color.setHex(METALS[i][1]); matGhost.color.setHex(METALS[i][1]);
-});
-swatches(document.getElementById("sw-wood"), WOODS, cfg.wood, i => {
-  cfg.wood = i; matWood.color.setHex(WOODS[i][1]);
-});
-
-/* ---------- controls ---------- */
-document.getElementById("c-len").addEventListener("change", e => { cfg.length = +e.target.value; build(); });
-document.getElementById("c-back").addEventListener("change", e => { cfg.back = e.target.value; build(); });
-const sideSel = document.getElementById("c-side");
-sideSel.innerHTML = Object.entries(SIDES).map(([k,v]) =>
-  `<option value="${k}"${k===cfg.side?" selected":""}>${v.label}</option>`).join("");
-/* the foot belongs to the side casting - it is not a part anyone picks */
-const SIDE_FOOT = {
-  referanse:"taper", tracet:"taper", frogner:"taper", kvadratur:"runner",
-  sorlandet:"taper", alesund:"flare", sunnmore:"taper", borgund:"blade",
-  giske:"cuff", aksla:"taper", valderoy:"runner", ellingsoy:"cuff", godoy:"wedge"
-};
-function setSide(key){
-  cfg.side = key;
-  cfg.foot = SIDE_FOOT[key] || "taper";
-  sideSel.value = key;
-  document.getElementById("foot-note").textContent =
-    `Foot, cast with this side — ${FEET[cfg.foot].label.toLowerCase()}. ${FEET[cfg.foot].note}.`;
-  const keys = Object.keys(SIDES);
-  document.getElementById("side-count").textContent =
-    `${keys.indexOf(key)+1} / ${keys.length} · ${SIDES[key].label}`;
-  build();
-}
-sideSel.addEventListener("change", e => setSide(e.target.value));
-function stepSide(delta){
-  const keys = Object.keys(SIDES);
-  const i = (keys.indexOf(cfg.side) + delta + keys.length) % keys.length;
-  setSide(keys[i]);
-}
-document.getElementById("b-side-prev").addEventListener("click", () => stepSide(-1));
-document.getElementById("b-side-next").addEventListener("click", () => stepSide(1));
-setSide(cfg.side);
-document.getElementById("c-env").addEventListener("change", e => { cfg.env = e.target.value; buildEnv(); applyLight(); });
-document.getElementById("c-light").addEventListener("change", e => { cfg.light = e.target.value; buildEnv(); applyLight(); });
-
-const layoutSel = document.getElementById("c-layout");
-layoutSel.innerHTML = Object.entries(LAYOUTS).map(([k,v]) =>
-  `<option value="${k}"${k===cfg.layout?" selected":""}>${v.label}</option>`).join("");
-layoutSel.addEventListener("change", e => {
-  cfg.layout = e.target.value;
-  cfg.tiltSeat = []; cfg.tiltBack = [];   // plank count changed, so the per-plank angles reset
-  build();
-});
-
-/* ---------- ▲/▼ steppers on every picker ---------- */
-function addArrows(id){
-  const sel = document.getElementById(id);
-  if(!sel || sel.parentElement.classList.contains("pickrow")) return;
-  const row = document.createElement("div");
-  row.className = "pickrow";
-  sel.parentNode.insertBefore(row, sel);
-  const prev = document.createElement("button"), next = document.createElement("button");
-  prev.type = next.type = "button";
-  prev.textContent = "\u25B2"; next.textContent = "\u25BC";
-  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
-  row.append(prev, sel, next);
-  const out = document.createElement("output");
-  out.className = "pickcount";
-  row.parentNode.insertBefore(out, row.nextSibling);
-  const read = () => { out.textContent = `${sel.selectedIndex+1} / ${sel.options.length} \u00b7 ${sel.options[sel.selectedIndex].textContent}`; };
-  const step = d => {
-    sel.selectedIndex = (sel.selectedIndex + d + sel.options.length) % sel.options.length;
-    sel.dispatchEvent(new Event("change", {bubbles:true}));
-    read();
-  };
-  prev.addEventListener("click", () => step(-1));
-  next.addEventListener("click", () => step(1));
-  sel.addEventListener("change", read);
-  read();
-}
-["c-len", "c-layout", "c-back", "c-env", "c-light"].forEach(addArrows);
-
-/* the two colour rows get the same arrows, stepping through the swatches */
-function addSwatchArrows(hostId){
-  const host = document.getElementById(hostId);
-  if(!host || host.parentElement.classList.contains("pickrow")) return;
-  const row = document.createElement("div");
-  row.className = "pickrow";
-  host.parentNode.insertBefore(row, host);
-  const prev = document.createElement("button"), next = document.createElement("button");
-  prev.type = next.type = "button";
-  prev.textContent = "\u25B2"; next.textContent = "\u25BC";
-  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
-  row.append(prev, host, next);
-  const out = document.createElement("output");
-  out.className = "pickcount";
-  row.parentNode.insertBefore(out, row.nextSibling);
-  const btns = () => Array.from(host.querySelectorAll("button"));
-  const read = () => {
-    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
-    out.textContent = `${i+1} / ${b.length} \u00b7 ${b[i].title}`;
-  };
-  const step = d => {
-    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
-    b[(i + d + b.length) % b.length].click();
-    read();
-  };
-  prev.addEventListener("click", () => step(-1));
-  next.addEventListener("click", () => step(1));
-  host.addEventListener("click", read);
-  read();
-}
-["sw-metal", "sw-wood"].forEach(addSwatchArrows);
-document.getElementById("c-lift").addEventListener("input", e => {
-  cfg.lift = +e.target.value;
-  root.position.y = cfg.lift;
-});
 document.getElementById("b-joint").addEventListener("click", () => {
-  orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 1500;
-  orbit.target.set(-cfg.length/2 + 260, seatY(260) + 120 + cfg.lift, -300);
+  orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 90*STAGE;
+  orbit.target.set(-BENCH_LEN/2 + 50*STAGE, 20*STAGE + cfg.lift*STAGE, -20*STAGE);
   place();
 });
 document.getElementById("b-under").addEventListener("click", () => {
-  if(cfg.lift < 700){
-    cfg.lift = 900;
-    document.getElementById("c-lift").value = "900";
-    root.position.y = cfg.lift;
+  if(cfg.lift < 120){
+    cfg.lift = 150;
+    document.getElementById("c-lift").value = "150";
+    build();
   }
-  orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(3200, cfg.length*1.8);
-  orbit.target.set(0, cfg.lift + 300, 0);
+  orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(200*STAGE, BENCH_LEN*1.1);
+  orbit.target.set(0, cfg.lift*STAGE + 20*STAGE, 0);
   place();
 });
-document.getElementById("c-explode").addEventListener("input", e => { cfg.explode = +e.target.value; applyExplode(); applyInterface(); });
-document.getElementById("b-tilt-reset").addEventListener("click", () => {
-  cfg.tiltSeat = cfg.tiltSeat.map((_, i) => DROOP[i] || 0);
-  cfg.tiltBack = cfg.tiltBack.map(() => 0);
-  refreshPlanks();
-  buildTiltUI();
-});
-document.getElementById("b-iface").addEventListener("click", () => {
-  cfg.iface = !cfg.iface;
-  applyInterface();
-});
-document.getElementById("b-view").addEventListener("click", () => { orbit.theta=-Math.PI/2; orbit.phi=1.46; orbit.dist=2700; orbit.target.set(0,480,0); place(); });
-document.getElementById("b-foot").addEventListener("click", () => { orbit.theta=-1.35; orbit.phi=1.40; orbit.dist=1500; orbit.target.set(-cfg.length/2, 200 + cfg.lift, -300); place(); });
+document.getElementById("b-view").addEventListener("click", () => { orbit.theta=-Math.PI/2; orbit.phi=1.46; orbit.dist=160*STAGE; orbit.target.set(0,30*STAGE,0); place(); });
 document.getElementById("b-three").addEventListener("click", resetView);
 document.getElementById("b-reset").addEventListener("click", resetView);
 
@@ -1940,55 +1229,4 @@ resize();
 build();
 (function tick(){ renderer.render(scene, camera); requestAnimationFrame(tick); })();
 })();
-</script>
-
-<script>
-/* Plank angles are a design tool, not a customer control. This hides them
-   behind a sign-in. It is a convenience gate: the comparison happens in the
-   browser, so treat the credentials as public. Runs after the configurator
-   script, which builds the slider list. */
-(function () {
-  var cell = document.querySelector("#cfg .tiltcell");
-  var form = document.getElementById("admin-form");
-  if (!cell || !form) { return; }
-  var user = document.getElementById("admin-user");
-  var pass = document.getElementById("admin-pass");
-  var go   = document.getElementById("admin-in");
-  var out  = document.getElementById("admin-out");
-  var msg  = document.getElementById("admin-msg");
-
-  function apply(on) {
-    cell.hidden = !on;
-    user.hidden = on;
-    pass.hidden = on;
-    go.hidden = on;
-    out.hidden = !on;
-    msg.textContent = on ? "Signed in · plank angles unlocked" : "";
-    try {
-      if (on) { localStorage.setItem("kaia-admin", "1"); }
-      else { localStorage.removeItem("kaia-admin"); }
-    } catch (e) {}
-  }
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    if (user.value.trim().toLowerCase() === "ntnu" && pass.value === "mma4002") {
-      apply(true);
-    } else {
-      msg.textContent = "That user and password do not match";
-      pass.value = "";
-      pass.focus();
-    }
-  });
-
-  out.addEventListener("click", function () {
-    user.value = "";
-    pass.value = "";
-    apply(false);
-  });
-
-  var saved = false;
-  try { saved = localStorage.getItem("kaia-admin") === "1"; } catch (e) {}
-  apply(saved);
-}());
 </script>

@@ -1,18 +1,21 @@
-# Kaia
+# Outdoor Furniture
 
-Front page and 3D configurator for **Kaia** — a modular urban-furniture family of
-cast side frames and timber boards. Coursework for **MMA4002 Design for Automated
-Manufacturing**, NTNU Ålesund.
+Front page and 3D configurator for a modular outdoor-furniture family: one bent
+flat-bar frame, laser-cut and press-brake formed, with timber planks dropped
+straight into slotted pockets cut into the bar. Coursework for **MMA4002 Design
+for Automated Manufacturing**, NTNU Ålesund.
 
-One cast side, one machined channel, boards that slide in lengthwise. The 60 × 35
-board and the 30 mm cube spacer are the same in every variant, from the 600 mm
-chair to the 2400 mm bench.
+One frame, two states — with or without the backrest arm — and one choice per
+order: the top plank is either laser-cut with a mark or fitted with a separate
+logo shield. No cast sides, no separate foot, no assembly fasteners in the
+frame itself.
 
 ## What is in here
 
 | File | What it is |
 |---|---|
 | `index.html` | The whole site. One file — page, configurator and QR code. No build step, no dependencies to install. |
+| `index_assignment1_old.html` | Archived snapshot of the earlier cast-iron, ten-side-design configurator, kept for reference. |
 
 The page pulls two things from the open web at runtime: **three.js r128** from
 cdnjs and **Archivo / IBM Plex Mono** from Google Fonts. Everything else,
@@ -42,24 +45,17 @@ Then open `index.html`, find `var SITE_URL = "";` near the bottom and put that
 address in it. The QR code beside the configurator title encodes `SITE_URL` when
 it is set, and the address the page happens to be served from when it is not.
 
-## Admin sign-in
-
-The plank-angle sliders are a design tool, not a customer control, so they sit
-behind a sign-in — user `ntnu`, password `mma4002`.
-
-**This is a convenience gate, not security.** The check runs in the browser, so
-anyone who opens the page source can read the password. It keeps the sliders out
-of a visitor's way and nothing more. Do not put anything behind it that actually
-needs protecting.
-
 ## Design notes
 
-- The side elevation on the front page is drawn from the traced profile
-  coordinates — the same numbers the Fusion model is built from, not an
-  illustration.
-- The **foot is not a separate part**. Each side design is cast with the foot
-  that belongs to it, so the leg and the foot are one piece of iron.
-- Plank stations are spaced by **arc length along the curve**, never along an
-  axis, so the gaps stay parallel instead of opening into wedges.
+- The frame profile on the front page and in the 3D view is traced straight off
+  the CAD (`3d-modeling-and-simulation/bench-cad/BenchWOBackrestV2.STEP` and
+  `BenchInterfaceV2.STEP`) by slicing the frame solid and reading its outer wire
+  and slot pockets — not an illustration, and not rescaled, since these are
+  prototype/demonstrator sizes rather than a final production spec.
+- The **foot is not a separate part**. The same bent bar that forms the seat
+  rail (and, with a backrest, the brace behind it) reaches the ground on its
+  own.
+- Seat and back planks are single boards dropped into slotted pockets cut
+  straight into the bar — no tenons, no spacer cubes.
 - On a phone the 3D view pins to the top of the screen while the controls scroll
   underneath, so the bench stays visible while it is being changed.
