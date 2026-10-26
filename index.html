@@ -825,24 +825,27 @@ const matShield = new THREE.MeshStandardMaterial({color:SHIELD_COLOR, roughness:
 /* ---------- geometry from the traced profile ---------- */
 
 /* profile-space (x,z) -> world (z,y); the bench's own length becomes world X.
-   This is purely how the part is placed on the stage — every distance and
-   angle below comes straight from the CAD, untouched. */
-function toWorld([px, pz]){ return {y: pz, z: -px}; }
+   The CAD's own Z comes out pointing the opposite way from "up" — the legs
+   only read as legs, and the backrest brace only reads as a backrest rather
+   than a loop dragging through the floor, once Z is flipped. Every distance
+   and angle is still exactly what the CAD gives; this is the one rigid flip
+   needed to view it right-side up, applied the same way everywhere below. */
+function toWorld([px, pz]){ return {y: -pz, z: -px}; }
 
 function frameShape(variant){
   const outer = PROFILE[variant];
   const s = new THREE.Shape();
-  outer.forEach((p, i) => i === 0 ? s.moveTo(p[0], p[1]) : s.lineTo(p[0], p[1]));
+  outer.forEach((p, i) => i === 0 ? s.moveTo(p[0], -p[1]) : s.lineTo(p[0], -p[1]));
   s.closePath();
   SEAT_SLOTS.forEach(slot => {
     const h = new THREE.Path();
-    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], p[1]) : h.lineTo(p[0], p[1]));
+    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], -p[1]) : h.lineTo(p[0], -p[1]));
     h.closePath();
     s.holes.push(h);
   });
   if(variant === "high") BACK_SLOTS.forEach(slot => {
     const h = new THREE.Path();
-    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], p[1]) : h.lineTo(p[0], p[1]));
+    slot.forEach((p, i) => i === 0 ? h.moveTo(p[0], -p[1]) : h.lineTo(p[0], -p[1]));
     h.closePath();
     s.holes.push(h);
   });
@@ -937,11 +940,9 @@ function laserMesh(){
 function build(){
   clear();
   const hasBack = cfg.back === "high";
-  /* ground reference comes from the leg/seat points shared by both variants (PROFILE.none),
-     not from "high"'s own lowest point — that lowest point is the tip of the backrest brace,
-     a loop that curves back up to close near the seat rail rather than a separate ground
-     contact, so it is not a floor reference. See the open question flagged to the user. */
-  const ground = -Math.min(...PROFILE.none.map(p => p[1]));
+  /* ground reference comes from the leg/seat points shared by both variants (PROFILE.none) —
+     same flip as toWorld()/frameShape(), so the legs land on the floor the same way here. */
+  const ground = -Math.min(...PROFILE.none.map(p => -p[1]));
 
   const frameGeo = frameShape(cfg.back);
   [-1, 1].forEach(sgn => {
@@ -1200,8 +1201,8 @@ function resetView(){
   fit();
 }
 document.getElementById("b-joint").addEventListener("click", () => {
-  orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 90*STAGE;
-  orbit.target.set(-BENCH_LEN/2 + 50*STAGE, 20*STAGE + cfg.lift*STAGE, -20*STAGE);
+  orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 130;
+  orbit.target.set(-BENCH_LEN/2 + 50, 75 + cfg.lift*STAGE, -20);
   place();
 });
 document.getElementById("b-under").addEventListener("click", () => {
@@ -1211,10 +1212,10 @@ document.getElementById("b-under").addEventListener("click", () => {
     build();
   }
   orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(200*STAGE, BENCH_LEN*1.1);
-  orbit.target.set(0, cfg.lift*STAGE + 20*STAGE, 0);
+  orbit.target.set(0, cfg.lift*STAGE + 20, 0);
   place();
 });
-document.getElementById("b-view").addEventListener("click", () => { orbit.theta=-Math.PI/2; orbit.phi=1.46; orbit.dist=160*STAGE; orbit.target.set(0,30*STAGE,0); place(); });
+document.getElementById("b-view").addEventListener("click", () => { orbit.theta=-Math.PI/2; orbit.phi=1.46; orbit.dist=320; orbit.target.set(0,60,0); place(); });
 document.getElementById("b-three").addEventListener("click", resetView);
 document.getElementById("b-reset").addEventListener("click", resetView);
 
