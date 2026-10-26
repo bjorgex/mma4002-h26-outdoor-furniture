@@ -1,0 +1,1994 @@
+<title>Kaia Front Page</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ---------------------------------------------------------------
+   KAIA — front page. One committed visual world: the side elevation
+   as ground, monochrome, every colour painted explicitly.
+   --------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --gut:     clamp(20px, 5vw, 72px);
+  --bg:      #f6f6f4;
+  --panel:   #eeeeeb;
+  --ink:     #121413;
+  --muted:   #686b68;
+  --line:    #cfd0cd;
+  --accent:  #121413;
+  --display: 'Archivo', system-ui, sans-serif;
+  --body:    'Archivo', system-ui, sans-serif;
+  --util:    'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ===================== hero ===================== */
+
+.hero {
+  position: relative;
+  padding: clamp(28px, 6vh, 64px) var(--gut) clamp(28px, 5vh, 56px);
+  min-height: 78vh;
+  min-height: 78svh;
+  display: grid;
+  align-content: space-between;
+  gap: clamp(24px, 4vh, 48px);
+  overflow: hidden;
+}
+
+.topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  font-family: var(--util);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+.topline .sep { color: var(--line); }
+
+.stage-copy { position: relative; z-index: 1; }
+
+.mark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(64px, 17vw, 190px);
+  line-height: .82;
+  letter-spacing: -.06em;
+  margin: 0;
+  text-wrap: balance;
+}
+.mark::after {
+  content: "";
+  display: block;
+  width: 96px;
+  height: 4px;
+  background: var(--accent);
+  margin-top: clamp(16px, 2.6vh, 26px);
+}
+
+.lede {
+  margin: clamp(14px, 2.5vh, 26px) 0 0;
+  max-width: 34ch;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+.lede strong { font-weight: 600; }
+
+.spec {
+  list-style: none;
+  margin: clamp(18px, 3vh, 30px) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-family: var(--util);
+  font-size: 11.5px;
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
+}
+.spec li {
+  padding: 7px 13px 6px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.spec li b { color: var(--ink); font-weight: 500; }
+
+/* the side elevation, plotted from the traced coordinates, used as ground */
+.art-cell {
+  position: absolute;
+  right: -9%;
+  top: 50%;
+  translate: 0 -50%;
+  width: min(58%, 680px);
+  z-index: 0;
+  pointer-events: none;
+}
+@media (max-width: 879px) { .art-cell { right: -34%; width: 100%; } }
+@media (max-width: 560px) { .art-cell { right: -46%; width: 108%; opacity: .6; } }
+
+.plate { display: block; width: 100%; height: auto; max-width: 100%; color: #d9dbd7; }
+.plate .bars { stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ===================== down button ===================== */
+
+.down {
+  justify-self: start;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 12px 18px;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--util);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+.down:hover { border-color: var(--accent); }
+.down svg { display: block; overflow: visible; }
+.down .chev { animation: nudge 2.4s ease-in-out infinite; }
+@keyframes nudge {
+  0%, 68%, 100% { transform: translateY(0); }
+  80%           { transform: translateY(3px); }
+}
+@media (prefers-reduced-motion: reduce) { .down .chev { animation: none; } }
+
+/* ===================== configurator section ===================== */
+
+.tool {
+  padding: clamp(40px, 8vh, 96px) var(--gut) clamp(48px, 9vh, 104px);
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+.toolhead {
+  display: grid;
+  gap: clamp(20px, 3vw, 44px);
+  align-items: start;
+}
+@media (min-width: 760px) {
+  .toolhead { grid-template-columns: minmax(0, 1fr) auto; }
+}
+.tool h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 5.5vw, 58px);
+  line-height: 1;
+  letter-spacing: -.03em;
+  margin: 0;
+}
+.tool .intro {
+  max-width: 56ch;
+  margin: 18px 0 0;
+  color: var(--muted);
+}
+
+/* the QR is for someone reading this on a laptop, so it is hidden on a phone */
+.qr { margin: 0; display: none; }
+@media (min-width: 620px) { .qr { display: block; } }
+.qr .code {
+  display: block;
+  width: 128px;
+  height: 128px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  font: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: zoom-in;
+}
+.qr .code > span { display: block; width: 100%; height: 100%; }
+.qr .code svg { display: block; width: 100%; height: 100%; }
+
+/* ---- enlarged QR, for showing the address to a room ---- */
+
+.qrbig {
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  max-width: none;
+  max-height: none;
+}
+.qrbig::backdrop { background: rgba(18, 20, 19, .92); }
+.qrbig .sheet {
+  display: grid;
+  justify-items: center;
+  gap: clamp(16px, 3vh, 28px);
+  padding: clamp(20px, 4vmin, 40px);
+  background: #ffffff;
+}
+/* square, and never taller than the viewport it has to share with the caption */
+.qrbig .code {
+  width: min(78vmin, 76vh, 760px);
+  height: min(78vmin, 76vh, 760px);
+  background: #ffffff;
+}
+.qrbig .code svg { display: block; width: 100%; height: 100%; }
+.qrbig .url {
+  margin: 0;
+  font-family: var(--util);
+  font-size: clamp(14px, 2.2vmin, 24px);
+  letter-spacing: .04em;
+  text-align: center;
+  word-break: break-all;
+}
+.qrbig .hint {
+  margin: 0;
+  font-family: var(--util);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.qr figcaption {
+  margin-top: 10px;
+  max-width: 152px;
+  font-family: var(--util);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+.qr .url {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  word-break: break-all;
+  letter-spacing: 0;
+  user-select: all;
+}
+
+/* ===================== touch ===================== */
+/* every control a finger hits gets a 44px target, and every select gets 16px
+   text so iOS does not zoom the page when it takes focus */
+@media (pointer: coarse) {
+  .down { padding: 15px 22px; }
+  #cfg button { min-height: 44px; padding: 8px 14px; }
+  #cfg select { min-height: 44px; font-size: 16px; padding: 8px 10px; }
+  #cfg .swatches button { width: 42px; height: 42px; }
+  #cfg .pickrow { grid-template-columns: 46px 1fr 46px; gap: 8px; }
+  #cfg .pickrow button { padding: 0; font-size: 14px; }
+  #cfg input[type="range"] { height: 44px; }
+  #cfg .tiltrow { grid-template-columns: 62px 1fr 46px; }
+  #cfg .tiltrow input[type="range"] { height: 40px; }
+  #cfg .btnrow { gap: 10px; }
+}
+/* a nested scroller inside a scrolling page is a trap on a phone */
+@media (max-width: 620px) {
+  #cfg .tiltlist { max-height: none; overflow-y: visible; }
+  #cfg .controls > div { padding: 13px 14px; }
+}
+.touch-only { display: none; }
+@media (pointer: coarse) {
+  .touch-only { display: inline; }
+  .mouse-only { display: none; }
+}
+
+/* ===================== admin sign-in ===================== */
+/* A gate on the plank angles, not a security boundary — the check runs in
+   the page, so anyone who reads the source can see the password. It keeps
+   the sliders out of a visitor's way; it does not protect anything. */
+#cfg .adminform { display: flex; flex-direction: column; gap: 6px; }
+#cfg .adminform input {
+  font: inherit;
+  font-size: 14px;
+  width: 100%;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 6px 8px;
+}
+#cfg .adminform input::placeholder { color: var(--ink-soft); }
+@media (pointer: coarse) {
+  #cfg .adminform input { min-height: 44px; font-size: 16px; }
+}
+</style>
+
+<style>
+/* ====== configurator, scoped under #cfg ====== */
+#cfg{color-scheme:light;padding-inline:0;padding-block:0;margin-top:clamp(24px,4vh,40px)}
+
+/* ====== configurator, scoped under #cfg ====== */
+#cfg{color-scheme:light;padding-inline:0;padding-block:0;margin-top:clamp(24px,4vh,40px)}
+#cfg{
+    --paper:#EEEBE4; --surface:#F7F5F1; --ink:#1B1F1D; --ink-soft:#5B615E;
+    --line:#CBC6BA; --line-soft:#DEDAD1; --stripe:#F0EDE6; --hl:#7A4B2A;
+    --stage-a:#E7E3DA; --stage-b:#D5D0C4;
+  }
+#cfg, #cfg *{box-sizing:border-box}
+#cfg{
+    background:var(--paper); color:var(--ink); margin:0;
+    font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:15px; line-height:1.5; padding-inline:20px; padding-block:28px 48px;
+  }
+#cfg .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+#cfg .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;
+  }
+#cfg h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:600;letter-spacing:-.02em}
+#cfg .lede{margin:10px 0 0;max-width:60ch;color:var(--ink-soft)}
+#cfg header{border-bottom:1px solid var(--line);padding-bottom:20px}
+#cfg .stage{
+    position:relative;border:1px solid var(--line);
+    background:linear-gradient(180deg,var(--stage-a),var(--stage-b));
+    aspect-ratio:16/10;overflow:hidden;
+  }
+@media (max-width:560px){
+#cfg .stage{aspect-ratio:4/5}
+}
+#cfg .stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#cfg .stage canvas:active{cursor:grabbing}
+#cfg .hud{
+    position:absolute;left:14px;bottom:12px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;pointer-events:none;
+  }
+#cfg .badge{
+    position:absolute;right:14px;top:12px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+    border:1px solid var(--line);padding:4px 8px;background:var(--surface);margin:0;
+  }
+#cfg .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--ink-soft)}
+#cfg .controls{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));
+    gap:1px;background:var(--line-soft);border:1px solid var(--line);
+  }
+#cfg .controls > div{background:var(--surface);padding:11px 13px;display:flex;flex-direction:column;gap:6px}
+#cfg label{
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);
+  }
+#cfg select{
+    font:inherit;font-size:14px;width:100%;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:0;padding:6px 8px;
+  }
+#cfg input[type=range]{width:100%;accent-color:var(--hl);margin:6px 0 0}
+#cfg select:focus-visible, #cfg input:focus-visible, #cfg button:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+#cfg .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+#cfg button{
+    font:inherit;font-size:13px;background:var(--paper);color:var(--ink);
+    border:1px solid var(--line);border-radius:0;padding:6px 10px;cursor:pointer;
+  }
+#cfg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#cfg .tiltcell{grid-column:span 2}
+@media (max-width:620px){
+#cfg .tiltcell{grid-column:span 1}
+}
+#cfg .tiltlist{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;max-height:190px;overflow-y:auto}
+@media (max-width:620px){
+#cfg .tiltlist{grid-template-columns:1fr}
+}
+#cfg .tiltrow{display:grid;grid-template-columns:62px 1fr 42px;align-items:center;gap:8px}
+#cfg .tiltrow span, #cfg .tiltrow output{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+#cfg .tiltrow output{text-align:right;color:var(--ink)}
+#cfg .tiltrow input[type=range]{margin:0}
+#cfg .pickrow{display:grid;grid-template-columns:34px 1fr 34px;gap:6px;align-items:center}
+#cfg .pickrow button{padding:6px 0;font-size:12px;line-height:1}
+#cfg .pickcount{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+#cfg .swatches{display:flex;flex-wrap:wrap;gap:6px}
+#cfg .swatches button{padding:0;width:26px;height:26px;border:1px solid var(--line);position:relative}
+#cfg .swatches button[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:1px}
+#cfg .tablewrap{overflow-x:auto;border:1px solid var(--line)}
+#cfg table{border-collapse:collapse;width:100%;min-width:620px;background:var(--surface)}
+#cfg th, #cfg td{text-align:left;padding:8px 12px;font-size:13.5px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+#cfg thead th{background:var(--paper);font-weight:700;font-size:11px;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+#cfg tbody tr:nth-child(even){background:var(--stripe)}
+#cfg tbody tr:last-child td{border-bottom:0}
+#cfg td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+#cfg h2{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+#cfg .note{font-size:13px;color:var(--ink-soft);border-left:2px solid var(--hl);padding-left:12px;margin:0;max-width:78ch}
+#cfg footer{font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:14px}
+
+</style>
+
+<style>
+
+/* ===== phone: the model has to stay on screen while you change things =====
+   On a narrow screen the viewport sat above the controls, so every change
+   scrolled the bench out of sight. It now pins to the top of the screen and
+   the controls run underneath it. Loaded after the configurator's own CSS so
+   these win. */
+@media (max-width: 760px) {
+  #cfg .stage {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    aspect-ratio: auto;
+    height: 42vh;
+    height: 42svh;
+    min-height: 236px;
+    box-shadow: 0 12px 24px -20px rgba(0, 0, 0, .6);
+  }
+  #cfg .hud { font-size: 10px; left: 10px; bottom: 8px; line-height: 1.35; }
+  #cfg .badge { right: 10px; top: 8px; }
+  /* the two long notes and the bill of material are reading matter, not
+     controls - let them sit below without fighting the pinned viewport */
+  #cfg .note, #cfg section, #cfg footer { position: relative; z-index: 1; }
+}
+@media (max-width: 760px) and (orientation: landscape) {
+  #cfg .stage { height: 62vh; height: 62svh; }
+}
+
+</style>
+
+<section class="hero">
+
+  <div class="topline">
+    <span>Kaia</span>
+    <span class="sep">/</span>
+    <span>Urban furniture</span>
+    <span class="sep">/</span>
+    <span>Ålesund &amp; Bergen</span>
+  </div>
+
+  <div class="stage-copy">
+    <h1 class="mark">KAIA</h1>
+    <p class="lede">
+      Cast side frames and timber boards for public space.
+      <strong>One side, one machined channel</strong> — boards slide in
+      lengthwise, from a bench for two to a bench for eight.
+    </p>
+    <ul class="spec">
+      <li>Seat <b>450</b></li>
+      <li>Module <b>90</b></li>
+      <li>Channel <b>32 × 32</b></li>
+      <li>Lengths <b>600–2400</b></li>
+    </ul>
+  </div>
+
+  <div class="art-cell">
+    <svg class="plate" viewBox="-40 -40 760 960" role="img" aria-label="Side elevation of the Kaia bench frame">
+      <g transform="translate(0,880) scale(1,-1)">
+        <g class="bars">
+          <polyline stroke-width="46" points="2,0 52,190 82,296 128,386 150,450"></polyline>
+          <polyline stroke-width="46" points="664,0 606,190 522,380 470,452"></polyline>
+          <polyline stroke-width="52" points="470,452 482,540 498,640 518,748 536,828 542,864"></polyline>
+          <polyline stroke-width="20" points="70,232 240,268 420,268 600,232"></polyline>
+          <polyline stroke-width="52" points="150,452 208,474 278,486 336,486 392,476 472,450"></polyline>
+          <polyline stroke-width="26" points="520,640 506,586"></polyline>
+          <polyline stroke-width="16" points="214,656 360,656 426,662 462,684 476,716 488,754 502,792 514,834 524,852 526,872 544,882 580,880 586,872 592,850"></polyline>
+          <polyline stroke-width="16" points="150,452 180,490 208,516 228,550 240,590 234,630 198,650 158,644 128,622 116,590 122,558 154,542 182,546 196,568 206,592 180,604 160,590"></polyline>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <button class="down" id="toTool" type="button">
+    <svg class="chev" width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden="true">
+      <path d="M7 1v13M1.5 8.5L7 14.5l5.5-6" stroke="currentColor" stroke-width="1.5"></path>
+    </svg>
+    Configure a bench
+  </button>
+
+</section>
+
+<section class="tool" id="tool">
+  <div class="toolhead">
+    <div>
+      <h2>Configurator</h2>
+      <p class="intro">
+        Pick a side, a timber layout and a length. The foot comes with the
+        side — it is cast as one piece with the leg. The channel, the tenons
+        and the cube spacers follow automatically, and every variant is the
+        same cast side and the same 60 × 35 board.
+      </p>
+    </div>
+    <figure class="qr">
+      <button type="button" class="code" id="qr-open" aria-label="Enlarge the QR code">
+        <span id="qr-code" role="img" aria-label="QR code that opens this page"></span>
+      </button>
+      <figcaption>
+        Scan to open on your phone — click to enlarge
+        <span class="url" id="qr-url"></span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div id="cfg">
+
+<div class="wrap">
+  
+
+  <div class="stage" id="stage">
+    <p class="badge" id="badge">1800 mm</p>
+    <p class="hud"><span class="mouse-only">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom · arrow keys pan</span><span class="touch-only">One finger to orbit · two fingers to pan and pinch to zoom</span></p>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label>Metal finish</label>
+      <div class="swatches" id="sw-metal"></div>
+    </div>
+    <div>
+      <label>Timber finish</label>
+      <div class="swatches" id="sw-wood"></div>
+    </div>
+    <div>
+      <label for="c-len">Product · length</label>
+      <select id="c-len">
+        <option value="600">600 mm · single chair</option>
+        <option value="1200">1200 mm · 2 seats</option>
+        <option value="1500">1500 mm</option>
+        <option value="1800" selected>1800 mm · standard</option>
+        <option value="2400">2400 mm · 4 seats</option>
+      </select>
+    </div>
+    <div>
+      <label for="c-layout">Timber layout</label>
+      <select id="c-layout"></select>
+    </div>
+    <div>
+      <label for="c-back">Back</label>
+      <select id="c-back"><option value="none">None</option><option value="low">Low</option><option value="high" selected>High + scroll arms</option></select>
+    </div>
+    <div>
+      <label for="c-side">Side design</label>
+      <div class="pickrow">
+        <button type="button" id="b-side-prev" aria-label="Previous side design">▲</button>
+        <select id="c-side"></select>
+        <button type="button" id="b-side-next" aria-label="Next side design">▼</button>
+      </div>
+      <output id="side-count" class="pickcount"></output>
+    </div>
+    <div>
+      <label for="c-env">Surroundings</label>
+      <select id="c-env"><option value="allee" selected>Allé · park avenue</option><option value="studio">Studio</option></select>
+    </div>
+    <div>
+      <label for="c-light">Light</label>
+      <select id="c-light"><option value="midday" selected>Midday</option><option value="golden">Late afternoon</option><option value="evening">Evening · lamp lit</option></select>
+    </div>
+    <div>
+      <label for="c-lift">Lift off ground</label>
+      <input type="range" id="c-lift" min="0" max="1500" step="50" value="0">
+    </div>
+    <div>
+      <label for="c-explode">Explode</label>
+      <input type="range" id="c-explode" min="0" max="100" value="0">
+    </div>
+    <div class="admincell">
+      <label>Admin</label>
+      <form id="admin-form" class="adminform">
+        <input type="text" id="admin-user" name="user" placeholder="user" autocomplete="username" aria-label="Admin user">
+        <input type="password" id="admin-pass" name="pass" placeholder="password" autocomplete="current-password" aria-label="Admin password">
+        <div class="btnrow">
+          <button type="submit" id="admin-in">Sign in</button>
+          <button type="button" id="admin-out" hidden>Sign out</button>
+        </div>
+        <output id="admin-msg" class="pickcount"></output>
+      </form>
+    </div>
+    <div class="tiltcell" hidden>
+      <label>Plank angles · degrees from horizontal</label>
+      <div id="tilt-list" class="tiltlist"></div>
+      <div class="btnrow"><button type="button" id="b-tilt-reset">Reset angles</button></div>
+    </div>
+    <div>
+      <label>Interface</label>
+      <div class="btnrow">
+        <button type="button" id="b-iface" aria-pressed="false">Show interface</button>
+      </div>
+    </div>
+    <div>
+      <label>View</label>
+      <div class="btnrow">
+        <button type="button" id="b-view">Side</button>
+        <button type="button" id="b-foot">Foot</button>
+        <button type="button" id="b-joint">Joint</button>
+        <button type="button" id="b-under">Underside</button>
+        <button type="button" id="b-reset">Reset</button>
+        <button type="button" id="b-three">Three-quarter</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" id="foot-note">The leg turns and runs along the ground as a sled runner, tips lifted clear.</p>
+
+  <p class="note">Reference for the side profile: Victorian and Norwegian cast bench ends — swept front leg, rolled spiral arm, pierced web between the legs, and a foot that grows out of the leg rather than sitting under it as a plate. A cast side of this size runs about 16 kg per end.</p>
+
+  <section>
+    <h2>Bill of material</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Part</th><th>Process</th><th>Size mm</th><th>Qty</th></tr></thead>
+        <tbody id="bom"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Seat 450 mm at the centre, dished to 478 at the edges — a shallow dish rather than a deep cradle. The two front planks carry an extra 11° and 4° of nose-down droop so the front edge falls away from the back of the knee, and the two rear planks are tipped 6° and 14° further down toward the back, so the seat settles into the backrest instead of rising into it. Back shaped as an S: it comes 30 mm forward of the seat rear at the lumbar (about 590 mm up), then reclines to roughly 30° at the top edge, 850 mm above ground. Each back plank is rotated to the local tangent, so the stack follows the spine rather than a flat board. Side profile 45 mm thick. The foot is not a separate choice: each side design is cast with the foot that belongs to it, so the leg and the foot are one piece of iron. The fixing hole is modelled on the ring, whose open centre is the fixing point; on skid and wishbone it would be cored in the same place. No ground fixing is shown yet. Planks 60 × 35 at 75 mm pitch measured along the curve, so every gap stays the same width instead of opening into a wedge, each rotated to the local tangent of the dish — 0° at the centre rising to about 20° at the front and rear plank — so the seat is a continuous curved surface rather than a row of flat steps, reduced at each end to a tenon with a square 30 × 30 section — the channel is square too, so the tenon cannot rock or jam as it slides, so the full section stops proud of the side and the joint reads as a shoulder, not as timber disappearing into a slot. Pitch = tenon 40 along the groove + 30 mm spacer cube = 70. Lift the bench and orbit below it to inspect the underside of the seat rail and the cored hole in each foot — the ground hides itself once the camera passes under.</footer>
+</div>
+  </div>
+</section>
+
+<dialog class="qrbig" id="qr-big" aria-label="QR code, enlarged">
+  <div class="sheet">
+    <div class="code" id="qr-big-code" role="img" aria-label="QR code that opens this page"></div>
+    <p class="url" id="qr-big-url"></p>
+    <p class="hint">Click anywhere or press Esc to close</p>
+  </div>
+</dialog>
+
+<script>var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});</script>
+<script>
+(function () {
+  /* Pin the public address here once the page is hosted — GitHub Pages,
+     a shared artifact link, anywhere. Left empty, the QR encodes whatever
+     URL the page is actually served from. */
+  var SITE_URL = "https://bjorgex.github.io/mma4002-assignment1/";
+
+  var box = document.getElementById("qr-code");
+  var out = document.getElementById("qr-url");
+  var url = SITE_URL || (location.origin + location.pathname);
+
+  out.textContent = url.replace(/^https?:\/\//, "");
+  try {
+    var qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    box.setAttribute("aria-label", "QR code for " + url);
+
+    /* The enlarged copy is the one a room scans: level H tolerates glare,
+       a shallow angle and a hand across the corner of the screen, and the
+       margin gives it the quiet zone the small one gets from its padding. */
+    var big = qrcode(0, "H");
+    big.addData(url);
+    big.make();
+    var bigBox = document.getElementById("qr-big-code");
+    bigBox.innerHTML = big.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+    bigBox.setAttribute("aria-label", "QR code for " + url);
+    document.getElementById("qr-big-url").textContent = url;
+
+    var dlg = document.getElementById("qr-big");
+    if (typeof dlg.showModal === "function") {
+      document.getElementById("qr-open").addEventListener("click", function () {
+        dlg.showModal();
+      });
+      dlg.addEventListener("click", function () { dlg.close(); });
+    } else {
+      document.getElementById("qr-open").disabled = true;
+    }
+  } catch (e) {
+    var fig = box.closest(".qr");
+    if (fig) { fig.remove(); }
+  }
+
+  document.getElementById("toTool").addEventListener("click", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("tool").scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "start"
+    });
+  });
+}());
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const stage = document.getElementById("stage");
+if(typeof THREE === "undefined"){
+  stage.insertAdjacentHTML("beforeend","<p class='fallback'>The 3D viewer could not load its renderer. Reload the page to try again.</p>");
+  return;
+}
+
+/* ---------- parameters, mm ---------- */
+let GRD=140;
+const                        // top of the foot: the side profile starts here
+      SEAT=450, SEAT_E=478, D0=40, D1=470, DEPTH=610,
+      BACK_TOP=850, RAKE=15*Math.PI/180,
+      SLAT_H=35, PLATE=45,
+      TEN_H=30, TEN_L=30, CUBE=30, LIP=30, FOOT_Z=0.72, FOOT_HOLE=11;
+/* the timber layout: same channel, same cubes, different board widths */
+const LAYOUTS = {
+  slats:  {label:"Slats · 5 × 60 seat, 4 × 60 back",  sw:60,  spitch:75,  srows:5, bw:60,  bpitch:75,  brows:4},
+  boards: {label:"Boards · 3 × 150 seat, one back board", sw:150, spitch:158, srows:3, bw:300, bpitch:310, brows:1}
+};
+let SLAT_W = 60, PITCH = 75, TEN_W = 40;
+
+const seatY = d => SEAT + (SEAT_E-SEAT)*Math.pow((d-(D0+D1)/2)/((D1-D0)/2),2);
+/* walk a curve and return equally spaced stations — pitch measured along the curve,
+   not along an axis, so the gaps between planks stay parallel instead of opening into wedges */
+function curveStations(kind, count, pitch){
+  const P = pitch || PITCH;
+  const pts = [];
+  if(kind === "seat"){
+    for(let d=D0; d<=D1; d+=2) pts.push({d, y: seatY(d), t: Math.atan(seatSlope(d))});
+  }else{
+    for(let y=BACK_BASE+20; y<=BACK_TOP-10; y+=2) pts.push({d: postD(y), y, t: Math.atan(backSlope(y))});
+  }
+  pts[0].s = 0;
+  for(let i=1;i<pts.length;i++)
+    pts[i].s = pts[i-1].s + Math.hypot(pts[i].d - pts[i-1].d, pts[i].y - pts[i-1].y);
+  const total = pts[pts.length-1].s;
+  const n = Math.max(1, Math.min(count, Math.floor(total / P) + 1));
+  const s0 = (total - (n-1)*P) / 2;                          // centre the run on the curve
+  const out = [];
+  for(let i=0;i<n;i++){
+    const target = s0 + i*P;
+    let k = pts.findIndex(q => q.s >= target);
+    out.push(pts[k < 0 ? pts.length-1 : k]);
+  }
+  return out;
+}
+
+const seatSlope = d => 2*(SEAT_E-SEAT)*(d-(D0+D1)/2)/Math.pow((D1-D0)/2, 2);
+const BACK_BASE = 470, BACK_OUT = 86, BACK_EXP = 1.7, LUMBAR = 24, LUMBAR_SPAN = 0.62;
+const backT = y => Math.min(1, Math.max(0, (y - BACK_BASE) / (BACK_TOP - BACK_BASE)));
+/* the back is an S: it comes forward at the lumbar, then reclines toward the top edge */
+const postD = y => {
+  const t = backT(y);
+  return D1 - 6 + BACK_OUT*Math.pow(t, BACK_EXP)
+             - LUMBAR*Math.sin(Math.PI*Math.min(1, t/LUMBAR_SPAN));
+};
+const backSlope = y => {
+  const t = Math.max(backT(y), 0.001), span = BACK_TOP - BACK_BASE;
+  const power = BACK_OUT*BACK_EXP*Math.pow(t, BACK_EXP-1);
+  const lump = t < LUMBAR_SPAN
+    ? LUMBAR*(Math.PI/LUMBAR_SPAN)*Math.cos(Math.PI*t/LUMBAR_SPAN)
+    : 0;
+  return (power - lump) / span;
+};
+
+const METALS = [
+  ["Cast black",   0x15171A], ["Graphite",   0x3A4043],
+  ["Heritage green",0x17372B], ["Oxide red",  0x5E2A21], ["Signal blue", 0x305BAB]
+];
+const WOODS = [
+  ["Natural pine", 0xD9B380], ["Oiled oak",  0xB08149],
+  ["Teak brown",   0x8A5A33], ["Ålesund yellow", 0xD9A93C],
+  ["Heritage red", 0x7E2B21], ["Grey wash",  0x9E9C92],
+  ["Park green",   0x3D5F38], ["Bottle green", 0x2A412C]
+];
+
+const cfg = {metal:0, wood:1, layout:"slats", iface:false, side:"frogner", tiltSeat:[], tiltBack:[], length:1800, back:"high", explode:0, lift:0, foot:"taper", env:"allee", light:"midday"};
+
+/* ---------- scene ---------- */
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 16/10, 50, 60000);
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8f979d, 0.7);
+scene.add(hemi);
+const key = new THREE.DirectionalLight(0xfff4e4, 1.0);
+key.position.set(1900, 2800, 2100);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera, {left:-3600, right:3600, top:3600, bottom:-3600, near:100, far:16000});
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xd8e6ff, 0.4);
+rim.position.set(-1700, 1100, -1500);
+scene.add(rim);
+const lampLight = new THREE.PointLight(0xffc27a, 0, 9000, 2);
+lampLight.position.set(3100, 3300, 250);
+scene.add(lampLight);
+
+/* sky: a gradient painted on a canvas, no external asset */
+function skyTexture(top, bottom){
+  const c = document.createElement("canvas");
+  c.width = 8; c.height = 256;
+  const g = c.getContext("2d").createLinearGradient(0,0,0,256);
+  g.addColorStop(0, top); g.addColorStop(0.62, bottom); g.addColorStop(1, bottom);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = g; ctx.fillRect(0,0,8,256);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.LinearFilter;
+  return t;
+}
+
+const LIGHTS = {
+  midday:  {key:[0xfff2e0, 0.92, 3000, 4200, 2600], hemi:[0xa9c6ea, 0x5d6a48, 0.5], rim:0.26,
+            sky:["#7FA8D4","#CBD9DE"], fog:0xc3d0d6, fogD:0.00005, lamp:0, shadow:.17},
+  golden:  {key:[0xffc17a, 1.0, -3600, 1600, 2800], hemi:[0xf6d3ab, 0x5f4e33, 0.36], rim:0.16,
+            sky:["#8FAECE","#EBC99F"], fog:0xdcbf98, fogD:0.00006, lamp:0.3, shadow:.22},
+  evening: {key:[0x7f93c8, 0.16, -2400, 2600, -2000], hemi:[0x28324d, 0x171d16, 0.26], rim:0.08,
+            sky:["#101C33","#2E374B"], fog:0x1d2740, fogD:0.00007, lamp:2.6, shadow:.08}
+};
+
+function applyLight(){
+  const p = LIGHTS[cfg.light];
+  key.color.setHex(p.key[0]); key.intensity = p.key[1];
+  key.position.set(p.key[2], p.key[3], p.key[4]);
+  hemi.color.setHex(p.hemi[0]); hemi.groundColor.setHex(p.hemi[1]); hemi.intensity = p.hemi[2];
+  rim.intensity = p.rim;
+  lampLight.intensity = cfg.env === "allee" ? p.lamp * 1.0 : 0;
+  if(cfg.env === "allee"){
+    scene.background = skyTexture(p.sky[0], p.sky[1]);
+    scene.fog = new THREE.FogExp2(p.fog, p.fogD);
+  }else{
+    scene.background = null;
+    scene.fog = null;
+  }
+  shadowCatcher.material.opacity = p.shadow;
+  if(lampHead) lampHead.material.emissiveIntensity = cfg.light === "evening" ? 1.6 : 0.15;
+}
+
+const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(26000,26000), new THREE.ShadowMaterial({opacity:.17}));
+shadowCatcher.rotation.x = -Math.PI/2;
+shadowCatcher.position.y = 0.5;
+shadowCatcher.receiveShadow = true;
+scene.add(shadowCatcher);
+
+const envGroup = new THREE.Group();
+scene.add(envGroup);
+let lampHead = null;
+
+/* deterministic jitter so the avenue looks planted, not random each frame */
+function rnd(i, k){ const x = Math.sin(i*127.1 + k*311.7) * 43758.5453; return x - Math.floor(x); }
+
+function tree(i, dark){
+  const g = new THREE.Group();
+  const h = 2200 + rnd(i,1)*700;
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(62 + rnd(i,2)*26, 112 + rnd(i,3)*30, h, 9),
+    new THREE.MeshStandardMaterial({color: dark ? 0x241f1a : 0x463629, roughness:.95}));
+  trunk.position.y = h/2;
+  trunk.castShadow = true;
+  g.add(trunk);
+  const leaf = new THREE.MeshStandardMaterial({
+    color: dark ? 0x22331f : [0x5F7A3A, 0x6E8A44, 0x53702F][Math.abs(i)%3], roughness:.92, flatShading:true});
+  for(let j=0;j<4;j++){
+    const r = 760 + rnd(i,4+j)*440;
+    const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), leaf);
+    blob.position.set((rnd(i,10+j)-0.5)*900, h + 420 + rnd(i,20+j)*760, (rnd(i,30+j)-0.5)*900);
+    blob.castShadow = true;
+    g.add(blob);
+  }
+  return g;
+}
+
+function buildEnv(){
+  while(envGroup.children.length) envGroup.remove(envGroup.children[0]);
+  lampHead = null;
+  if(cfg.env !== "allee") return;
+  const dark = cfg.light === "evening";
+
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(70000, 70000),
+    new THREE.MeshStandardMaterial({color: dark ? 0x202a19 : 0x4E6135, roughness:.98}));
+  grass.rotation.x = -Math.PI/2;
+  grass.receiveShadow = true;
+  envGroup.add(grass);
+
+  const path = new THREE.Mesh(new THREE.BoxGeometry(70000, 40, 2900),
+    new THREE.MeshStandardMaterial({color: dark ? 0x33312c : 0x736C5E, roughness:.95}));
+  path.position.set(0, 20, 1900);
+  path.receiveShadow = true;
+  envGroup.add(path);
+
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(cfg.length + 1800, 44, 1500),
+    new THREE.MeshStandardMaterial({color: dark ? 0x3b3832 : 0x7F7869, roughness:.92}));
+  apron.position.set(0, 22, 120);
+  apron.receiveShadow = true;
+  envGroup.add(apron);
+
+  for(let i=-5; i<=5; i++){
+    if(Math.abs(i) < 1) continue;
+    const back = tree(i+20, dark);  back.position.set(i*4000 + 400, 0, -5200);
+    envGroup.add(back);
+    const front = tree(i+40, dark); front.position.set(i*4000 - 1600, 0, 11000);
+    envGroup.add(front);
+  }
+
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(55, 80, 3300, 12),
+    new THREE.MeshStandardMaterial({color:0x15171A, roughness:.5, metalness:.6}));
+  post.position.set(3100, 1650, 250);
+  post.castShadow = true;
+  envGroup.add(post);
+  lampHead = new THREE.Mesh(new THREE.CylinderGeometry(70, 220, 300, 12),
+    new THREE.MeshStandardMaterial({color:0x2A2C30, emissive:0xffc27a, emissiveIntensity:0.15, roughness:.4}));
+  lampHead.position.set(3100, 3400, 250);
+  envGroup.add(lampHead);
+}
+
+const root = new THREE.Group();
+scene.add(root);
+
+const matMetal = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.55});
+const matWood  = new THREE.MeshStandardMaterial({color:WOODS[cfg.wood][1],  roughness:.78, metalness:.03});
+const matChannel = new THREE.MeshStandardMaterial({color:0x4FB3C9, roughness:.5, metalness:0, transparent:true, opacity:.42, depthWrite:false});
+const matGhost = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.35, transparent:true, opacity:.26, depthWrite:false});
+
+/* ---------- helpers ---------- */
+function plate(shape, t, bevel){
+  const bv = bevel || 2.5;
+  const g = new THREE.ExtrudeGeometry(shape, {depth:t, bevelEnabled:true, bevelThickness:bv, bevelSize:bv, bevelSegments:bevel ? 5 : 2, curveSegments:26});
+  g.translate(0,0,-t/2);
+  return g;
+}
+
+/* ---------- the side: one cast profile, built from swept round bars ----------
+   Extruded flat profiles came out faceted. A cast bench end is a rounded bar, so each
+   member is now a TUBE swept along a smooth spline and squashed across the bench into an
+   oval section: smooth shading, no visible facets, and a section that reads as cast iron. */
+
+function tubeMember(pts, r, flat, closed){
+  const path = pts.map(q => new THREE.Vector3(0, q[1], -q[0]));
+  const curve = new THREE.CatmullRomCurve3(path, !!closed, "catmullrom", 0.5);
+  const g = new THREE.TubeGeometry(curve, Math.max(40, pts.length*14), r, 20, !!closed);
+  g.scale(flat, 1, 1);
+  const out = [{g}];
+  if(!closed){                                   // round caps, so the bar ends are not open
+    [pts[0], pts[pts.length-1]].forEach(q => {
+      const c = new THREE.SphereGeometry(r, 18, 12);
+      c.scale(flat, 1, 1);
+      c.translate(0, q[1], -q[0]);
+      out.push({g: c});
+    });
+  }
+  return out;
+}
+const shapeMember = (sh, t, dx) => [{g: plate(sh, t, 4), orient:true, dx: dx || 0}];
+
+/* spiral scroll, as a control path for a swept bar */
+function scrollCtrl(cx, cy, r0, r1, turns, start){
+  const out = [], n = 26;
+  for(let i=0;i<=n;i++){
+    const k = i/n, a = start + turns*Math.PI*2*k, r = r0 + (r1-r0)*k;
+    out.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]);
+  }
+  return out;
+}
+function annulus(cx, cy, ro, ri){
+  const s = new THREE.Shape();
+  s.absarc(cx, cy, ro, 0, Math.PI*2, false);
+  const h = new THREE.Path();
+  h.absarc(cx, cy, ri, 0, Math.PI*2, true);
+  s.holes.push(h);
+  return s;
+}
+function stroke(ctrl, w, samples, cap){
+  const curve = new THREE.SplineCurve(ctrl.map(p => new THREE.Vector2(p[0], p[1])));
+  const pts = curve.getPoints(samples || 40);
+  const left = [], right = [];
+  for(let i=0;i<pts.length;i++){
+    const a = pts[Math.max(0,i-1)], b = pts[Math.min(pts.length-1,i+1)];
+    const t = new THREE.Vector2(b.x-a.x, b.y-a.y).normalize();
+    const n = new THREE.Vector2(-t.y, t.x).multiplyScalar(w/2);
+    left.push(new THREE.Vector2(pts[i].x+n.x, pts[i].y+n.y));
+    right.push(new THREE.Vector2(pts[i].x-n.x, pts[i].y-n.y));
+  }
+  if(!cap) return new THREE.Shape(left.concat(right.reverse()));
+  const arc = (p, n, from, to) => {
+    const out = [];
+    for(let i=1;i<8;i++){
+      const th = from + (to-from)*i/8;
+      out.push(new THREE.Vector2(
+        p.x + n.x*Math.cos(th) - n.y*Math.sin(th),
+        p.y + n.x*Math.sin(th) + n.y*Math.cos(th)));
+    }
+    return out;
+  };
+  const last = pts[pts.length-1], first = pts[0];
+  const nEnd = new THREE.Vector2(left[left.length-1].x - last.x, left[left.length-1].y - last.y);
+  const nStart = new THREE.Vector2(left[0].x - first.x, left[0].y - first.y);
+  return new THREE.Shape(left.concat(arc(last, nEnd, 0, -Math.PI))
+                             .concat(right.reverse())
+                             .concat(arc(first, nStart, Math.PI, 0)));
+}
+
+/* ---------- ten traditional sides ----------
+   All ten share the seat line, the back curve, the arm height and the foot position, so the
+   plank interface and the assembly are identical. Only the character changes. */
+const SIDES = {
+  /* traced off the reference photograph: one cast piece runs from the ground up the front
+     leg, curls into the arm volute, sweeps back along the arm and up into the back post;
+     the rear leg branches off at the seat rail, and a thin arched brace ties the two legs. */
+  referanse: {label:"Referanse · foto", bar:23, flat:.64, arm:null, web:null, orn:null,
+              style:"ref", tie:true,
+              legF:[[2,0],[52,190],[112,400],[150,452]], legR:[[664,0],[606,190],[522,380],[470,452]]},
+  /* traced by hand in the profile studio, 22 Sep — coordinates straight from the export */
+  tracet: {label:"Referanse · tracet", bar:23, flat:.64, style:"trace", tie:false,
+    legF:[[2,0],[52,190],[82,296],[128,386],[150,450]],
+    legR:[[664,0],[606,190],[522,380],[470,452]],
+    trace:[
+      {r:8,  pts:[[150,452],[180,490],[208,516],[228,550],[240,590],[234,630],[198,650],[158,644],[128,622],[116,590],[122,558],[154,542],[182,546],[196,568],[206,592],[180,604],[160,590]]},
+      {r:22, pts:[[470,452],[482,540],[498,640],[518,748],[536,828],[542,864]]},
+      {r:10, pts:[[70,232],[240,268],[420,268],[600,232]]},
+      {r:13, pts:[[520,640],[506,586]]},
+      {r:9,  pts:[[152,454],[150,452],[208,474],[278,486],[336,486],[392,476],[472,450]]},
+      {r:8,  pts:[[214,656],[360,656],[426,662],[462,684],[476,716],[488,754],[502,792],[514,834],[524,852],[526,872],[544,882],[580,880],[586,872],[592,850],[570,844],[568,848],[568,852],[564,860],[562,860]]}
+    ],
+    scrolls:[{r:14, at:[96,732], R:54, turns:1.05}]},
+  frogner:   {label:"Frogner · scroll cluster", bar:19, flat:.66, arm:"scroll", web:null, orn:null,
+              underarm:"cluster", tie:true,
+              legF:[[-34,0],[38,180],[108,330],[150,452]], legR:[[652,0],[580,190],[506,340],[470,452]]},
+  kvadratur: {label:"Kvadraturen · plain sweep", bar:22, flat:.62, arm:"roll", web:null, orn:null,
+              underarm:"single", tie:true,
+              legF:[[-12,0],[50,190],[112,335],[150,452]], legR:[[630,0],[566,195],[504,340],[470,452]]},
+  sorlandet: {label:"Sørlandet · light scrolls", bar:17, flat:.68, arm:"scroll", web:null, orn:null,
+              underarm:"cluster", tie:true, bead:true,
+              legF:[[-22,0],[44,186],[110,332],[150,452]], legR:[[642,0],[574,192],[505,338],[470,452]]},
+  alesund:   {label:"Ålesund II · swept scroll", bar:25, flat:.62, arm:"scroll", web:"arch", orn:"roundel", bead:true,
+              legF:[[56,0],[62,20],[92,250],[126,350],[150,452]], legR:[[574,0],[570,20],[540,260],[500,350],[470,452]]},
+  sunnmore:  {label:"Sunnmøre · twin + scroll", bar:16, flat:.70, arm:"scroll", web:"arch", orn:"roundelS", twin:30, bead:true,
+              legF:[[66,0],[74,220],[112,350],[150,452]], legR:[[564,0],[554,225],[508,350],[470,452]]},
+  borgund:   {label:"Borgund · harp", bar:16, flat:.70, arm:"roll", web:"harp", orn:null, twin:34,
+              legF:[[70,0],[80,220],[118,350],[150,452]], legR:[[560,0],[548,225],[502,350],[470,452]]},
+  giske:     {label:"Giske · double scroll", bar:23, flat:.64, arm:"double", web:"scrollweb", orn:null, bead:true,
+              legF:[[58,0],[70,230],[110,345],[150,452]], legR:[[572,0],[558,235],[508,348],[470,452]]},
+  aksla:     {label:"Aksla · trefoil", bar:17, flat:.70, arm:"scroll", web:"arch", orn:"trefoil", twin:28, bead:true,
+              legF:[[68,0],[78,220],[116,350],[150,452]], legR:[[562,0],[550,225],[504,350],[470,452]]},
+  valderoy:  {label:"Valderøy · paired scrolls", bar:22, flat:.65, arm:"scroll", web:"scrollweb", orn:"roundelS",
+              legF:[[58,0],[68,225],[110,348],[150,452]], legR:[[572,0],[560,230],[510,348],[470,452]]},
+  ellingsoy: {label:"Ellingsøy · spindles", bar:21, flat:.66, arm:"roll", web:"spindles", orn:null, bead:true,
+              legF:[[62,0],[74,225],[114,350],[150,452]], legR:[[568,0],[554,230],[506,350],[470,452]]},
+  godoy:     {label:"Godøy · grand scroll", bar:29, flat:.60, arm:"scroll", web:"ringarch", orn:"roundel", bead:true,
+              legF:[[52,0],[58,20],[88,245],[124,350],[150,452]], legR:[[578,0],[572,20],[544,255],[502,350],[470,452]]}
+};
+
+const bead = (d, y, r, flat) => {
+  const g = new THREE.SphereGeometry(r, 20, 14);
+  g.scale(flat*1.15, 1, 1);
+  g.translate(0, y, -d);
+  return [{g}];
+};
+
+/* Sample a member's own curve, so nothing is ever placed by eye.
+   atHeight() returns the point where a leg actually is at a given height;
+   onCurve() returns the point where a web curve actually is at a given depth. */
+function atHeight(pts, y){
+  const c = new THREE.SplineCurve(pts.map(q => new THREE.Vector2(q[1], q[0]))); // (height, depth)
+  const sm = c.getPoints(80);
+  for(let i=1;i<sm.length;i++){
+    if((sm[i-1].x - y)*(sm[i].x - y) <= 0){
+      const t = (y - sm[i-1].x) / ((sm[i].x - sm[i-1].x) || 1);
+      return [sm[i-1].y + t*(sm[i].y - sm[i-1].y), y];
+    }
+  }
+  return [sm[sm.length-1].y, y];
+}
+function onCurve(pts, d){
+  const c = new THREE.SplineCurve(pts.map(q => new THREE.Vector2(q[0], q[1])));
+  const sm = c.getPoints(120);
+  let best = sm[0];
+  sm.forEach(p => { if(Math.abs(p.x - d) < Math.abs(best.x - d)) best = p; });
+  return [d, best.y];
+}
+const shiftTo = (pts, target) => {
+  const dx = target[0] - pts[0][0], dy = target[1] - pts[0][1];
+  return pts.map(q => [q[0] + dx, q[1] + dy]);
+};
+/* an arch that starts and finishes exactly on the two legs */
+function archPts(LF, LR, y, rise){
+  const a = atHeight(LF, y), b = atHeight(LR, y);
+  const mid = (a[0] + b[0]) / 2;
+  return [a, [a[0] + (mid-a[0])*0.45, y + rise*0.72], [mid, y + rise], [b[0] - (b[0]-mid)*0.45, y + rise*0.72], b];
+}
+
+function armMembers(S){
+  const r = S.bar*0.86, f = S.flat, out = [];
+  const aY = 700, aD = postD(aY);
+  if(S.arm === "scroll"){
+    out.push(...tubeMember([[aD,aY],[430,690],[290,684],[214,692]], r, f));
+    out.push(...tubeMember(scrollCtrl(140, 700, 78, 20, 1.15, -0.25), r*0.7, f));
+    out.push(...tubeMember([[152,474],[146,566],[142,662]], r*0.8, f));
+  }else if(S.arm === "roll"){
+    out.push(...tubeMember([[aD,aY],[420,690],[262,684],[186,690]], r, f));
+    out.push(...tubeMember(scrollCtrl(150, 690, 46, 18, 0.8, -0.2), r*0.7, f));
+    out.push(...tubeMember([[160,474],[152,570],[150,664]], r*0.8, f));
+  }else if(S.arm === "straight"){
+    out.push(...tubeMember([[aD,aY],[400,694],[220,698],[158,700]], r, f));
+    out.push(...tubeMember([[158,700],[154,600],[156,474]], r*0.8, f));
+  }else if(S.arm === "double"){
+    out.push(...tubeMember([[aD,aY],[430,690],[290,684],[214,692]], r, f));
+    out.push(...tubeMember(scrollCtrl(140, 700, 78, 20, 1.15, -0.25), r*0.7, f));
+    out.push(...tubeMember([[152,474],[146,566],[142,662]], r*0.8, f));
+    out.push(...tubeMember(scrollCtrl(196, 520, 52, 14, 1.0, Math.PI*0.9), r*0.6, f));
+  }else if(S.arm === "loop"){
+    out.push(...tubeMember([[aD,aY],[420,690],[300,682],[236,690]], r, f));
+    out.push(...tubeMember(scrollCtrl(168, 692, 66, 60, 1, 0), r*0.62, f, true));
+    out.push(...tubeMember([[168,474],[160,572],[158,632]], r*0.8, f));
+  }
+  return out;
+}
+
+/* the triangle between arm and seat rail — where these benches put all their ornament */
+function underarmMembers(S){
+  const r = S.bar*0.6, f = S.flat, out = [];
+  const armY = 686;
+  const rail = d => seatY(Math.min(D1, Math.max(D0, d))) + SLAT_H/2 - 26;
+  if(S.underarm === "single"){
+    out.push(...tubeMember([[330,armY],[268,618],[240,556],[262,rail(262)]], r, f));
+  }
+  if(S.underarm === "cluster"){
+    out.push(...tubeMember([[430,armY],[374,624],[330,558],[306,rail(306)]], r, f));
+    out.push(...tubeMember([[312,armY],[266,618],[238,556],[232,rail(232)]], r, f));
+    out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0, -46, 0.88, Math.PI*0.08), [360, armY-8]), r*0.8, f));
+    out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0,  46, -0.88, Math.PI*0.92), [250, armY-8]), r*0.8, f));
+  }
+  return out;
+}
+
+function webMembers(S, LF, LR){
+  const r = S.bar*0.7, f = S.flat, out = [];
+  const arch = archPts(LF, LR, 250, 72);
+  const tieAt = y => [atHeight(LF, y), atHeight(LR, y)];
+
+  if(S.web === "arch"){
+    out.push(...tubeMember(arch, r, f));
+  }else if(S.web === "cross"){
+    const lo = tieAt(150), hi = tieAt(330);
+    out.push(...tubeMember([lo[0], hi[1]], r*0.8, f));
+    out.push(...tubeMember([hi[0], lo[1]], r*0.8, f));
+  }else if(S.web === "wave"){
+    const a = atHeight(LF, 246), b = atHeight(LR, 246);
+    const span = b[0] - a[0];
+    out.push(...tubeMember([a,
+      [a[0] + span*0.25, 246 + 76], [a[0] + span*0.5, 246 + 4],
+      [a[0] + span*0.75, 246 + 76], b], r*0.8, f));
+  }else if(S.web === "harp" || S.web === "spindles"){
+    const tie = tieAt(168);
+    out.push(...tubeMember(arch, r*0.85, f));
+    out.push(...tubeMember([tie[0], [(tie[0][0]+tie[1][0])/2, 168], tie[1]], r*0.7, f));
+    const n = S.web === "harp" ? 5 : 3;
+    const d0 = arch[0][0] + 46, d1 = arch[4][0] - 46;
+    for(let i=0;i<n;i++){
+      const d = d0 + (d1 - d0)*(i + 0.5)/n;
+      const top = onCurve(arch, d);
+      out.push(...tubeMember([[d, 168], [d, top[1]]], r*0.45, f));
+      if(S.web === "spindles") out.push(...bead(d, (168 + top[1])/2, r*0.75, f));
+    }
+  }else if(S.web === "scrollweb"){
+    out.push(...tubeMember(arch, r*0.8, f));
+    [0.3, 0.7].forEach((k, i) => {
+      const d = arch[0][0] + (arch[4][0] - arch[0][0])*k;
+      const anchor = onCurve(arch, d);
+      const sp = scrollCtrl(0, 0, 0, -64, i ? -1.05 : 1.05, i ? Math.PI : 0);
+      out.push(...tubeMember(shiftTo(sp, anchor), r*0.6, f));
+    });
+  }else if(S.web === "ringarch"){
+    out.push(...tubeMember(arch, r*0.85, f));
+    const peak = arch[2], R = 52;
+    const ring = scrollCtrl(peak[0], peak[1] - R, R, R, 1, Math.PI/2);
+    out.push(...tubeMember(ring, r*0.55, f, true));
+  }
+  return out;
+}
+
+function ornMembers(S, LF, LR){
+  const out = [];
+  const arch = archPts(LF, LR, 250, 72);
+  const peak = arch[2];
+  if(S.orn === "roundel")  out.push(...shapeMember(annulus(peak[0], peak[1] - 46, 46, 26), S.bar*1.3));
+  if(S.orn === "roundelS") out.push(...shapeMember(annulus(peak[0], peak[1] - 34, 34, 19), S.bar*1.4));
+  if(S.orn === "trefoil"){
+    out.push(...shapeMember(annulus(peak[0], peak[1] - 30, 30, 16), S.bar*1.6));
+    [-58, 58].forEach(o => out.push(...shapeMember(
+      annulus(peak[0] + o, onCurve(arch, peak[0] + o)[1] - 26, 24, 12), S.bar*1.5)));
+  }
+  if(S.orn === "bead") out.push(...bead(peak[0], peak[1], S.bar*1.5, S.flat));
+  return out;
+}
+
+let FOOT_D = [56, DEPTH - 36];
+// where the cross tie rod actually meets the side frame — sampled off the rear leg
+let TIE_POS = [330, 214];
+/* the reference bench: leg -> volute -> arm -> back post as one continuous cast run */
+function refMembers(S, LF, LR, hasBack, top){
+  const out = [], r = S.bar, f = S.flat;
+  const armY = 702;
+
+  // front leg carried on into the arm: up, a short turn, then a long near-level run back
+  const headF = LF[LF.length-1];
+  const armRun = [headF, [150, 552], [146, 624], [164, 676],
+                  [214, armY], [300, armY + 8], [400, armY + 10], [478, armY - 4], [510, armY - 40]];
+  out.push(...tubeMember(armRun, r*0.9, f));
+
+  // the volute: a flat spiral tucked under the front of the arm, centred over the front leg
+  out.push(...tubeMember(shiftTo(scrollCtrl(0, 0, 0, -54, 1.05, Math.PI*0.1), [176, 660]), r*0.62, f));
+
+  // rear leg carried on up into the back post, finishing in a rounded head
+  if(hasBack){
+    const headR = LR[LR.length-1];
+    const postRun = [headR, [482, 540], [498, 640], [518, 748], [536, 828], [542, top + 14]];
+    out.push(...tubeMember(postRun, r*0.98, f));
+    out.push(...bead(542, top + 14, r*1.1, f));
+    // the short knuckle that props the arm against the post
+    out.push(...tubeMember([[510, armY - 40], [520, 640], [506, 586]], r*0.55, f));
+  }
+
+  // the thin arched brace low between the legs, with its central boss
+  const brace = archPts(LF, LR, 232, 46);
+  out.push(...tubeMember(brace, r*0.42, f));
+  out.push(...bead(brace[2][0], brace[2][1], r*0.8, f));
+  return out;
+}
+
+function sideMembers(){
+  const S = SIDES[cfg.side];
+  const hasBack = cfg.back !== "none";
+  const top = cfg.back === "low" ? 690 : BACK_TOP;
+  const out = [];
+
+  /* a hand-traced profile: every member comes from the studio export, nothing placed by eye */
+  if(S.style === "trace"){
+    const lift = p => p.map(q => [q[0], q[1] <= 2 ? GRD - 46 : q[1] + GRD*0.12]);
+    const LFt = lift(S.legF), LRt = lift(S.legR);
+    FOOT_D = [LFt[0][0], LRt[0][0]];
+    out.push(...tubeMember(LFt, S.bar, S.flat));
+    out.push(...tubeMember(LRt, S.bar, S.flat));
+    S.trace.forEach(m => {
+      if(!hasBack && m.pts[m.pts.length-1][1] > 520) return;   // drop the back run when there is no back
+      out.push(...tubeMember(lift(m.pts), m.r, S.flat));
+    });
+    (S.scrolls || []).forEach(sc => out.push(...tubeMember(
+      lift(scrollCtrl(sc.at[0], sc.at[1], sc.R, sc.R*0.12, sc.turns, Math.PI*0.1)), sc.r, S.flat)));
+    return out;
+  }
+
+  // seat rail — identical on every side. The groove is cut INTO this bar, so there is no
+  // separate wall or lip: the bar is deep enough to hide the plank ends from outside.
+  const rail = [];
+  for(let d=D0-16; d<=D1+16; d+=30)
+    rail.push([d, seatY(Math.min(D1,Math.max(D0,d))) + SLAT_H/2 - 4]);
+  out.push(...tubeMember(rail, 33, S.flat*1.05));
+
+  // legs, lifted to stand in the chosen foot
+  const lift = p => p.map(q => [q[0], q[1] === 0 ? GRD - 46 : q[1] + GRD*0.12]);
+  const LF = lift(S.legF), LR = lift(S.legR);
+  FOOT_D = [LF[0][0], LR[0][0]];
+  { const ty = LF[0][1] + 200; const a = atHeight(LR, ty); TIE_POS = [a[0], a[1]]; }
+  if(S.twin){
+    [-S.twin, S.twin].forEach(o => {
+      out.push(...tubeMember(LF.map(q => [q[0]+o*0.5, q[1]]), S.bar, S.flat));
+      out.push(...tubeMember(LR.map(q => [q[0]-o*0.5, q[1]]), S.bar, S.flat));
+    });
+  }else{
+    out.push(...tubeMember(LF, S.bar, S.flat));
+    out.push(...tubeMember(LR, S.bar*0.95, S.flat));
+  }
+
+  if(S.style === "ref"){
+    out.push(...refMembers(S, LF, LR, hasBack, top));
+    out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
+    return out;
+  }
+
+  // back post, following the curved back
+  if(hasBack){
+    const post = [];
+    for(let y=450; y<=top; y+=50) post.push([postD(y) - 16, y]);
+    post.push([postD(top) - 16, top]);
+    out.push(...tubeMember(post, 31, S.flat*1.05));
+    out.push(...shapeMember(annulus(postD(top)-2, top-6, S.bar*1.5, 0.01), S.bar*1.6));
+    out.push(...armMembers(S).filter(() => cfg.back === "high"));
+  }
+
+  if(S.bead){
+    const cf = atHeight(LF, 424), cr = atHeight(LR, 424);
+    out.push(...bead(cf[0], cf[1], S.bar*1.3, S.flat));
+    out.push(...bead(cr[0], cr[1], S.bar*1.3, S.flat));
+  }
+  out.push(...webMembers(S, LF, LR), ...ornMembers(S, LF, LR));
+  if(S.underarm && cfg.back === "high") out.push(...underarmMembers(S));
+
+  return out;
+}
+
+/* ---------- ten feet to choose between ---------- */
+/* each returns a list of parts: {g: geometry, p:[dx,dy,dz], r:[rx,ry,rz]}
+   positions are relative to the point where the leg meets the ground.
+   ORIENT = [0, Math.PI/2, 0] puts an extruded 2D profile in the depth/height plane. */
+const ORIENT = [0, Math.PI/2, 0];
+const lathe = (pts, seg, sz) => {
+  const g = new THREE.LatheGeometry(pts.map(q => new THREE.Vector2(q[0], q[1])), seg || 40);
+  if(sz) g.scale(1, 1, sz);
+  g.computeVertexNormals();
+  return g;
+};
+
+const FEET = {
+  taper: {
+    label: "Taper", H:44, size:"96 × 62 pad, 26 high",
+    note: "Barely a foot — the leg tapers and meets the ground on a small oval pad",
+    parts(){
+      const pts = [[9,0],[9,44],[26,44]];
+      for(let i=1;i<=10;i++){ const t=i/10; pts.push([26 + 22*Math.pow(t,1.6), 44*(1-t)]); }
+      pts.push([48, 0], [9, 0]);
+      return [{g: lathe(pts, 36, 0.66)}];
+    }
+  },
+  skid: {
+    label: "Skid", H:44, size:"280 × 98 runner, 40 section, 44 wide",
+    note: "The leg turns and runs along the ground as a slim sled runner with rounded, lifted tips",
+    parts(){
+      return [{g: plate(stroke([[-120,78],[-84,38],[0,24],[84,38],[120,78]], 40, 34, true), 44, 6), r:ORIENT}];
+    }
+  },
+
+  /* --- the five below keep the same rule as taper and skid: the foot is the leg
+     arriving at the ground, never an ornament bolted onto the bottom of it. --- */
+
+  flare: {
+    label: "Flare", H:120, size: "Ø88 at the ground, 120 high",
+    note: "No separate foot at all — the leg section widens into the ground over the last 120 mm",
+    parts(){
+      const pts = [[0,0],[44,0]];
+      for(let i=1;i<=14;i++){ const t=i/14; pts.push([44 - 31*Math.pow(t,0.55), 120*t]); }
+      return [{g: lathe(pts, 40, 0.74)}];
+    }
+  },
+
+  blade: {
+    label: "Blade", H:56, size: "188 across × 42, 56 high",
+    note: "The leg flattens across the bench into a thin blade standing on its edge",
+    parts(){
+      const pts = [[0,0],[94,0]];
+      for(let i=1;i<=12;i++){ const t=i/12; pts.push([94 - 72*Math.pow(t,0.8), 56*t]); }
+      return [{g: lathe(pts, 40, 0.23)}];
+    }
+  },
+
+  runner: {
+    label: "Runner", H:52, size: "190 fore-aft runner, 46 wide",
+    note: "A short runner under each leg, flat on the ground, tips only just eased",
+    parts(){
+      return [{g: plate(stroke([[-95,34],[-58,23],[0,20],[58,23],[95,34]], 36, 30, true), 46, 5), r:ORIENT}];
+    }
+  },
+
+  cuff: {
+    label: "Cuff", H:76, size: "Ø104 collar, 76 high",
+    note: "One low cast collar where the leg reaches the ground, and nothing else",
+    parts(){
+      const pts = [[0,0],[38,0],[46,9],[52,24],[49,41],[30,50],[22,60],[18,76]];
+      return [{g: lathe(pts, 40, 0.8)}];
+    }
+  },
+
+  wedge: {
+    label: "Wedge", H:130, size: "200 ground line fore-aft, 40 wide",
+    note: "The leg splays fore and aft into a shallow wedge with a long flat ground line",
+    parts(){
+      const sh = new THREE.Shape();
+      sh.moveTo(-100, 0);
+      sh.quadraticCurveTo(-50, 24, -20, 130);
+      sh.lineTo(20, 130);
+      sh.quadraticCurveTo(50, 24, 100, 0);
+      sh.closePath();
+      return [{g: plate(sh, 40, 6), r:ORIENT}];
+    }
+  }
+};
+
+function footParts(){ return FEET[cfg.foot].parts(); }
+
+/* the groove: drawn as a translucent volume so the slide reads when the interface is on */
+function channelParts(){
+  const top = cfg.back === "low" ? 690 : BACK_TOP;
+  const out = [];
+  const seatLine = [];
+  for(let d=D0-16; d<=D1+16; d+=24) seatLine.push([d, seatY(Math.min(D1,Math.max(D0,d))) + SLAT_H/2]);
+  out.push(plate(stroke(seatLine, TEN_H + 6, 30), TEN_L + 6));
+  if(cfg.back !== "none"){
+    const backLine = [];
+    for(let y=520; y<=top-20; y+=30) backLine.push([postD(y) - 22, y]);
+    out.push(plate(stroke(backLine, TEN_H + 6, 24), TEN_L + 6));
+  }
+  return out;
+}
+
+/* ---------- build ---------- */
+let parts = [];
+let seatParts = [], seatCubeParts = [], backParts = [], backCubeParts = [];
+function clear(){
+  while(root.children.length) root.remove(root.children[0]);
+  parts.forEach(m => m.geometry.dispose());
+  parts = [];
+}
+function add(geom, mat, pos, rot, layer){
+  const m = new THREE.Mesh(geom, mat);
+  m.castShadow = m.receiveShadow = true;
+  m.position.set(pos[0], pos[1], pos[2]);
+  if(rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+  m.userData.layer = layer; m.userData.baseY = pos[1];
+  parts.push(m); root.add(m);
+  return m;
+}
+
+function build(){
+  clear();
+  GRD = FEET[cfg.foot].H;
+  const L = cfg.length;
+  const hasBack = cfg.back !== "none";
+  const topBack = cfg.back === "low" ? 690 : BACK_TOP;
+
+  // the two sides — the only structure
+  const members = sideMembers();
+  [[0, 1], [L, -1]].forEach(([x, sgn]) => members.forEach(m => {
+    const mesh = add(m.g.clone(), matMetal, [x + (m.dx || 0)*sgn, 0, 0],
+                     m.orient ? [0, Math.PI/2, 0] : null, 1);
+    mesh.userData.side = true;
+  }));
+
+  // the feet, directly under the two legs of each side
+  // the groove, one per side, sitting just inside the inner face
+  channelParts().forEach(g => [[0,1],[L,-1]].forEach(([x,sgn]) => {
+    const m = add(g.clone(), matChannel, [x + (PLATE/2 - 16)*sgn, 0, 0], [0, Math.PI/2, 0], 1);
+    m.userData.iface = true;
+    m.castShadow = false;
+  }));
+
+  // tie rod: the thin bar that ties the two sides together low down
+  if(SIDES[cfg.side].tie){
+    const [tD, tY] = TIE_POS;
+    const rod = new THREE.CylinderGeometry(11, 11, L + PLATE*0.6, 16);
+    rod.rotateZ(Math.PI/2);
+    add(rod, matMetal, [L/2, tY, -tD], null, 1);
+    const collar = new THREE.SphereGeometry(21, 18, 12);
+    collar.scale(1.5, 1, 1);
+    add(collar, matMetal, [L/2, tY, -tD], null, 1);
+  }
+
+  const fparts = footParts();
+  const feetD = FEET[cfg.foot].perSide ? [0] : FOOT_D;
+  [0, L].forEach(x => feetD.forEach(d => fparts.forEach(pt =>
+    add(pt.g.clone(), matMetal,
+        [x + (pt.p ? pt.p[0] : 0), (pt.p ? pt.p[1] : 0), -d + (pt.p ? pt.p[2] : 0)],
+        pt.r || null, 0))));
+
+  // seat planks: full 60 x 35 section between the sides, 40 x 24 tenon into the channel
+  const inner = L - PLATE;            // clear distance between the inner faces
+  const tenX = [PLATE/2 - TEN_L/2, L - PLATE/2 + TEN_L/2];
+  const LY = LAYOUTS[cfg.layout];
+  SLAT_W = LY.sw; PITCH = LY.spitch; TEN_W = Math.min(LY.sw - 20, 120);
+  const BW = LY.bw, BTEN = Math.min(LY.bw - 20, 260);
+  seatParts = []; seatCubeParts = []; backParts = []; backCubeParts = [];
+  const seatStations = curveStations("seat", LY.srows, LY.spitch);
+  const nSeat = seatStations.length;
+  seatStations.forEach((st, i) => {
+    if(cfg.tiltSeat[i] === undefined) cfg.tiltSeat[i] = (cfg.layout === "boards" ? DROOP_BOARDS : DROOP)[i] || 0;
+    const t = st.t + cfg.tiltSeat[i];
+    const y = st.y + (SLAT_H/2)*Math.cos(t);
+    const z = -st.d + (SLAT_H/2)*Math.sin(t);
+    const group = {st, meshes:[]};
+    group.meshes.push(add(new THREE.BoxGeometry(inner - 2, SLAT_H, SLAT_W), matWood, [L/2, y, z], [t,0,0], 2));
+    tenX.forEach(tx => {
+      const m = add(new THREE.BoxGeometry(TEN_L, TEN_H, TEN_W), matWood, [tx, y, z], [t,0,0], 2);
+      m.userData.iface = true;
+      group.meshes.push(m);
+    });
+    seatParts.push(group);
+  });
+
+  // spacer cubes, one midway along the curve between neighbouring planks
+  for(let i=1; i<seatStations.length; i++){
+    const a = seatStations[i-1], b = seatStations[i];
+    const t = (a.t + cfg.tiltSeat[i-1] + b.t + cfg.tiltSeat[i])/2;
+    const y = (a.y + b.y)/2 + (SLAT_H/2)*Math.cos(t);
+    const z = -(a.d + b.d)/2 + (SLAT_H/2)*Math.sin(t);
+    const group = {a, b, meshes:[]};
+    tenX.forEach(tx => {
+      const m = add(new THREE.BoxGeometry(TEN_L, TEN_H, CUBE), matMetal, [tx, y, z], [t,0,0], 2);
+      m.userData.iface = true;
+      group.meshes.push(m);
+    });
+    seatCubeParts.push(group);
+  }
+
+  // back planks: same rule, stations measured along the curved back
+  const rows = cfg.back === "none" ? 0
+             : cfg.back === "low" ? Math.max(1, Math.round(LY.brows/2)) : LY.brows;
+  const backStations = rows ? curveStations("back", rows, LY.bpitch) : [];
+  const nBack = backStations.length;
+  backStations.forEach((st, i) => {
+    if(cfg.tiltBack[i] === undefined) cfg.tiltBack[i] = 0;
+    const tilt = -st.t + cfg.tiltBack[i];     // face turns back with the curve, not forward
+    const z = -st.d + 22*Math.cos(tilt);
+    const y = st.y - 22*Math.sin(tilt);
+    const group = {st, meshes:[]};
+    group.meshes.push(add(new THREE.BoxGeometry(inner - 2, BW, SLAT_H), matWood, [L/2, y, z], [tilt,0,0], 3));
+    tenX.forEach(tx => {
+      const m = add(new THREE.BoxGeometry(TEN_L, BTEN, TEN_H), matWood, [tx, y, z], [tilt,0,0], 3);
+      m.userData.iface = true;
+      group.meshes.push(m);
+    });
+    backParts.push(group);
+  });
+  for(let i=1; i<backStations.length; i++){
+    const a = backStations[i-1], b = backStations[i];
+    const t = (-a.t + cfg.tiltBack[i-1] + -b.t + cfg.tiltBack[i])/2;
+    const z = -(a.d + b.d)/2 + 22*Math.cos(t);
+    const y = (a.y + b.y)/2 - 22*Math.sin(t);
+    const group = {a, b, meshes:[]};
+    tenX.forEach(tx => {
+      const m = add(new THREE.BoxGeometry(TEN_L, CUBE, TEN_H), matMetal, [tx, y, z], [t,0,0], 3);
+      m.userData.iface = true;
+      group.meshes.push(m);
+    });
+    backCubeParts.push(group);
+  }
+
+  buildEnv();
+  applyLight();
+  root.position.set(-L/2, cfg.lift, DEPTH/2);
+  applyExplode();
+  applyInterface();
+  buildTiltUI();
+  if(!framed){ fit(L); framed = true; }
+  bom(nSeat, nBack, L);
+  document.getElementById("badge").textContent = `${L === 600 ? "Chair" : "Bench"} · ${L} mm · ${cfg.back === "none" ? "backless" : cfg.back === "low" ? "low back" : "high back"}`;
+}
+
+/* the tenons and cubes live inside the side; show them only on request,
+   and always while the bench is exploded */
+function applyInterface(){
+  const on = cfg.iface || cfg.explode > 0;
+  parts.forEach(m => {
+    if(m.userData.iface) m.visible = on;
+    if(m.userData.side) m.material = on ? matGhost : matMetal;
+  });
+  const b = document.getElementById("b-iface");
+  if(b) b.setAttribute("aria-pressed", String(on));
+}
+
+function applyExplode(){
+  const k = cfg.explode/100 * 620;
+  parts.forEach(m => { m.position.y = m.userData.baseY + k*m.userData.layer; });
+}
+
+/* ---------- per-plank angles ---------- */
+function place3(m, x, y, z, t){
+  m.position.set(x, y, z);
+  m.rotation.x = t;
+  m.userData.baseY = y;
+}
+function refreshPlanks(){
+  const L = cfg.length;
+  seatParts.forEach((g, i) => {
+    const t = g.st.t + cfg.tiltSeat[i];
+    const y = g.st.y + (SLAT_H/2)*Math.cos(t);
+    const z = -g.st.d + (SLAT_H/2)*Math.sin(t);
+    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
+  });
+  seatCubeParts.forEach((g, k) => {
+    const t = (g.a.t + cfg.tiltSeat[k] + g.b.t + cfg.tiltSeat[k+1])/2;
+    const y = (g.a.y + g.b.y)/2 + (SLAT_H/2)*Math.cos(t);
+    const z = -(g.a.d + g.b.d)/2 + (SLAT_H/2)*Math.sin(t);
+    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
+  });
+  backParts.forEach((g, i) => {
+    const t = -g.st.t + cfg.tiltBack[i];
+    const y = g.st.y - 22*Math.sin(t);
+    const z = -g.st.d + 22*Math.cos(t);
+    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
+  });
+  backCubeParts.forEach((g, k) => {
+    const t = (-g.a.t + cfg.tiltBack[k] + -g.b.t + cfg.tiltBack[k+1])/2;
+    const y = (g.a.y + g.b.y)/2 - 22*Math.sin(t);
+    const z = -(g.a.d + g.b.d)/2 + 22*Math.cos(t);
+    g.meshes.forEach(m => place3(m, m.position.x, y, z, t));
+  });
+  applyExplode();
+}
+
+const DROOP = [-0.20, -0.07, 0, -0.11, -0.25];
+/* wide boards sit flat, the way the reference bench does — no per-plank droop */
+const DROOP_BOARDS = [0, 0, 0, 0, 0];   // default droop, front to rear, radians
+const DEG = 180/Math.PI;
+function buildTiltUI(){
+  const host = document.getElementById("tilt-list");
+  if(!host) return;
+  const row = (label, arr, i, base) => {
+    const id = `tl-${label}`;
+    return `<div class="tiltrow">
+      <span>${label}</span>
+      <input type="range" id="${id}" min="-30" max="30" step="1" value="${Math.round(arr[i]*DEG)}"
+             aria-label="${label} angle">
+      <output id="${id}-out">${(base + arr[i]*DEG).toFixed(0)}°</output>
+    </div>`;
+  };
+  host.innerHTML =
+    seatParts.map((g,i) => row(`Seat ${i+1}`, cfg.tiltSeat, i, g.st.t*DEG)).join("") +
+    backParts.map((g,i) => row(`Back ${i+1}`, cfg.tiltBack, i, -g.st.t*DEG)).join("");
+
+  seatParts.forEach((g,i) => {
+    const el = document.getElementById(`tl-Seat ${i+1}`);
+    el.addEventListener("input", e => {
+      cfg.tiltSeat[i] = (+e.target.value)/DEG;
+      document.getElementById(`tl-Seat ${i+1}-out`).textContent =
+        (g.st.t*DEG + (+e.target.value)).toFixed(0) + "°";
+      refreshPlanks();
+    });
+  });
+  backParts.forEach((g,i) => {
+    const el = document.getElementById(`tl-Back ${i+1}`);
+    el.addEventListener("input", e => {
+      cfg.tiltBack[i] = (+e.target.value)/DEG;
+      document.getElementById(`tl-Back ${i+1}-out`).textContent =
+        (-g.st.t*DEG + (+e.target.value)).toFixed(0) + "°";
+      refreshPlanks();
+    });
+  });
+}
+
+/* ---------- camera ---------- */
+let framed = false;
+const orbit = {theta:-0.62, phi:1.34, dist:7600, target:new THREE.Vector3(0,1150,0)};
+function fit(L){ orbit.dist = cfg.env === "allee" ? Math.max(6600, L*1.8 + 4400) : Math.max(2800, L*1.6 + 2200); place(); }
+function place(){
+  const {theta, phi, dist, target} = orbit;
+  const below = phi > 1.60;
+  envGroup.visible = !below && cfg.env === "allee";
+  shadowCatcher.visible = !below;
+  camera.position.set(
+    target.x + dist*Math.sin(phi)*Math.sin(theta),
+    target.y + dist*Math.cos(phi),
+    target.z + dist*Math.sin(phi)*Math.cos(theta)
+  );
+  camera.lookAt(target);
+}
+let drag = null;
+const el = renderer.domElement;
+const pointers = new Map();
+let pinch = 0;
+let pinchMid = null;   // two-finger pan: the midpoint between the two fingers
+
+el.addEventListener("contextmenu", e => e.preventDefault());
+
+/* move the look-at point across the screen plane */
+function pan(dx, dy){
+  const fwd = new THREE.Vector3().subVectors(orbit.target, camera.position).normalize();
+  const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0,1,0)).normalize();
+  const up = new THREE.Vector3().crossVectors(right, fwd).normalize();
+  const k = orbit.dist * 0.0016;
+  orbit.target.addScaledVector(right, -dx*k);
+  orbit.target.addScaledVector(up, dy*k);
+  place();
+}
+function zoom(f){
+  orbit.dist = Math.min(20000, Math.max(500, orbit.dist * f));
+  place();
+}
+
+el.addEventListener("pointerdown", e => {
+  el.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(pointers.size === 2){
+    const [p1, p2] = [...pointers.values()];
+    pinch = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+    drag = null;
+    return;
+  }
+  // right button, middle button or shift = pan; left = orbit
+  drag = {x:e.clientX, y:e.clientY, mode:(e.button === 2 || e.button === 1 || e.shiftKey) ? "pan" : "orbit"};
+});
+
+el.addEventListener("pointermove", e => {
+  if(pointers.has(e.pointerId)) pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+
+  if(pointers.size === 2){                       // two fingers: pinch to zoom, drag to pan
+    const [p1, p2] = [...pointers.values()];
+    const d = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+    const mid = {x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2};
+    if(pinch) zoom(pinch / Math.max(1, d));
+    if(pinchMid) pan(mid.x - pinchMid.x, mid.y - pinchMid.y);
+    pinch = d;
+    pinchMid = mid;
+    return;
+  }
+  if(!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if(drag.mode === "pan"){
+    pan(dx, dy);
+  }else{
+    orbit.theta -= dx*0.006;
+    orbit.phi = Math.min(2.92, Math.max(0.18, orbit.phi - dy*0.005));
+    place();
+  }
+  drag = {x:e.clientX, y:e.clientY, mode:drag.mode};
+});
+
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if(pointers.size < 2) { pinch = 0; pinchMid = null; }
+  if(pointers.size === 0) drag = null;
+  try{ el.releasePointerCapture(e.pointerId); }catch(err){}
+}
+el.addEventListener("pointerup", endPointer);
+el.addEventListener("pointercancel", endPointer);
+
+el.addEventListener("wheel", e => {
+  e.preventDefault();
+  if(e.shiftKey) pan(-e.deltaX*0.9 - e.deltaY*0.9, 0);   // shift-wheel pans sideways
+  else if(e.ctrlKey || e.metaKey) pan(0, -e.deltaY*0.9); // ctrl-wheel pans vertically
+  else if(Math.abs(e.deltaX) > Math.abs(e.deltaY)) pan(-e.deltaX*0.9, 0);
+  else zoom(1 + Math.sign(e.deltaY)*0.12);
+}, {passive:false});
+
+/* keyboard: arrows pan, +/- zoom, 0 resets */
+el.tabIndex = 0;
+el.setAttribute("aria-label", "3D view of the bench. Arrow keys pan, plus and minus zoom, 0 resets the view.");
+el.addEventListener("keydown", e => {
+  const step = 60;
+  if(e.key === "ArrowLeft")  pan(step, 0);
+  else if(e.key === "ArrowRight") pan(-step, 0);
+  else if(e.key === "ArrowUp")    pan(0, step);
+  else if(e.key === "ArrowDown")  pan(0, -step);
+  else if(e.key === "+" || e.key === "=") zoom(0.88);
+  else if(e.key === "-") zoom(1.12);
+  else if(e.key === "0") resetView();
+  else return;
+  e.preventDefault();
+});
+
+function resetView(){
+  orbit.theta = -0.62;
+  orbit.phi = 1.34;
+  orbit.target.set(0, (cfg.env === "allee" ? 1150 : 420) + cfg.lift*0.6 + cfg.explode*3.4, 0);
+  fit(cfg.length);
+}
+
+/* ---------- bill of material ---------- */
+function bom(nSeat, nBack, L){
+  const rows = [
+    [`Side — ${SIDES[cfg.side].label}`,
+      `Cast · ~16 kg · ${FEET[cfg.foot].label.toLowerCase()} foot cast in`,
+      `${DEPTH} × ${cfg.back==="none"?520:BACK_TOP} × ${PLATE}`, 2],
+    ["Seat plank", "Timber, one piece", `${SLAT_W} × ${SLAT_H} × ${L - PLATE + 2*TEN_L}, tenon ${TEN_W} × ${TEN_H}`, nSeat],
+    ["Back board", "Timber, one piece", `${LAYOUTS[cfg.layout].bw} × ${SLAT_H} × ${L - PLATE + 2*TEN_L}, tenon ${Math.min(LAYOUTS[cfg.layout].bw-20,260)} × ${TEN_H}`, nBack],
+    ["Spacer cube", "Cast or cut bar", `${CUBE} × ${TEN_H} × ${TEN_L} — true cube`, 2*Math.max(0, nSeat - 1) + 2*Math.max(0, nBack - 1)],
+    ["Seat rail with groove", "Cast, integral with the side", `Ø66 × ${Math.round(66*0.65)} bar, 38 square groove`, 2],
+    ["Channel end stop", "Cast, integral with the side", "closed end of the groove", 2],
+  ].filter(r => r[3] > 0);
+  document.getElementById("bom").innerHTML = rows.map(r =>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join("");
+}
+
+/* ---------- swatches ---------- */
+function swatches(host, list, current, onPick){
+  host.innerHTML = list.map((c,i) =>
+    `<button type="button" title="${c[0]}" aria-label="${c[0]}" aria-pressed="${i===current}"
+      style="background:#${c[1].toString(16).padStart(6,'0')}"></button>`).join("");
+  host.querySelectorAll("button").forEach((b,i) => b.addEventListener("click", () => {
+    onPick(i);
+    host.querySelectorAll("button").forEach((x,j) => x.setAttribute("aria-pressed", String(i===j)));
+  }));
+}
+swatches(document.getElementById("sw-metal"), METALS, cfg.metal, i => {
+  cfg.metal = i; matMetal.color.setHex(METALS[i][1]); matGhost.color.setHex(METALS[i][1]);
+});
+swatches(document.getElementById("sw-wood"), WOODS, cfg.wood, i => {
+  cfg.wood = i; matWood.color.setHex(WOODS[i][1]);
+});
+
+/* ---------- controls ---------- */
+document.getElementById("c-len").addEventListener("change", e => { cfg.length = +e.target.value; build(); });
+document.getElementById("c-back").addEventListener("change", e => { cfg.back = e.target.value; build(); });
+const sideSel = document.getElementById("c-side");
+sideSel.innerHTML = Object.entries(SIDES).map(([k,v]) =>
+  `<option value="${k}"${k===cfg.side?" selected":""}>${v.label}</option>`).join("");
+/* the foot belongs to the side casting - it is not a part anyone picks */
+const SIDE_FOOT = {
+  referanse:"taper", tracet:"taper", frogner:"taper", kvadratur:"runner",
+  sorlandet:"taper", alesund:"flare", sunnmore:"taper", borgund:"blade",
+  giske:"cuff", aksla:"taper", valderoy:"runner", ellingsoy:"cuff", godoy:"wedge"
+};
+function setSide(key){
+  cfg.side = key;
+  cfg.foot = SIDE_FOOT[key] || "taper";
+  sideSel.value = key;
+  document.getElementById("foot-note").textContent =
+    `Foot, cast with this side — ${FEET[cfg.foot].label.toLowerCase()}. ${FEET[cfg.foot].note}.`;
+  const keys = Object.keys(SIDES);
+  document.getElementById("side-count").textContent =
+    `${keys.indexOf(key)+1} / ${keys.length} · ${SIDES[key].label}`;
+  build();
+}
+sideSel.addEventListener("change", e => setSide(e.target.value));
+function stepSide(delta){
+  const keys = Object.keys(SIDES);
+  const i = (keys.indexOf(cfg.side) + delta + keys.length) % keys.length;
+  setSide(keys[i]);
+}
+document.getElementById("b-side-prev").addEventListener("click", () => stepSide(-1));
+document.getElementById("b-side-next").addEventListener("click", () => stepSide(1));
+setSide(cfg.side);
+document.getElementById("c-env").addEventListener("change", e => { cfg.env = e.target.value; buildEnv(); applyLight(); });
+document.getElementById("c-light").addEventListener("change", e => { cfg.light = e.target.value; buildEnv(); applyLight(); });
+
+const layoutSel = document.getElementById("c-layout");
+layoutSel.innerHTML = Object.entries(LAYOUTS).map(([k,v]) =>
+  `<option value="${k}"${k===cfg.layout?" selected":""}>${v.label}</option>`).join("");
+layoutSel.addEventListener("change", e => {
+  cfg.layout = e.target.value;
+  cfg.tiltSeat = []; cfg.tiltBack = [];   // plank count changed, so the per-plank angles reset
+  build();
+});
+
+/* ---------- ▲/▼ steppers on every picker ---------- */
+function addArrows(id){
+  const sel = document.getElementById(id);
+  if(!sel || sel.parentElement.classList.contains("pickrow")) return;
+  const row = document.createElement("div");
+  row.className = "pickrow";
+  sel.parentNode.insertBefore(row, sel);
+  const prev = document.createElement("button"), next = document.createElement("button");
+  prev.type = next.type = "button";
+  prev.textContent = "\u25B2"; next.textContent = "\u25BC";
+  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
+  row.append(prev, sel, next);
+  const out = document.createElement("output");
+  out.className = "pickcount";
+  row.parentNode.insertBefore(out, row.nextSibling);
+  const read = () => { out.textContent = `${sel.selectedIndex+1} / ${sel.options.length} \u00b7 ${sel.options[sel.selectedIndex].textContent}`; };
+  const step = d => {
+    sel.selectedIndex = (sel.selectedIndex + d + sel.options.length) % sel.options.length;
+    sel.dispatchEvent(new Event("change", {bubbles:true}));
+    read();
+  };
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  sel.addEventListener("change", read);
+  read();
+}
+["c-len", "c-layout", "c-back", "c-env", "c-light"].forEach(addArrows);
+
+/* the two colour rows get the same arrows, stepping through the swatches */
+function addSwatchArrows(hostId){
+  const host = document.getElementById(hostId);
+  if(!host || host.parentElement.classList.contains("pickrow")) return;
+  const row = document.createElement("div");
+  row.className = "pickrow";
+  host.parentNode.insertBefore(row, host);
+  const prev = document.createElement("button"), next = document.createElement("button");
+  prev.type = next.type = "button";
+  prev.textContent = "\u25B2"; next.textContent = "\u25BC";
+  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
+  row.append(prev, host, next);
+  const out = document.createElement("output");
+  out.className = "pickcount";
+  row.parentNode.insertBefore(out, row.nextSibling);
+  const btns = () => Array.from(host.querySelectorAll("button"));
+  const read = () => {
+    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
+    out.textContent = `${i+1} / ${b.length} \u00b7 ${b[i].title}`;
+  };
+  const step = d => {
+    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
+    b[(i + d + b.length) % b.length].click();
+    read();
+  };
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  host.addEventListener("click", read);
+  read();
+}
+["sw-metal", "sw-wood"].forEach(addSwatchArrows);
+document.getElementById("c-lift").addEventListener("input", e => {
+  cfg.lift = +e.target.value;
+  root.position.y = cfg.lift;
+});
+document.getElementById("b-joint").addEventListener("click", () => {
+  orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 1500;
+  orbit.target.set(-cfg.length/2 + 260, seatY(260) + 120 + cfg.lift, -300);
+  place();
+});
+document.getElementById("b-under").addEventListener("click", () => {
+  if(cfg.lift < 700){
+    cfg.lift = 900;
+    document.getElementById("c-lift").value = "900";
+    root.position.y = cfg.lift;
+  }
+  orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(3200, cfg.length*1.8);
+  orbit.target.set(0, cfg.lift + 300, 0);
+  place();
+});
+document.getElementById("c-explode").addEventListener("input", e => { cfg.explode = +e.target.value; applyExplode(); applyInterface(); });
+document.getElementById("b-tilt-reset").addEventListener("click", () => {
+  cfg.tiltSeat = cfg.tiltSeat.map((_, i) => DROOP[i] || 0);
+  cfg.tiltBack = cfg.tiltBack.map(() => 0);
+  refreshPlanks();
+  buildTiltUI();
+});
+document.getElementById("b-iface").addEventListener("click", () => {
+  cfg.iface = !cfg.iface;
+  applyInterface();
+});
+document.getElementById("b-view").addEventListener("click", () => { orbit.theta=-Math.PI/2; orbit.phi=1.46; orbit.dist=2700; orbit.target.set(0,480,0); place(); });
+document.getElementById("b-foot").addEventListener("click", () => { orbit.theta=-1.35; orbit.phi=1.40; orbit.dist=1500; orbit.target.set(-cfg.length/2, 200 + cfg.lift, -300); place(); });
+document.getElementById("b-three").addEventListener("click", resetView);
+document.getElementById("b-reset").addEventListener("click", resetView);
+
+/* ---------- loop ---------- */
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+build();
+(function tick(){ renderer.render(scene, camera); requestAnimationFrame(tick); })();
+})();
+</script>
+
+<script>
+/* Plank angles are a design tool, not a customer control. This hides them
+   behind a sign-in. It is a convenience gate: the comparison happens in the
+   browser, so treat the credentials as public. Runs after the configurator
+   script, which builds the slider list. */
+(function () {
+  var cell = document.querySelector("#cfg .tiltcell");
+  var form = document.getElementById("admin-form");
+  if (!cell || !form) { return; }
+  var user = document.getElementById("admin-user");
+  var pass = document.getElementById("admin-pass");
+  var go   = document.getElementById("admin-in");
+  var out  = document.getElementById("admin-out");
+  var msg  = document.getElementById("admin-msg");
+
+  function apply(on) {
+    cell.hidden = !on;
+    user.hidden = on;
+    pass.hidden = on;
+    go.hidden = on;
+    out.hidden = !on;
+    msg.textContent = on ? "Signed in · plank angles unlocked" : "";
+    try {
+      if (on) { localStorage.setItem("kaia-admin", "1"); }
+      else { localStorage.removeItem("kaia-admin"); }
+    } catch (e) {}
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (user.value.trim().toLowerCase() === "ntnu" && pass.value === "mma4002") {
+      apply(true);
+    } else {
+      msg.textContent = "That user and password do not match";
+      pass.value = "";
+      pass.focus();
+    }
+  });
+
+  out.addEventListener("click", function () {
+    user.value = "";
+    pass.value = "";
+    apply(false);
+  });
+
+  var saved = false;
+  try { saved = localStorage.getItem("kaia-admin") === "1"; } catch (e) {}
+  apply(saved);
+}());
+</script>
