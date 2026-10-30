@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="180mm" height="180mm" viewBox="0 0 180 180">
+  <g id="CUT_THROUGH" inkscape:groupmode="layer" inkscape:label="CUT_THROUGH" fill="none" stroke="#ff0000" stroke-width="0.1">
+    <rect x="0.000" y="0.000" width="180.000" height="180.000" />
+    <circle cx="15.000" cy="165.000" r="1.700" />
+    <circle cx="15.000" cy="15.000" r="1.700" />
+    <circle cx="165.000" cy="165.000" r="1.700" />
+    <circle cx="165.000" cy="15.000" r="1.700" />
+  </g>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="770mm" height="440mm" viewBox="0 0 770 440">
+  <g id="FILL_3MM_POCKET" inkscape:groupmode="layer" inkscape:label="FILL_3MM_POCKET" fill="#000000" stroke="none">
+    <rect x="2.800" y="411.800" width="25.400" height="25.400" />
+    <rect x="2.800" y="2.800" width="25.400" height="25.400" />
+    <rect x="741.800" y="411.800" width="25.400" height="25.400" />
+    <rect x="741.800" y="2.800" width="25.400" height="25.400" />
+  </g>
+  <g id="SCORE" inkscape:groupmode="layer" inkscape:label="SCORE" fill="none" stroke="#0000ff" stroke-width="0.1">
+    <rect x="390.000" y="230.000" width="180.000" height="180.000" />
+    <rect x="390.000" y="30.000" width="180.000" height="180.000" />
+    <rect x="575.000" y="30.000" width="180.000" height="380.000" />
+    <rect x="145.000" y="190.000" width="100.000" height="60.000" />
+  </g>
+  <g id="CUT_THROUGH" inkscape:groupmode="layer" inkscape:label="CUT_THROUGH" fill="none" stroke="#ff0000" stroke-width="0.1">
+    <rect x="0.000" y="0.000" width="770.000" height="440.000" />
+    <circle cx="405.000" cy="395.000" r="1.700" />
+    <circle cx="405.000" cy="245.000" r="1.700" />
+    <circle cx="555.000" cy="395.000" r="1.700" />
+    <circle cx="555.000" cy="245.000" r="1.700" />
+    <circle cx="405.000" cy="195.000" r="1.700" />
+    <circle cx="405.000" cy="45.000" r="1.700" />
+    <circle cx="555.000" cy="195.000" r="1.700" />
+    <circle cx="555.000" cy="45.000" r="1.700" />
+    <circle cx="590.000" cy="395.000" r="1.700" />
+    <circle cx="590.000" cy="45.000" r="1.700" />
+    <circle cx="740.000" cy="395.000" r="1.700" />
+    <circle cx="740.000" cy="45.000" r="1.700" />
+    <circle cx="160.000" cy="244.000" r="1.700" />
+    <circle cx="160.000" cy="196.000" r="1.700" />
+    <circle cx="230.000" cy="244.000" r="1.700" />
+    <circle cx="230.000" cy="196.000" r="1.700" />
+    <circle cx="200.000" cy="430.000" r="2.750" />
+    <circle cx="700.000" cy="430.000" r="2.750" />
+    <circle cx="200.000" cy="10.000" r="2.750" />
+    <circle cx="700.000" cy="10.000" r="2.750" />
+    <circle cx="15.500" cy="424.500" r="2.500" />
+    <circle cx="15.500" cy="15.500" r="2.500" />
+    <circle cx="754.500" cy="424.500" r="2.500" />
+    <circle cx="754.500" cy="15.500" r="2.500" />
+  </g>
+</svg>
