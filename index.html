@@ -86,33 +86,6 @@ a { color: inherit; }
   margin-top: clamp(16px, 2.6vh, 26px);
 }
 
-.lede {
-  margin: clamp(14px, 2.5vh, 26px) 0 0;
-  max-width: 34ch;
-  font-size: clamp(16px, 1.9vw, 21px);
-}
-.lede strong { font-weight: 600; }
-
-.spec {
-  list-style: none;
-  margin: clamp(18px, 3vh, 30px) 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  font-family: var(--util);
-  font-size: 11.5px;
-  letter-spacing: .08em;
-  font-variant-numeric: tabular-nums;
-}
-.spec li {
-  padding: 7px 13px 6px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  white-space: nowrap;
-}
-.spec li b { color: var(--ink); font-weight: 500; }
-
 /* the side elevation, plotted from the traced profile coordinates, used as ground */
 .art-cell {
   position: absolute;
@@ -182,12 +155,6 @@ a { color: inherit; }
   letter-spacing: -.03em;
   margin: 0;
 }
-.tool .intro {
-  max-width: 56ch;
-  margin: 18px 0 0;
-  color: var(--muted);
-}
-
 /* the QR is for someone reading this on a laptop, so it is hidden on a phone */
 .qr { margin: 0; display: none; }
 @media (min-width: 620px) { .qr { display: block; } }
@@ -232,6 +199,17 @@ a { color: inherit; }
   background: #ffffff;
 }
 .qrbig .code svg { display: block; width: 100%; height: 100%; }
+.quotesheet { width: min(90vw, 360px); text-align: left; }
+.quotesheet h3 { margin: 0 0 4px; font-family: var(--display); font-size: 20px; }
+.quotesheet .qfield {
+  display: flex; flex-direction: column; gap: 4px; margin: 10px 0 0;
+  font-family: var(--util); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.quotesheet .qfield input {
+  font: 16px var(--body); color: var(--ink); border: 1px solid var(--line); border-radius: 0; padding: 8px 10px;
+}
+.quotesheet .btnrow { margin-top: 16px; }
+.quotesheet #quote-sent p { font-size: 15px; line-height: 1.5; margin: 0 0 14px; }
 .qrbig .url {
   margin: 0;
   font-family: var(--util);
@@ -273,7 +251,6 @@ a { color: inherit; }
   .down { padding: 15px 22px; }
   #cfg button { min-height: 44px; padding: 8px 14px; }
   #cfg select { min-height: 44px; font-size: 16px; padding: 8px 10px; }
-  #cfg .swatches button { width: 42px; height: 42px; }
   #cfg .pickrow { grid-template-columns: 46px 1fr 46px; gap: 8px; }
   #cfg .pickrow button { padding: 0; font-size: 14px; }
   #cfg input[type="range"] { height: 44px; }
@@ -309,9 +286,6 @@ a { color: inherit; }
     font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;
   }
-#cfg h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:600;letter-spacing:-.02em}
-#cfg .lede{margin:10px 0 0;max-width:60ch;color:var(--ink-soft)}
-#cfg header{border-bottom:1px solid var(--line);padding-bottom:20px}
 #cfg .stage{
     position:relative;border:1px solid var(--line);
     background:linear-gradient(180deg,var(--stage-a),var(--stage-b));
@@ -332,6 +306,21 @@ a { color: inherit; }
     border:1px solid var(--line);padding:4px 8px;background:var(--surface);margin:0;
   }
 #cfg .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--ink-soft)}
+#cfg .viewtoggles{position:absolute;right:14px;bottom:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+#cfg .viewtoggles .togrow{display:flex;gap:2px}
+#cfg .viewtoggles button, #cfg .viewtools button{
+    font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    padding:4px 8px;background:rgba(247,245,241,.82);color:var(--ink);border:1px solid var(--line);cursor:pointer;
+  }
+#cfg .viewtoggles button[aria-pressed="true"], #cfg .viewtools button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#cfg .viewtools{position:absolute;left:14px;top:12px;display:flex;flex-direction:column;gap:4px;max-width:260px}
+#cfg .viewtools .togrow{display:flex;gap:2px;flex-wrap:wrap}
+#cfg .viewtools .vtslider{
+    display:flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:10px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--ink);background:rgba(247,245,241,.82);
+    padding:4px 7px;border:1px solid var(--line);
+  }
+#cfg .viewtools .vtslider input{width:90px;margin:0;accent-color:var(--hl)}
 #cfg .controls{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));
     gap:1px;background:var(--line-soft);border:1px solid var(--line);
@@ -346,22 +335,26 @@ a { color: inherit; }
     border:1px solid var(--line);border-radius:0;padding:6px 8px;
   }
 #cfg input[type=range]{width:100%;accent-color:var(--hl);margin:6px 0 0}
+#cfg input[type=number]{
+    font:inherit;font-size:14px;width:70px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:0;padding:6px 8px;
+  }
 #cfg select:focus-visible, #cfg input:focus-visible, #cfg button:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
-#cfg .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+#cfg .btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#cfg button:disabled{opacity:.4;cursor:not-allowed}
 #cfg button{
     font:inherit;font-size:13px;background:var(--paper);color:var(--ink);
     border:1px solid var(--line);border-radius:0;padding:6px 10px;cursor:pointer;
   }
 #cfg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#cfg button#b-quote{background:var(--hl);color:var(--paper);border-color:var(--hl);font-weight:600}
+#cfg button#b-quote:disabled{background:var(--paper);color:var(--ink-soft);border-color:var(--line)}
 #cfg .pickrow{display:grid;grid-template-columns:34px 1fr 34px;gap:6px;align-items:center}
 #cfg .pickrow button{padding:6px 0;font-size:12px;line-height:1}
 #cfg .pickcount{
     font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);
     font-variant-numeric:tabular-nums;
   }
-#cfg .swatches{display:flex;flex-wrap:wrap;gap:6px}
-#cfg .swatches button{padding:0;width:26px;height:26px;border:1px solid var(--line);position:relative}
-#cfg .swatches button[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:1px}
 #cfg .tablewrap{overflow-x:auto;border:1px solid var(--line)}
 #cfg table{border-collapse:collapse;width:100%;min-width:620px;background:var(--surface)}
 #cfg th, #cfg td{text-align:left;padding:8px 12px;font-size:13.5px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
@@ -414,18 +407,6 @@ a { color: inherit; }
 
   <div class="stage-copy">
     <h1 class="mark">OUTDOOR FURNITURE</h1>
-    <p class="lede">
-      One bent flat-bar frame, laser-cut and press-brake formed, with timber
-      boards dropped straight into its slots.
-      <strong>No cast sides, no assembly fasteners in the frame</strong> —
-      just a bench end and a chair end from the same bar.
-    </p>
-    <ul class="spec">
-      <li>Frame <b>bent flat bar</b></li>
-      <li>Planks <b>slot-fit</b></li>
-      <li>Back <b>none / high</b></li>
-      <li>Mark <b>laser-cut / logo shield</b></li>
-    </ul>
   </div>
 
   <div class="art-cell">
@@ -451,12 +432,6 @@ a { color: inherit; }
   <div class="toolhead">
     <div>
       <h2>Configurator</h2>
-      <p class="intro">
-        One frame, two states: with or without the backrest arm. The only
-        thing that changes per order is how it is marked — laser-cut straight
-        into the top plank, or a separate logo shield fixed on top of it.
-        Shown at its modelled demonstrator size, not a final production spec.
-      </p>
     </div>
     <figure class="qr">
       <button type="button" class="code" id="qr-open" aria-label="Enlarge the QR code">
@@ -476,16 +451,37 @@ a { color: inherit; }
   <div class="stage" id="stage">
     <p class="badge" id="badge"></p>
     <p class="hud"><span class="mouse-only">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom · arrow keys pan</span><span class="touch-only">One finger to orbit · two fingers to pan and pinch to zoom</span></p>
+    <div class="viewtools">
+      <div class="togrow" role="group" aria-label="View">
+        <button type="button" id="b-view">Side</button>
+        <button type="button" id="b-joint">Joint</button>
+        <button type="button" id="b-under">Underside</button>
+        <button type="button" id="b-three">3/4</button>
+        <button type="button" id="b-reset">Reset</button>
+      </div>
+      <div class="togrow">
+        <button type="button" id="b-iface" aria-pressed="false">Interface</button>
+      </div>
+      <label class="vtslider">Lift<input type="range" id="c-lift" min="0" max="250" step="10" value="0"></label>
+      <label class="vtslider">Explode<input type="range" id="c-explode" min="0" max="100" value="0"></label>
+    </div>
+    <div class="viewtoggles">
+      <div class="togrow" id="vt-env" role="group" aria-label="Surroundings">
+        <button type="button" data-env="allee" aria-pressed="true">Allé</button>
+        <button type="button" data-env="studio" aria-pressed="false">Studio</button>
+      </div>
+      <div class="togrow" id="vt-light" role="group" aria-label="Light">
+        <button type="button" data-light="midday" aria-pressed="true">Midday</button>
+        <button type="button" data-light="golden" aria-pressed="false">Golden</button>
+        <button type="button" data-light="evening" aria-pressed="false">Evening</button>
+      </div>
+    </div>
   </div>
 
   <div class="controls">
     <div>
-      <label>Frame finish</label>
-      <div class="swatches" id="sw-metal"></div>
-    </div>
-    <div>
-      <label>Timber finish</label>
-      <div class="swatches" id="sw-wood"></div>
+      <label for="c-size">Product</label>
+      <select id="c-size"><option value="bench" selected>Bench</option><option value="chair">Chair · half length</option></select>
     </div>
     <div>
       <label for="c-back">Backrest</label>
@@ -493,45 +489,33 @@ a { color: inherit; }
     </div>
     <div>
       <label for="c-decoration">Mark on the top plank</label>
-      <select id="c-decoration"><option value="laser" selected>Laser-cut</option><option value="shield">Logo shield</option></select>
+      <select id="c-decoration"><option value="none">None</option><option value="laser" selected>Laser-cut</option><option value="shield">Logo shield</option></select>
     </div>
     <div>
-      <label for="c-env">Surroundings</label>
-      <select id="c-env"><option value="allee" selected>Allé · park avenue</option><option value="studio">Studio</option></select>
-    </div>
-    <div>
-      <label for="c-light">Light</label>
-      <select id="c-light"><option value="midday" selected>Midday</option><option value="golden">Late afternoon</option><option value="evening">Evening · lamp lit</option></select>
-    </div>
-    <div>
-      <label for="c-lift">Lift off ground</label>
-      <input type="range" id="c-lift" min="0" max="250" step="10" value="0">
-    </div>
-    <div>
-      <label for="c-explode">Explode</label>
-      <input type="range" id="c-explode" min="0" max="100" value="0">
-    </div>
-    <div>
-      <label>Interface</label>
+      <label for="c-amount">Amount</label>
       <div class="btnrow">
-        <button type="button" id="b-iface" aria-pressed="false">Show interface</button>
+        <input type="number" id="c-amount" min="1" value="1">
+        <button type="button" id="b-save">Save to order list</button>
       </div>
     </div>
     <div>
-      <label>View</label>
+      <label>Quote</label>
       <div class="btnrow">
-        <button type="button" id="b-view">Side</button>
-        <button type="button" id="b-joint">Joint</button>
-        <button type="button" id="b-under">Underside</button>
-        <button type="button" id="b-reset">Reset</button>
-        <button type="button" id="b-three">Three-quarter</button>
+        <button type="button" id="b-quote" disabled>Get a quote</button>
       </div>
     </div>
   </div>
 
-  <p class="note">Traced straight from the CAD: one flat bar runs from the ground up each end, bends into the seat rail, and — with the backrest selected — keeps going into a diagonal brace that carries the back planks. No separate foot, no cast parts; the bar reaches the ground on its own.</p>
-
-  <p class="note">Three seat planks and, with a backrest, three more along the brace, each a single board dropped into a slotted pocket in the frame — no tenons, no spacer cubes. The centre seat plank is the one that takes the laser-cut mark or the logo shield. Sizes shown match the CAD demonstrator model as modelled, not a finished production specification.</p>
+  <section>
+    <h2>Order list</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Configuration</th><th>Amount</th><th></th></tr></thead>
+        <tbody id="order-rows"></tbody>
+      </table>
+    </div>
+    <p class="note" id="order-empty">No items saved yet — save a configuration before requesting a quote.</p>
+  </section>
 
   <section>
     <h2>Bill of material</h2>
@@ -542,11 +526,28 @@ a { color: inherit; }
       </table>
     </div>
   </section>
-
-  <footer>Frame: one bar, laser-cut flat then press-brake bent through the seat (and, with a backrest, through the brace behind it) — the same bar section throughout, two per bench. Seat and back planks sit in slotted pockets cut straight into that bar, 0.2 units of clearance per side, nothing else holding them. The centre seat plank carries whichever mark was ordered: a laser-engraved pattern, or a separate logo shield fixed on top of the plank. Lift the bench and orbit below it to see the underside of the seat and how the planks sit in their pockets.</footer>
 </div>
   </div>
 </section>
+
+<dialog class="qrbig" id="quote-dlg" aria-label="Request a quote">
+  <div class="sheet quotesheet">
+    <form id="quote-form">
+      <h3>Request a quote</h3>
+      <label class="qfield">Name<input type="text" id="q-name" required></label>
+      <label class="qfield">Email<input type="email" id="q-email" required></label>
+      <label class="qfield">Phone<input type="tel" id="q-phone" required></label>
+      <div class="btnrow">
+        <button type="submit">Send</button>
+        <button type="button" id="q-cancel">Cancel</button>
+      </div>
+    </form>
+    <div id="quote-sent" hidden>
+      <p>Sent request — you'll receive a quote within 5 business days. Call +47 400 00 000 if urgent.</p>
+      <button type="button" id="q-close">Close</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog class="qrbig" id="qr-big" aria-label="QR code, enlarged">
   <div class="sheet">
@@ -630,7 +631,8 @@ if(typeof THREE === "undefined"){
    so nothing is rescaled. */
 
 const FRAME_DEPTH = 10;     // the bar's own width (extrusion length along the bench)
-const BENCH_LEN   = 250;    // distance between the two frame ends, end to end
+const BENCH_LEN   = 250;    // the bench's own end-to-end length — fixed, used only to scale the stage
+let CUR_LEN = BENCH_LEN;    // the product actually being shown: BENCH_LEN for a bench, half that for a chair
 
 /* outer boundary of the bent bar, one cross-section, (profile-x, profile-z) */
 const PROFILE = {
@@ -775,7 +777,7 @@ function buildEnv(){
   path.receiveShadow = true;
   envGroup.add(path);
 
-  const apron = new THREE.Mesh(new THREE.BoxGeometry(BENCH_LEN + 1800*STAGE, 44*STAGE, 1500*STAGE),
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(CUR_LEN + 1800*STAGE, 44*STAGE, 1500*STAGE),
     new THREE.MeshStandardMaterial({color: dark ? 0x3b3832 : 0x7F7869, roughness:.92}));
   apron.position.set(0, 22*STAGE, 120*STAGE);
   apron.receiveShadow = true;
@@ -815,12 +817,12 @@ const WOODS = [
 ];
 const SHIELD_COLOR = 0xC9A24B;
 
-const cfg = {metal:0, wood:1, back:"high", decoration:"laser", explode:0, lift:0, iface:false, env:"allee", light:"midday"};
+const cfg = {metal:0, wood:1, size:"bench", back:"high", decoration:"laser", explode:0, lift:0, iface:false, env:"allee", light:"midday"};
 
 const matMetal = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.55});
 const matWood  = new THREE.MeshStandardMaterial({color:WOODS[cfg.wood][1],  roughness:.78, metalness:.03});
 const matGhost = new THREE.MeshStandardMaterial({color:METALS[cfg.metal][1], roughness:.42, metalness:.35, transparent:true, opacity:.26, depthWrite:false});
-const matShield = new THREE.MeshStandardMaterial({color:SHIELD_COLOR, roughness:.3, metalness:.75});
+const matShield = new THREE.MeshStandardMaterial({color:SHIELD_COLOR, roughness:.3, metalness:.75, side: THREE.DoubleSide});
 
 /* ---------- geometry from the traced profile ---------- */
 
@@ -914,12 +916,29 @@ function add(geom, mat, pos, rot, layer, iface){
 
 function plankMesh(slotCAD, mat, layer){
   const p = slotPlacement(slotCAD);
-  const geo = new THREE.BoxGeometry(BENCH_LEN, PLANK_T, PLANK_W);
+  const geo = new THREE.BoxGeometry(CUR_LEN, PLANK_T, PLANK_W);
   const m = add(geo, mat, [0, p.y, p.z], p.theta, layer);
   return m;
 }
 
-/* the logo shield: a small raised plaque on top of the centre seat plank */
+/* which plank carries the mark: the highest back plank when there is a
+   backrest (the classic spot for a crest, right at eye height), otherwise
+   the rearmost seat plank — same side of the bench either way, never the
+   middle one. */
+function markSlot(){ return cfg.back === "high" ? BACK_SLOTS[2] : SEAT_SLOTS[2]; }
+
+/* offset a point outward from a plank's own face, accounting for its tilt
+   (0 for a flat seat plank, nonzero for a plank mounted on the brace).
+   A seat plank's exposed top is the +cos/sin side; a back plank sits where
+   the folded bar's two legs run close together, so its exposed face is the
+   opposite side — confirmed by placing a marker on each side and checking
+   which one actually clears the frame. */
+function alongTop(centre, dist){
+  const sign = cfg.back === "high" ? -1 : 1;
+  return [centre.y + sign*dist*Math.cos(centre.theta), centre.z + sign*dist*Math.sin(centre.theta)];
+}
+
+/* the logo shield: a small raised plaque on top of the marked plank */
 function shieldMesh(){
   const w = 11, h = 7, r = 1.4, t = 1.1;
   const s = new THREE.Shape();
@@ -930,8 +949,9 @@ function shieldMesh(){
   s.lineTo(-w/2, -h/2+r);s.quadraticCurveTo(-w/2, -h/2, -w/2+r, -h/2);
   const g = new THREE.ExtrudeGeometry(s, {depth:t, bevelEnabled:true, bevelThickness:.25, bevelSize:.25, bevelSegments:3, curveSegments:8});
   g.rotateX(-Math.PI/2);
-  const centre = slotPlacement(SEAT_SLOTS[1]);
-  return add(g, matShield, [0, centre.y + PLANK_T/2 + 0.02, centre.z], 0, 2.5);
+  const centre = slotPlacement(markSlot());
+  const [y, z] = alongTop(centre, PLANK_T/2 + 0.02);
+  return add(g, matShield, [0, y, z], centre.theta, 2.5);
 }
 
 /* the laser-cut mark: a dark decal on the top plank's face, no extra part */
@@ -940,21 +960,25 @@ function laserTexture(){
   c.width = c.height = 256;
   const ctx = c.getContext("2d");
   ctx.clearRect(0,0,256,256);
-  ctx.strokeStyle = "rgba(40,24,12,0.9)";
-  ctx.fillStyle = "rgba(40,24,12,0.9)";
-  ctx.lineWidth = 10;
-  ctx.beginPath(); ctx.arc(128,128,78,0,Math.PI*2); ctx.stroke();
-  ctx.font = "700 108px Georgia, serif";
+  ctx.strokeStyle = "rgba(18,10,4,1)";
+  ctx.fillStyle = "rgba(18,10,4,1)";
+  ctx.lineWidth = 16;
+  ctx.beginPath(); ctx.arc(128,128,92,0,Math.PI*2); ctx.stroke();
+  ctx.font = "700 144px Georgia, serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("K", 128, 140);
+  ctx.fillText("K", 128, 142);
   return new THREE.CanvasTexture(c);
 }
 function laserMesh(){
-  const geo = new THREE.PlaneGeometry(9, 9);
-  const mat = new THREE.MeshStandardMaterial({map: laserTexture(), transparent:true, roughness:.9, metalness:0, depthWrite:false});
+  const geo = new THREE.PlaneGeometry(13, 13);
+  /* DoubleSide: the mark sits on whichever plank face is exposed, and for the
+     back plank that face's own normal points opposite to the plane's default
+     front — a single-sided plane would be invisible from the viewing side. */
+  const mat = new THREE.MeshStandardMaterial({map: laserTexture(), transparent:true, roughness:.9, metalness:0, depthWrite:false, side: THREE.DoubleSide});
   geo.rotateX(-Math.PI/2);
-  const centre = slotPlacement(SEAT_SLOTS[1]);
-  const m = add(geo, mat, [0, centre.y + PLANK_T/2 + 0.03, centre.z], 0, 2.5);
+  const centre = slotPlacement(markSlot());
+  const [y, z] = alongTop(centre, PLANK_T/2 + 0.03);
+  const m = add(geo, mat, [0, y, z], centre.theta, 2.5);
   m.castShadow = false;
   return m;
 }
@@ -962,13 +986,14 @@ function laserMesh(){
 function build(){
   clear();
   const hasBack = cfg.back === "high";
+  CUR_LEN = cfg.size === "chair" ? BENCH_LEN/2 : BENCH_LEN;
   /* ground reference comes from the leg/seat points shared by both variants (PROFILE.none) —
      same flip as toWorld()/frameShape(), so the legs land on the floor the same way here. */
   const ground = -Math.min(...PROFILE.none.map(p => -p[1]));
 
   const frameGeo = frameShape(cfg.back);
   [-1, 1].forEach(sgn => {
-    const mesh = add(frameGeo.clone(), matMetal, [sgn*(BENCH_LEN/2 - FRAME_DEPTH/2), 0, 0], null, 1);
+    const mesh = add(frameGeo.clone(), matMetal, [sgn*(CUR_LEN/2 - FRAME_DEPTH/2), 0, 0], null, 1);
     mesh.userData.side = true;
   });
 
@@ -976,7 +1001,7 @@ function build(){
   if(hasBack) BACK_SLOTS.forEach(slot => plankMesh(slot, matWood, 3));
 
   if(cfg.decoration === "shield") shieldMesh();
-  else laserMesh();
+  else if(cfg.decoration === "laser") laserMesh();
 
   root.position.set(0, cfg.lift*STAGE + ground, 0);
   buildEnv();
@@ -986,8 +1011,64 @@ function build(){
   if(!framed){ fit(); framed = true; }
   bom(hasBack);
   document.getElementById("badge").textContent =
-    `Demonstrator · ${hasBack ? "with backrest" : "backless"} · ${cfg.decoration === "shield" ? "logo shield" : "laser-cut"}`;
+    `Demonstrator · ${cfg.size === "chair" ? "chair" : "bench"} · ${hasBack ? "with backrest" : "backless"} · ${decorationLabel()}`;
 }
+
+function decorationLabel(){
+  return cfg.decoration === "shield" ? "logo shield" : cfg.decoration === "laser" ? "laser-cut" : "no mark";
+}
+function configSummary(){
+  return `${cfg.size === "chair" ? "Chair" : "Bench"} · ${cfg.back === "high" ? "with backrest" : "backless"} · ${decorationLabel()}`;
+}
+
+/* ---------- order list ----------
+   No backend on a static site, so "save to order" just keeps a list in this
+   browser (localStorage), and the quote request is a simulated popup, not a
+   real email — honest about what a client-only demo can actually do. */
+let orderList = [];
+try { orderList = JSON.parse(localStorage.getItem("kaia-orders")) || []; } catch(e) {}
+
+function persistOrders(){
+  try { localStorage.setItem("kaia-orders", JSON.stringify(orderList)); } catch(e) {}
+}
+function renderOrders(){
+  const rows = document.getElementById("order-rows");
+  rows.innerHTML = orderList.map((o, i) =>
+    `<tr><td>${o.summary}</td><td class="num">${o.amount}</td><td><button type="button" data-remove="${i}">Remove</button></td></tr>`
+  ).join("");
+  rows.querySelectorAll("button[data-remove]").forEach(b => b.addEventListener("click", () => {
+    orderList.splice(+b.getAttribute("data-remove"), 1);
+    persistOrders();
+    renderOrders();
+  }));
+  document.getElementById("order-empty").hidden = orderList.length > 0;
+  document.getElementById("b-quote").disabled = orderList.length === 0;
+}
+document.getElementById("b-save").addEventListener("click", () => {
+  const amount = Math.max(1, +document.getElementById("c-amount").value || 1);
+  orderList.push({summary: configSummary(), amount});
+  persistOrders();
+  renderOrders();
+});
+
+/* ---------- quote request popup (simulated — see note above) ---------- */
+const quoteDlg = document.getElementById("quote-dlg");
+const quoteForm = document.getElementById("quote-form");
+const quoteSent = document.getElementById("quote-sent");
+document.getElementById("b-quote").addEventListener("click", () => {
+  if(orderList.length === 0) return;
+  quoteForm.reset();
+  quoteForm.hidden = false;
+  quoteSent.hidden = true;
+  quoteDlg.showModal();
+});
+quoteForm.addEventListener("submit", e => {
+  e.preventDefault();
+  quoteForm.hidden = true;
+  quoteSent.hidden = false;
+});
+document.getElementById("q-cancel").addEventListener("click", () => quoteDlg.close());
+document.getElementById("q-close").addEventListener("click", () => quoteDlg.close());
 
 /* the frame goes translucent on request, so the plank pockets read through it */
 function applyInterface(){
@@ -1006,36 +1087,30 @@ function applyExplode(){
 function bom(hasBack){
   const rows = [
     ["Frame", "Laser-cut flat bar, press-brake bent", `${FRAME_DEPTH} wide bar, ${PROFILE[cfg.back].length}-point bend`, 2],
-    ["Seat plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${BENCH_LEN}`, 3],
-    ["Back plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${BENCH_LEN}`, hasBack ? 3 : 0],
+    ["Seat plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${CUR_LEN}`, 3],
+    ["Back plank", "Timber, one piece, slot-fit", `${PLANK_W} × ${PLANK_T} × ${CUR_LEN}`, hasBack ? 3 : 0],
     ["Logo shield", "Cast or machined plaque, fixed on top", "11 × 7 × 1.1", cfg.decoration === "shield" ? 1 : 0],
   ].filter(r => r[3] > 0);
   document.getElementById("bom").innerHTML = rows.map(r =>
     `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join("");
 }
 
-/* ---------- swatches ---------- */
-function swatches(host, list, current, onPick){
-  host.innerHTML = list.map((c,i) =>
-    `<button type="button" title="${c[0]}" aria-label="${c[0]}" aria-pressed="${i===current}"
-      style="background:#${c[1].toString(16).padStart(6,'0')}"></button>`).join("");
-  host.querySelectorAll("button").forEach((b,i) => b.addEventListener("click", () => {
-    onPick(i);
-    host.querySelectorAll("button").forEach((x,j) => x.setAttribute("aria-pressed", String(i===j)));
-  }));
-}
-swatches(document.getElementById("sw-metal"), METALS, cfg.metal, i => {
-  cfg.metal = i; matMetal.color.setHex(METALS[i][1]); matGhost.color.setHex(METALS[i][1]);
-});
-swatches(document.getElementById("sw-wood"), WOODS, cfg.wood, i => {
-  cfg.wood = i; matWood.color.setHex(WOODS[i][1]);
-});
-
 /* ---------- controls ---------- */
+document.getElementById("c-size").addEventListener("change", e => { cfg.size = e.target.value; framed = false; build(); });
 document.getElementById("c-back").addEventListener("change", e => { cfg.back = e.target.value; framed = false; build(); });
 document.getElementById("c-decoration").addEventListener("change", e => { cfg.decoration = e.target.value; build(); });
-document.getElementById("c-env").addEventListener("change", e => { cfg.env = e.target.value; buildEnv(); applyLight(); });
-document.getElementById("c-light").addEventListener("change", e => { cfg.light = e.target.value; buildEnv(); applyLight(); });
+
+/* surroundings and light are presentation, not configuration — small toggle
+   buttons on the view itself, for anyone looking at it to change */
+function toggleGroup(hostId, attr, onPick){
+  const host = document.getElementById(hostId);
+  host.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    onPick(b.getAttribute(attr));
+    host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  }));
+}
+toggleGroup("vt-env", "data-env", v => { cfg.env = v; buildEnv(); applyLight(); });
+toggleGroup("vt-light", "data-light", v => { cfg.light = v; buildEnv(); applyLight(); });
 
 /* ---------- ▲/▼ steppers on every picker ---------- */
 function addArrows(id){
@@ -1063,39 +1138,7 @@ function addArrows(id){
   sel.addEventListener("change", read);
   read();
 }
-["c-back", "c-decoration", "c-env", "c-light"].forEach(addArrows);
-
-/* the two colour rows get the same arrows, stepping through the swatches */
-function addSwatchArrows(hostId){
-  const host = document.getElementById(hostId);
-  if(!host || host.parentElement.classList.contains("pickrow")) return;
-  const row = document.createElement("div");
-  row.className = "pickrow";
-  host.parentNode.insertBefore(row, host);
-  const prev = document.createElement("button"), next = document.createElement("button");
-  prev.type = next.type = "button";
-  prev.textContent = "▲"; next.textContent = "▼";
-  prev.setAttribute("aria-label", "Previous"); next.setAttribute("aria-label", "Next");
-  row.append(prev, host, next);
-  const out = document.createElement("output");
-  out.className = "pickcount";
-  row.parentNode.insertBefore(out, row.nextSibling);
-  const btns = () => Array.from(host.querySelectorAll("button"));
-  const read = () => {
-    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
-    out.textContent = `${i+1} / ${b.length} · ${b[i].title}`;
-  };
-  const step = d => {
-    const b = btns(); const i = Math.max(0, b.findIndex(x => x.getAttribute("aria-pressed") === "true"));
-    b[(i + d + b.length) % b.length].click();
-    read();
-  };
-  prev.addEventListener("click", () => step(-1));
-  next.addEventListener("click", () => step(1));
-  host.addEventListener("click", read);
-  read();
-}
-["sw-metal", "sw-wood"].forEach(addSwatchArrows);
+["c-size", "c-back", "c-decoration"].forEach(addArrows);
 document.getElementById("c-lift").addEventListener("input", e => {
   cfg.lift = +e.target.value;
   build();
@@ -1109,7 +1152,7 @@ document.getElementById("b-iface").addEventListener("click", () => {
 /* ---------- camera ---------- */
 let framed = false;
 const orbit = {theta:-0.62, phi:1.34, dist:7600*STAGE, target:new THREE.Vector3(0,1150*STAGE,0)};
-function fit(){ orbit.dist = cfg.env === "allee" ? Math.max(6600*STAGE, BENCH_LEN*1.8 + 4400*STAGE) : Math.max(2800*STAGE, BENCH_LEN*1.6 + 2200*STAGE); place(); }
+function fit(){ orbit.dist = cfg.env === "allee" ? Math.max(6600*STAGE, CUR_LEN*1.8 + 4400*STAGE) : Math.max(2800*STAGE, CUR_LEN*1.6 + 2200*STAGE); place(); }
 function place(){
   const {theta, phi, dist, target} = orbit;
   const below = phi > 1.60;
@@ -1224,7 +1267,7 @@ function resetView(){
 }
 document.getElementById("b-joint").addEventListener("click", () => {
   orbit.theta = -0.55; orbit.phi = 1.05; orbit.dist = 130;
-  orbit.target.set(-BENCH_LEN/2 + 50, 75 + cfg.lift*STAGE, -20);
+  orbit.target.set(-CUR_LEN/2 + 50, 75 + cfg.lift*STAGE, -20);
   place();
 });
 document.getElementById("b-under").addEventListener("click", () => {
@@ -1233,7 +1276,7 @@ document.getElementById("b-under").addEventListener("click", () => {
     document.getElementById("c-lift").value = "150";
     build();
   }
-  orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(200*STAGE, BENCH_LEN*1.1);
+  orbit.theta = -0.6; orbit.phi = 2.15; orbit.dist = Math.max(200*STAGE, CUR_LEN*1.1);
   orbit.target.set(0, cfg.lift*STAGE + 20, 0);
   place();
 });
@@ -1249,6 +1292,7 @@ function resize(){
 }
 new ResizeObserver(resize).observe(stage);
 resize();
+renderOrders();
 build();
 (function tick(){ renderer.render(scene, camera); requestAnimationFrame(tick); })();
 })();
