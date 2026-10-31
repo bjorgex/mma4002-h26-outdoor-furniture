@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Demo</title>
+<!-- Served by tmflow_mock.py serve at /demo. The demo view is /all in demo mode (tmflow_all_view.html with ?demo):
+     LEFT the TMflow flow with the running node lit, RIGHT the bridge in plain words (big step banner, the step list,
+     one line per exchange, no packets), no 3D. One page to keep up to date instead of two.
+     The previous stand-alone demo page (steps only) is in git history. -->
+<style>
+  body { margin: 0; background: #e4e7e9; color: #231815; font: 15px/1.5 "Segoe UI", "Open Sans", Arial, sans-serif; }
+  p { max-width: 640px; margin: 15vh auto; padding: 16px 20px; background: #fff; border: 1px solid #8a969b; border-radius: 3px; }
+</style>
+<p id="msg">Opening the demo view…</p>
+<script>
+fetch('/all').then(r => {
+  if (r.ok) return location.replace('/all?demo');
+  throw new Error('no /all');
+}).catch(() => {
+  document.getElementById('msg').textContent = 'This mock was started before the demo view moved to /all: ' +
+    'stop it (Ctrl+C) and start "tmflow_mock.py serve" again, then reload.';
+});
+</script>

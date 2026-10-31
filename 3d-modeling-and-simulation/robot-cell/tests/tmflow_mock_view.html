@@ -1,0 +1,409 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock TMflow Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<!-- Served by tmflow_mock.py serve (http://127.0.0.1:8090). The flow and sequence drawings, their step
+     names and their styles come from the group's listen_loop_flow.html at load time (/diagram), so this
+     page only adds the live highlighting. Events arrive as Server-Sent Events on /events. -->
+<style id="base">
+/* fallback tokens, replaced by the diagram's own <style> once it loads */
+:root { --bg: #eef0f3; --surface: #fff; --canvas: #e4e8ee; --fg: #1b2230; --muted: #5b6577; --line: #b9c1cd;
+  --accent: #2350c8; --accent-tint: #dfe7fb; --listen: #6b4fc2; --listen-tint: #ece6fb; --grip: #a8650c;
+  --grip-tint: #fbefdc; --ok: #1f8a3b; --fail: #c23b2b; --loss: #c0661a; --f-ui: "Archivo", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #11151c; --surface: #1a2029;
+  --canvas: #151a22; --fg: #e5e9f0; --muted: #98a2b3; --line: #3a4350; --accent: #82a0ff; --accent-tint: #1e2947;
+  --listen: #a990f2; --listen-tint: #2a2443; --grip: #e3a64d; --grip-tint: #3a2c17; --ok: #55c873; --fail: #f07462;
+  --loss: #ec9650; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-ui); padding: 20px 16px 40px; }
+</style>
+<style id="live">
+.page { max-width: 1400px; margin: 0 auto; display: grid; gap: 16px; }
+.live-work { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .live-work { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--fail); margin-right: 6px; }
+.dot.on { background: var(--ok); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font: 0.86rem var(--f-mono); margin: 0; font-variant-numeric: tabular-nums; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.kv dd.flash { background: var(--accent-tint); border-radius: 4px; }
+.say { font: 600 1rem var(--f-mono); }
+.say small { display: block; font: 0.85rem var(--f-ui); color: var(--muted); font-weight: 400; }
+.log { font: 12px/1.55 var(--f-mono); max-height: 340px; overflow: auto; background: var(--canvas); border-radius: 9px; padding: 8px 10px; margin: 0; }
+.log div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.log .rx { color: var(--fg); } .log .tx { color: var(--accent); } .log .ev { color: var(--muted); }
+.log .err { color: var(--fail); font-weight: 600; }
+.log .t { color: var(--muted); margin-right: 8px; }
+.fallback { display: flex; flex-wrap: wrap; gap: 6px; }
+.fallback span { font: 0.85rem var(--f-mono); padding: 4px 10px; border: 1.5px solid var(--line); border-radius: 7px; background: var(--surface); }
+.fallback span.active { border-color: var(--accent); border-width: 3px; }
+/* live marks on the group's drawings */
+.node.active rect.box { stroke: var(--accent) !important; stroke-width: 4 !important; }
+.node.listen-open rect.box { fill: var(--listen-tint); }
+.edge.active { stroke: var(--accent) !important; stroke-width: 3.5 !important; }
+.edge.recent { stroke: var(--accent) !important; stroke-opacity: 0.35; stroke-width: 2.5 !important; }
+.msg.live { stroke: var(--accent) !important; stroke-width: 4 !important; }
+.msg-text.live { fill: var(--accent) !important; font-weight: 700 !important; }
+.msg.err { stroke: var(--fail) !important; stroke-width: 4 !important; }
+.msg-text.err { fill: var(--fail) !important; font-weight: 700 !important; }
+.self.live { fill: var(--accent-tint) !important; stroke: var(--accent); stroke-width: 2; }
+</style>
+<!-- ===== TMFLOW SKIN START ===== reusable: copy this whole <style> block into another page and put
+     class="tm-skin" on its <main> (or any wrapper). The mock server has no .css route, so it lives inline.
+     Colours sampled from TMflow screenshots in the Omron TM training decks (TC114 L04/L09, TC115 L03) and the
+     Listen Node tech note. TMflow has no dark theme, so the skinned page stays light in both page themes.
+     Font: Segoe UI with Open Sans fallback (add Open Sans to the page's Google Fonts link). -->
+<style id="tmflow-skin">
+.tm-skin { --tm-bar: #10232a; --tm-ink: #231815; --tm-line: #817d7d; --tm-frame: #cccccc; --tm-flow: #e1f9ec;
+  --tm-comp: #d4f7f9; --tm-sel: #dcf77e; --tm-green: #8dc035; --tm-orange: #f9c446; --tm-icon: #444444;
+  --tm-tag: #cececc; --tm-in: #0000ff; --tm-out: #008000; --tm-fail: #e60012;
+  --tm-font: "Segoe UI", "Open Sans", Arial, sans-serif;
+  color-scheme: light; color: var(--tm-ink); font-family: var(--tm-font); }
+html:has(.tm-skin), body:has(.tm-skin) { background: #e4e7e9; color-scheme: light; }
+body:has(.tm-skin) { color: #231815; font-family: "Segoe UI", "Open Sans", Arial, sans-serif; }
+.tm-skin code, .tm-skin .mono { font-family: var(--tm-font); }
+
+/* header: TMflow's dark top bar */
+.tm-skin .top { background: var(--tm-bar); color: #fff; padding: 10px 16px; border-radius: 3px; align-items: center; }
+.tm-skin .top .eyebrow { font: 12px var(--tm-font); letter-spacing: 0; text-transform: none; color: #9fb0b7; }
+.tm-skin .top h1 { font: 400 1.25rem/1.25 var(--tm-font); color: #fff; letter-spacing: 0; }
+.tm-skin .top .status { font: 13px var(--tm-font); color: #fff; }
+.tm-skin .dot { background: var(--tm-fail); } .tm-skin .dot.on { background: var(--tm-green); }
+
+/* panels: white window, thin frame, square-ish corners */
+.tm-skin .panel { background: #fff; color: var(--tm-ink); border: 1px solid #8a969b; border-radius: 3px;
+  padding: 0; gap: 0; overflow: hidden; }
+.tm-skin .panel > * { margin: 0; }
+.tm-skin .tm-bar { display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; background: var(--tm-bar);
+  color: #fff; font: 13px var(--tm-font); padding: 9px 14px; }
+.tm-skin .tm-bar b { color: var(--tm-green); font-weight: 400; }
+.tm-skin .panel > .eyebrow { font: 600 12px/1.3 var(--tm-font); letter-spacing: 0; text-transform: none; color: var(--tm-ink);
+  background: #eef0f1; border-bottom: 1px solid var(--tm-frame); padding: 6px 14px; }
+/* status line as TMflow's Step Run box: black, white bold */
+.tm-skin .say { background: #000; color: #fff; font: 700 15px/1.35 var(--tm-font); text-align: center; padding: 9px 14px; }
+.tm-skin .say small { font: 400 12.5px var(--tm-font); color: #b9c3c7; }
+/* canvases: plain white, thin grey frame */
+.tm-skin .canvas { background: #fff; background-image: none; border: 1px solid var(--tm-frame); border-radius: 0; margin: 10px; }
+.tm-skin #flow svg { min-width: 520px; }
+
+/* flow nodes: rounded white box, grey line, italic name; Start/Stop mint and upright; components
+   (HANDE_V002 SET/GRIP/RELEASE) light cyan; orange icon on components and the Gateway */
+.tm-skin .canvas .node rect.box { fill: #fff; stroke: var(--tm-line); stroke-width: 1.4; rx: 13px; }
+.tm-skin .canvas .node .name { font: italic 400 13.5px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .canvas .node .sub { font: 10px var(--tm-font); fill: #7a7a7a; }
+.tm-skin .canvas .node .glyph { font: 700 12px var(--tm-font); fill: #fff; }
+.tm-skin .canvas .node .icon { rx: 3px; }
+.tm-skin .canvas .t-point .icon { fill: var(--tm-icon); }
+.tm-skin .canvas .t-grip rect.box { fill: var(--tm-comp); }
+.tm-skin .canvas .t-grip .icon, .tm-skin .canvas .t-logic .icon { fill: var(--tm-orange); }
+.tm-skin .canvas .t-listen .icon { fill: var(--tm-tag); }
+.tm-skin .canvas .t-listen .glyph { fill: #555; }
+.tm-skin .canvas :is(#a-start, #b-start, #b-stop) rect.box { fill: var(--tm-flow); }
+.tm-skin .canvas :is(#a-start, #b-start, #b-stop) .name { font-style: normal; }
+.tm-skin .canvas :is(#a-start, #b-start) :is(.icon, .glyph), .tm-skin .canvas #b-stop .glyph { display: none; }
+.tm-skin .canvas #b-stop .icon { fill: var(--tm-ink); transform-box: fill-box; transform-origin: center; transform: scale(0.45); }
+/* running node: TMflow's lime highlight around the node */
+.tm-skin .canvas .node.active rect.box { stroke: var(--tm-sel) !important; stroke-width: 16px !important; paint-order: stroke; }
+.tm-skin .canvas .node.listen-open rect.box { fill: #fff; }
+.tm-skin .canvas .node.listen-open .sub { fill: var(--tm-out); font-weight: 600; }
+/* edges: thin black orthogonal lines; the edge into the running node blue */
+.tm-skin .canvas .edge { stroke: #1a1a1a; stroke-width: 1.4; }
+.tm-skin .canvas .edge.active { stroke: var(--tm-in) !important; stroke-width: 2.4 !important; stroke-opacity: 1; }
+.tm-skin .canvas .edge.recent { stroke: var(--tm-in) !important; stroke-opacity: 0.3; stroke-width: 2 !important; }
+.tm-skin .canvas .head { fill: #1a1a1a; }
+.tm-skin .canvas .head-active { fill: var(--tm-in); }
+/* ports: white circles, Pass/Fail labels green/red as on the Listen node */
+.tm-skin .canvas .port { fill: #fff; stroke: #333; stroke-width: 1.3; }
+.tm-skin .canvas .plabel { font: 700 10px var(--tm-font); }
+.tm-skin .canvas .l-ok { fill: var(--tm-out); } .tm-skin .canvas .l-fail { fill: var(--tm-fail); }
+.tm-skin .canvas .l-loss { fill: #d97a00; } .tm-skin .canvas .l-cond { fill: #555; }
+.tm-skin .canvas .stub { stroke: #888; }
+.tm-skin .canvas .note { font: 10.5px var(--tm-font); fill: #666; }
+.tm-skin .canvas .note-strong { font: 600 10.5px var(--tm-font); fill: var(--tm-ink); }
+/* plain node list (project not in the diagram) */
+.tm-skin .fallback { padding: 14px; gap: 14px; }
+.tm-skin .fallback span { font: italic 13px var(--tm-font); color: var(--tm-ink); background: #fff; border: 1.4px solid var(--tm-line);
+  border-radius: 13px; padding: 6px 16px; }
+.tm-skin .fallback span.active { border-color: var(--tm-line); border-width: 1.4px; box-shadow: 0 0 0 7px var(--tm-sel); }
+
+/* message sequence: lanes drawn as TMflow nodes, black messages, live message blue, live activity lime */
+.tm-skin .seq svg { min-width: 640px; }
+.tm-skin .seq .lane-box { fill: #fff; stroke: var(--tm-line); stroke-width: 1.4; rx: 13px; }
+.tm-skin .seq .lane-title { font: 600 13px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .lane-sub { font: italic 10.5px var(--tm-font); fill: #7a7a7a; }
+.tm-skin .seq .lifeline { stroke: #b5b5b5; stroke-width: 1.5; }
+.tm-skin .seq .msg { stroke: #1a1a1a; stroke-width: 1.4; }
+.tm-skin .seq .msg.key-msg { stroke: #1a1a1a; stroke-width: 2.2; }
+.tm-skin .seq .msg.var-msg { stroke: var(--tm-out); stroke-width: 1.8; }
+.tm-skin .seq .msg-text { font: 11.5px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .msg-text.key-msg { fill: var(--tm-ink); font-weight: 700; }
+.tm-skin .seq .msg-text.var-msg { fill: var(--tm-out); font-weight: 600; }
+.tm-skin .seq .fn { font: 600 11px var(--tm-font); fill: var(--tm-out); }
+.tm-skin .seq .self { fill: var(--tm-flow); stroke: var(--tm-line); stroke-width: 1; }
+.tm-skin .seq .self-text { font: 11px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .headf, .tm-skin .seq .heada { fill: #1a1a1a; } .tm-skin .seq .headv { fill: var(--tm-out); }
+.tm-skin .seq .msg.live { stroke: var(--tm-in) !important; stroke-width: 3 !important; }
+.tm-skin .seq .msg-text.live { fill: var(--tm-in) !important; font-weight: 700 !important; }
+.tm-skin .seq .msg.err { stroke: var(--tm-fail) !important; stroke-width: 3 !important; }
+.tm-skin .seq .msg-text.err { fill: var(--tm-fail) !important; font-weight: 700 !important; }
+.tm-skin .seq .self.live { fill: var(--tm-sel) !important; stroke: var(--tm-green); stroke-width: 2; }
+
+/* key/value tables as a TMflow Display Board */
+.tm-skin .kv { margin: 0 10px 10px; border: 1px solid var(--tm-frame); gap: 0; font: 13px/1.45 var(--tm-font); }
+.tm-skin .kv::before { content: "Display Board"; grid-column: 1 / -1; background: var(--tm-bar); color: #fff;
+  font: 600 12.5px var(--tm-font); padding: 5px 10px; }
+.tm-skin #py-kv::before { content: "Listen node · port 5890"; }
+.tm-skin .kv dt { color: #555; background: #f3f4f5; padding: 3px 10px; border-top: 1px solid #e3e3e3; }
+.tm-skin .kv dd { padding: 3px 10px; border-top: 1px solid #e3e3e3; }
+.tm-skin .kv dd.flash { background: var(--tm-sel); border-radius: 0; }
+/* logs as TMflow's Event Logger (packets stay monospace) */
+.tm-skin .log { margin: 0 10px 10px; background: #fff; border: 1px solid var(--tm-frame); border-radius: 0; color: var(--tm-ink); }
+.tm-skin .log .rx { color: var(--tm-ink); } .tm-skin .log .ev { color: #444; }
+.tm-skin .log .tx { color: var(--tm-in); } .tm-skin .log .err { color: var(--tm-fail); }
+.tm-skin .log .t { color: #999; }
+.tm-skin .foot { color: #555; font: 13px var(--tm-font); }
+</style>
+<!-- ===== TMFLOW SKIN END ===== -->
+
+<main class="page tm-skin">
+  <header class="top">
+    <div>
+      <div class="eyebrow">MMA4002 · TM5-900 · mock TMflow, live</div>
+      <h1 id="title">Mock TMflow</h1>
+    </div>
+    <div class="status mono"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></div>
+  </header>
+
+  <section class="live-work">
+    <div class="panel">
+      <div class="tm-bar" aria-hidden="true"><span>Display Board</span><b>Flow</b><span>IO</span><span>Simulator</span><span>Status</span></div>
+      <div class="eyebrow">TMflow + robot (mock) · what the robot side is doing</div>
+      <div class="say" id="tm-say">waiting for the project to start<small></small></div>
+      <div class="canvas" id="flow"></div>
+      <dl class="kv" id="tm-kv"></dl>
+      <div class="eyebrow">Mock log</div>
+      <div class="log" id="tm-log"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tm-bar" aria-hidden="true"><b>Listen</b><span>Ethernet · port 5890</span><span>Event Logger</span></div>
+      <div class="eyebrow">Python script ↔ Listen node, port 5890 · what the script side is doing</div>
+      <div class="say" id="py-say">no script connected<small>run a test script with: tmflow_mock.py run hande_bridge.py …</small></div>
+      <div class="canvas seq" id="seq"></div>
+      <dl class="kv" id="py-kv"></dl>
+      <div class="eyebrow">Packets on 5890 (newest first)</div>
+      <div class="log" id="py-log"></div>
+    </div>
+  </section>
+  <p class="foot">Diagram, node names and colours from <code>listen_loop_flow.html</code>. The script side is read off the wire (what it sent, what the Listen node answered); the mock cannot see inside the script.</p>
+</main>
+
+<script>
+// mock node name -> [diagram node id]; "a>b" -> diagram edge id. hande_bridge.py's Bridge/Lost are
+// TMflow's auto-named Listen1/Listen2 (BRIDGE, LOST in the script).
+const DIAGRAMS = {
+  hande: { svg: '#flow-b', marker: 'bh', label: { Listen1: 'Listen1 (Bridge)', Listen2: 'Listen2 (Lost)' },
+    nodes: { Start: 'b-start', Home: 'b-home', SET1: 'b-set1', Listen1: 'b-bridge', Gateway: 'b-gw', GRIP1: 'b-grip1',
+             RELEASE1: 'b-rel1', Home2: 'b-home2', Stop: 'b-stop', Listen2: 'b-lost' },
+    edges: { 'Start>Home': 'e-b-start-home', 'Home>SET1': 'e-b-home-set', 'SET1>Listen1': 'e-b-set-bridge',
+             'Listen1>Gateway': 'e-b-bridge-gw', 'Gateway>GRIP1': 'e-b-gw-grip', 'Gateway>RELEASE1': 'e-b-gw-rel',
+             'Gateway>Home2': 'e-b-gw-home2', 'Gateway>Stop': 'e-b-gw-stop', 'GRIP1>Listen1': 'e-b-grip-ok',
+             'GRIP1>Listen2': 'e-b-grip-lost', 'Listen2>Listen1': 'e-b-lost-bridge', 'RELEASE1>Listen1': 'e-b-rel-bridge',
+             'Home2>Listen1': 'e-b-home2-bridge' } },
+  testjb2: { svg: '#flow-a', marker: 'ah', label: {},
+    nodes: { Start: 'a-start', P3: 'a-p3', SET1: 'a-set1', Listen1: 'a-l1', RELEASE1: 'a-rel1', Listen2: 'a-l2',
+             GRIP1: 'a-grip1', Listen3: 'a-l3' },
+    edges: { 'Start>P3': 'e-a-start-p3', 'P3>SET1': 'e-a-p3-set', 'SET1>Listen1': 'e-a-set-l1', 'Listen1>RELEASE1': 'e-a-l1-rel',
+             'RELEASE1>Listen2': 'e-a-rel-l2', 'Listen2>GRIP1': 'e-a-l2-grip', 'GRIP1>Listen1': 'e-a-grip-l1',
+             'GRIP1>Listen3': 'e-a-grip-l3' } },
+  testproject: null,                                     // not in the diagram: plain node list
+};
+const TESTPROJECT = ['SET1', 'RELEASE1', 'Listen1', 'GRIP1', 'Listen2', 'RELEASE2', 'Listen3', 'Stop'];
+// rows of the diagram's "One handover, message by message" sequence, in drawing order
+const SEQ = { connect: 0, ask: 1, answer: 2, moves: 3, poll: 4, done: 5, setvar: 6, exit: 7 };
+const KIND = { home: 'point node: TMflow moves the arm', set: 'HANDE_V002 SET: gripper initializes',
+  grip: 'HANDE_V002 GRIP: fingers close', release: 'HANDE_V002 RELEASE: fingers open',
+  gateway: 'Gateway: reads var_cmd', listen: 'Listen node: port 5890 open, the script moves the robot',
+  stop: 'the project has stopped' };
+
+const $ = s => document.querySelector(s);
+let D = null, flow = null, diagramDoc = null, curEdge = null, prevEdge = null;
+let py = { sid: null, exited: false, tag: null, sent: 0, recv: 0, lastSent: '—', lastReply: '—', vars: {} };
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const f1 = v => v.map(x => x.toFixed(1)).join(', ');
+
+async function loadDiagram() {
+  try {
+    const html = await (await fetch('/diagram')).text();
+    diagramDoc = new DOMParser().parseFromString(html, 'text/html');
+    const style = diagramDoc.querySelector('style');
+    if (style) $('#base').textContent = style.textContent;   // the group's tokens and drawing styles
+    const seq = diagramDoc.querySelector('.seq svg');
+    if (seq) {
+      $('#seq').append(document.importNode(seq, true));
+      const subs = $('#seq').querySelectorAll('.lane-sub');
+      if (subs[0]) subs[0].textContent = 'mock 127.0.0.1';
+      if (subs[1]) subs[1].textContent = 'this PC';
+    }
+  } catch (e) { $('#seq').textContent = 'listen_loop_flow.html not found next to the mock: no diagrams.'; }
+}
+
+function showFlow(name, title) {
+  flow = name; D = DIAGRAMS[name];
+  $('#title').textContent = `Mock TMflow · project ${title}`;
+  $('#flow').innerHTML = '';
+  const svg = D && diagramDoc && diagramDoc.querySelector(`${D.svg} svg`);
+  if (svg) { $('#flow').append(document.importNode(svg, true)); return; }
+  D = null;
+  const list = document.createElement('div'); list.className = 'fallback';
+  (name === 'testproject' ? TESTPROJECT : []).forEach(n => { const s = document.createElement('span'); s.dataset.n = n; s.textContent = n; list.append(s); });
+  $('#flow').append(list);
+}
+
+function markNode(node, prev, kind) {
+  document.querySelectorAll('#flow .active, #flow .listen-open').forEach(el => el.classList.remove('active', 'listen-open'));
+  if (!D) { const s = $(`#flow [data-n="${node}"]`); if (s) s.classList.add('active'); return; }
+  const g = D.nodes[node] && $(`#flow #${D.nodes[node]}`);
+  if (g) { g.classList.add('active'); if (kind === 'listen') g.classList.add('listen-open'); }
+  const setEdge = (el, cls) => { if (!el) return; el.classList.add(cls); if (cls === 'active') el.setAttribute('marker-end', `url(#${D.marker}-a)`); };
+  document.querySelectorAll('#flow .edge').forEach(e => { e.classList.remove('active', 'recent'); e.setAttribute('marker-end', `url(#${D.marker})`); });
+  prevEdge = curEdge; curEdge = D.edges[`${prev}>${node}`] && $(`#flow #${D.edges[`${prev}>${node}`]}`);
+  setEdge(prevEdge, 'recent'); setEdge(curEdge, 'active');
+}
+
+function seqMark(row, err) {
+  const svg = $('#seq svg'); if (!svg) return;
+  svg.querySelectorAll('.live, .err').forEach(el => el.classList.remove('live', 'err'));
+  const cls = err ? 'err' : 'live';
+  if (row && row.self !== undefined) { const r = svg.querySelectorAll('rect.self')[row.self]; if (r) r.classList.add('live'); return; }
+  const line = svg.querySelectorAll('line.msg')[row]; if (!line) return;
+  line.classList.add(cls);
+  let t = line.nextElementSibling;                          // the message's label follows its line
+  while (t && !(t.classList.contains('msg-text'))) t = t.nextElementSibling;
+  if (t) t.classList.add(cls);
+}
+
+function addLog(box, cls, text, at) {
+  const d = document.createElement('div'); d.className = cls;
+  d.innerHTML = `<span class="t">${at !== undefined ? at.toFixed(1) : ''}</span>${esc(text)}`;
+  box.prepend(d);
+  while (box.childElementCount > 300) box.lastChild.remove();
+}
+
+function kv(el, rows) {
+  const old = Object.fromEntries([...el.querySelectorAll('dt')].map(dt => [dt.textContent, dt.nextElementSibling.textContent]));
+  el.innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="${old[k] !== undefined && old[k] !== String(v) ? 'flash' : ''}">${esc(v)}</dd>`).join('');
+}
+
+function say(el, head, small) { el.innerHTML = `${esc(head)}<small>${esc(small || '')}</small>`; }
+const nodeLabel = n => (D && D.label[n]) || n;
+
+// Classify one packet from the script into the sequence diagram's rows.
+function rxRow(header, data) {
+  if (header === 'TMSTA') return data.startsWith('01') ? SEQ.poll : SEQ.ask;
+  if (header !== 'TMSCT') return SEQ.connect;
+  if (/ScriptExit\(\)/.test(data)) return SEQ.exit;
+  if (/var_\w+\s*=/.test(data) && !/Line|PTP/.test(data)) return SEQ.setvar;
+  if (/Line|PTP|QueueTag/.test(data)) return SEQ.moves;
+  return SEQ.connect;                                        // ChangeBase/ChangeTCP right after connecting
+}
+
+function pyDoing(header, data) {
+  if (header === 'TMSTA' && data.startsWith('00')) return ['asks which Listen node the flow is in', 'where(r) / Bridge._connect: $TMSTA 00'];
+  if (header === 'TMSTA') return [`polls QueueTag ${data.split(',')[1]}: has the arm arrived?`, 'Listen.move() waits for the tag'];
+  const code = data.split(',').slice(1).join(',');
+  if (/ScriptExit\(\)/.test(code)) return ['leaves the Listen node (ScriptExit)', 'r.exit() / b.grip() / b.release() / b.home(): the flow runs the next node'];
+  const m = code.match(/(var_\w+)\s*=\s*(\S+)/);
+  if (m && !/Line|PTP/.test(code)) return [`sets ${m[1]} = ${m[2]}`, m[2] === '0' ? 'Bridge._connect resets var_cmd' : 'Bridge._handover: tells the Gateway what to do next'];
+  const n = (code.match(/Line|PTP/g) || []).length;
+  if (n) return [`sends ${n} move${n > 1 ? 's' : ''} + QueueTag`, 'Listen.move(): go(r, …) / b.move(…) / park(…)'];
+  return ['sets base and TCP after connecting', 'Listen.__init__: ChangeBase("RobotBase"), ChangeTCP(0,…)'];
+}
+
+function handle(ev) {
+  switch (ev.t) {
+    case 'hello':
+      showFlow(ev.flow, ev.title);
+      break;
+    case 'node': {
+      markNode(ev.node, ev.prev, ev.kind);
+      if (ev.kind === 'listen') seqMark({ self: 0 });
+      else if (py.exited) seqMark({ self: 1 });
+      say($('#tm-say'), nodeLabel(ev.node), KIND[ev.kind] || '');
+      addLog($('#tm-log'), 'ev', `→ ${nodeLabel(ev.node)}`, ev.at);
+      if (ev.kind === 'stop') say($('#tm-say'), ev.node === 'Error' ? 'stopped on a robot error' : 'Stop', 'Ctrl+C the mock and serve again to restart the project');
+      break;
+    }
+    case 'log':
+      if (!/^(\S+: (Listen node|PTP|Hand-E|Pass)|  (line|jptp|cptp|var_|ScriptExit))/.test(ev.msg))
+        addLog($('#tm-log'), /ERROR|rejected/.test(ev.msg) ? 'err' : 'ev', ev.msg.trim(), ev.at);
+      break;
+    case 'move':
+      addLog($('#tm-log'), 'ev', `${ev.kind} (${f1(ev.frm)}) → (${f1(ev.to)})  ${ev.secs} s`, ev.at);
+      break;
+    case 'grip':
+      addLog($('#tm-log'), ev.result === 'ok' ? 'ev' : 'err', `${ev.node}: ${ev.result.toUpperCase()} → ${nodeLabel(ev.next)}`, ev.at);
+      break;
+    case 'conn':
+      py.sid = ev.sid; py.exited = false;
+      seqMark(SEQ.connect);
+      say($('#py-say'), `connected (session ${ev.sid})`, ev.listening ? `to ${nodeLabel(ev.node)}` : 'but the flow is not in a Listen node: it will get "false" and retry');
+      addLog($('#py-log'), 'ev', `session ${ev.sid}: connected to :5890`, ev.at);
+      break;
+    case 'rx': {
+      py.recv++; py.lastSent = `$${ev.header} ${ev.data.replace(/\r\n/g, ' ⏎ ')}`;
+      if (/ScriptExit\(\)/.test(ev.data)) py.exited = true;
+      seqMark(rxRow(ev.header, ev.data));
+      const [head, small] = pyDoing(ev.header, ev.data);
+      say($('#py-say'), head, small);
+      addLog($('#py-log'), 'rx', `script → ${py.lastSent}`, ev.at);
+      break;
+    }
+    case 'tx': {
+      py.lastReply = ev.data;
+      const bad = /CPERR|ERROR/.test(ev.data);
+      if (bad) seqMark(SEQ.answer, true);
+      else if (/^\$TMSTA,\d+,00,/.test(ev.data)) seqMark(SEQ.answer);
+      else if (/^\$TMSTA,\d+,01,\d+,true/.test(ev.data)) seqMark(SEQ.done);
+      addLog($('#py-log'), bad ? 'err' : 'tx', `node   → ${ev.data}`, ev.at);
+      break;
+    }
+    case 'var':
+      addLog($('#tm-log'), 'ev', `${ev.name} = ${ev.value}`, ev.at);
+      break;
+    case 'disc':
+      addLog($('#py-log'), 'ev', `session ${ev.sid}: closed`, ev.at);
+      if (ev.sid === py.sid) say($('#py-say'), py.exited ? 'waiting to reconnect' : 'connection closed',
+        py.exited ? 'lt.Listen() retries 5890 every 0.5 s until the flow is back in a Listen node' : 'no ScriptExit: the flow keeps waiting in this Listen node (parked)');
+      break;
+    case 'state':
+      kv($('#tm-kv'), [
+        ['node', nodeLabel(ev.node || '—') + (ev.listening ? '  · listening on 5890' : '')],
+        ['motion', ev.error ? `ERROR: ${ev.error}` : ev.busy ? `moving (${ev.queued} queued)` : 'idle'],
+        ['last move', ev.last || '—'],
+        ['flange x y z', f1(ev.flange.slice(0, 3)) + ' mm'],
+        ['flange rx ry rz', f1(ev.flange.slice(3)) + ' °'],
+        ['joints', f1(ev.joints) + ' °'],
+        ['gripper', ev.gripper],
+        ...Object.entries(ev.vars).map(([k, v]) => [k, v]),
+      ]);
+      kv($('#py-kv'), [
+        ['session', py.sid ? `#${py.sid}` : '—'],
+        ['last sent', py.lastSent],
+        ['last reply', py.lastReply],
+        ['packets in', py.recv],
+      ]);
+      break;
+  }
+}
+
+loadDiagram().then(() => {
+  const es = new EventSource('/events');
+  es.onopen = () => { $('#dot').classList.add('on'); $('#conn').textContent = 'live: tmflow_mock.py serve'; };
+  es.onerror = () => { $('#dot').classList.remove('on'); $('#conn').textContent = 'mock not running (start: tmflow_mock.py serve), retrying…'; };
+  es.onmessage = m => handle(JSON.parse(m.data));
+});
+</script>

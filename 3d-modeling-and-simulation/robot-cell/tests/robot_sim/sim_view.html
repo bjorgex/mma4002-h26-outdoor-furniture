@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TM5-900 Cell Sim</title>
+<!--
+  Live 3D view of the mock TM5-900 (tmflow_mock.py), without RoboDK.
+  Served by the mock at /sim (see robot_sim/README in the report / mock_sim.py); it reads the mock's
+  Server-Sent Events on /events (same origin): "state" every 0.2 s (joints, flange, gripper, node),
+  "node", "move", "grip", "rx"/"tx" (Listen-node packets), "conn"/"disc", "log".
+  Robot: Techman's nominal TM5-900 chain (tm5-900-nominal.urdf, same numbers as tm5_kin.py) with
+  Techman's link meshes (tm5_links.glb, robot_meshes.py); simple cylinders if that file can't be loaded.
+  Cell: cell.glb (cell_layout.py: the "Bench V1 cell v4" objects at bench_cell_v4.py's poses).
+  Both GLBs are fetched next to this page (/sim/...). Without the mock it plays a short demo.
+-->
+<style>
+  :root { --bg:#f4f2ee; --panel:#ffffffe8; --ink:#222; --muted:#666; --line:#d8d4cc; --rx:#1b6ec2; --tx:#1e8a4c; --err:#c0392b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1d20; --panel:#26282ce8; --ink:#e8e6e1; --muted:#9a978f; --line:#3a3c41; --rx:#6aaaf0; --tx:#5ccf8b; --err:#ef6f5e; } }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.4 system-ui, sans-serif; overflow:hidden; }
+  #view { position:fixed; inset:0; }
+  .panel { position:fixed; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px; backdrop-filter:blur(4px); }
+  #status { top:12px; left:12px; width:300px; }
+  #legend { top:12px; right:12px; width:330px; }
+  #log { bottom:12px; right:12px; width:330px; height:30vh; overflow:auto; font:11px/1.35 ui-monospace, Consolas, monospace; }
+  h1 { font-size:14px; margin:0 0 6px; } h2 { font-size:12px; margin:8px 0 4px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  table { border-collapse:collapse; width:100%; } td { padding:1px 4px 1px 0; vertical-align:top; }
+  td.k { color:var(--muted); white-space:nowrap; } .mono { font-family:ui-monospace, Consolas, monospace; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:#999; margin-right:5px; vertical-align:middle; }
+  .on { background:#2ecc71; } .off { background:#e74c3c; } .demo { background:#f39c12; }
+  dl { margin:0; } dt { font-family:ui-monospace, Consolas, monospace; font-weight:600; margin-top:5px; } dd { margin:0 0 0 10px; color:var(--muted); }
+  .rx { color:var(--rx); } .tx { color:var(--tx); } .bad { color:var(--err); font-weight:600; }
+  #log div { white-space:pre-wrap; word-break:break-all; border-bottom:1px dotted var(--line); padding:1px 0; }
+  button { font:inherit; padding:2px 8px; margin:4px 4px 0 0; border:1px solid var(--line); border-radius:5px; background:transparent; color:var(--ink); cursor:pointer; }
+  @media (max-width: 760px) { #legend { display:none; } #log { width:calc(100% - 48px); height:22vh; } #status { width:calc(100% - 48px); } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="view"></div>
+
+<div id="status" class="panel">
+  <h1><span id="dot" class="dot"></span><span id="title">TM5-900 cell</span></h1>
+  <table>
+    <tr><td class="k">link</td><td id="link">connecting…</td></tr>
+    <tr><td class="k">node</td><td id="node">–</td></tr>
+    <tr><td class="k">gripper</td><td id="grip">–</td></tr>
+    <tr><td class="k">motion</td><td id="motion" class="mono">–</td></tr>
+    <tr><td class="k">joints °</td><td id="joints" class="mono">–</td></tr>
+    <tr><td class="k">flange</td><td id="flange" class="mono">–</td></tr>
+    <tr><td class="k">vars</td><td id="vars" class="mono">–</td></tr>
+  </table>
+  <button id="camIso">3D</button><button id="camTop">top</button><button id="camSide">side</button>
+</div>
+
+<div id="legend" class="panel">
+  <h1>What the mock and the scripts say</h1>
+  Port 5890 (Listen node) - the script asks, the robot answers:
+  <dl>
+    <dt>$TMSCT</dt><dd>script command: TMscript lines (Line, PTP, QueueTag, var_x = …, ScriptExit) - this is what makes the robot move. Answer: OK, or ERROR;line.</dd>
+    <dt>$TMSTA 00</dt><dd>"are you in a Listen node?" - answer true/false and the node's name.</dd>
+    <dt>$TMSTA 01</dt><dd>"has QueueTag n finished?" - answer true (done), false (still moving) or none.</dd>
+    <dt>CPERR</dt><dd>protocol error: the packet itself was wrong (01 bad frame, 02 bad checksum, 03 unknown header, 04 bad data, F1 not in a Listen node).</dd>
+  </dl>
+  Port 5891 (Ethernet Slave) - the robot talks, nobody answers:
+  <dl>
+    <dt>$TMSVR</dt><dd>joint/pose stream: Joint_Angle and Coord_Robot_Flange, 50 times a second. This view gets the same numbers from the mock's /events.</dd>
+  </dl>
+  <h2>In the picture</h2>
+  <span style="color:#598cd9">■</span> jig bases + plank jig &nbsp;<span style="color:#f2bf33">■</span> guide halves &nbsp;<span style="color:#bf8c4d">■</span> planks &nbsp;<span style="color:#8c9ebf">■</span> bench frames &nbsp;<span style="color:#d91a1a">■</span> interface pieces &nbsp;<span style="color:#e74c3c">—</span> last move (flange)
+</div>
+
+<div id="log" class="panel"></div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+// ---- data -------------------------------------------------------------------------------------------
+// Techman nominal TM5-900 (tm5-900-nominal.urdf, tmr_ros1) = tm5_kin.GEOMETRY["techman"], mm
+const D1 = 145.2, A2 = 429.0, A3 = 411.5, D4 = 122.3, D5 = 106.0, D6 = 113.15;
+const CHAIN = [[[0, 0, D1], [0, 0, 0]], [[0, 0, 0], [-90, -90, 0]], [[A2, 0, 0], [0, 0, 0]],
+               [[A3, 0, -D4], [0, 0, 90]], [[0, -D5, 0], [90, 0, 0]], [[0, -D6, 0], [90, 0, 0]]];
+const TIP = 160;                                     // flange -> closed fingertips (bench_layout.json tip_mm)
+const deg = Math.PI / 180;
+
+// ---- scene (mm, z up, robot base at the origin) ------------------------------------------------------
+const el = document.getElementById("view");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+el.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+scene.background = new THREE.Color(dark ? 0x1c1d20 : 0xf4f2ee);
+THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+const camera = new THREE.PerspectiveCamera(40, 1, 10, 20000);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+const views = { iso: [[900, -1500, 1100], [-450, 0, 200]], top: [[-450, 0, 2600], [-450, 0, 0]], side: [[-450, -2200, 400], [-450, 0, 300]] };
+function setView(v) { camera.position.set(...views[v][0]); controls.target.set(...views[v][1]); controls.update(); }
+setView("iso");
+for (const v of ["Iso", "Top", "Side"]) document.getElementById("cam" + v).onclick = () => setView(v.toLowerCase());
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x777766, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(800, -1200, 2500);
+sun.castShadow = true;
+Object.assign(sun.shadow.camera, { left: -1500, right: 1500, top: 1500, bottom: -1500, far: 6000 });
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+
+const floorZ = -750 - 5;                             // bench_cell_v4.TABLE_H below the table top
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.MeshStandardMaterial({ color: dark ? 0x2a2c30 : 0xe2ded6 }));
+floor.position.z = floorZ; floor.receiveShadow = true; scene.add(floor);
+const grid = new THREE.GridHelper(6000, 60, 0x999999, dark ? 0x3a3c41 : 0xcfcac0);
+grid.rotation.x = Math.PI / 2; grid.position.z = floorZ + 1; scene.add(grid);
+scene.add(new THREE.AxesHelper(200));               // robot base frame: x red, y green, z blue
+
+// ---- cell meshes (cell.glb) -----------------------------------------------------------------------------
+const loader = new GLTFLoader();
+// served by the mock at /sim/ (files next to this page); "/sim" without the slash too
+const base = location.pathname.endsWith("/sim") ? "/sim/" : "";
+function shade(root, opts = {}) {
+  root.traverse(o => { if (o.isMesh) {
+    o.castShadow = o.receiveShadow = true;
+    if (opts.flat) { o.material.flatShading = true; o.material.needsUpdate = true; }
+    if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+    if (/^(frame|Table)/.test(o.name)) { o.material.transparent = true; o.material.opacity = o.name === "Table" ? .9 : .8; }
+  } });
+}
+loader.load(base + "cell.glb", g => { shade(g.scene, { flat: true }); scene.add(g.scene); window.__sim.cell = g.scene; },
+  undefined, e => logLine("bad", "cell.glb not loaded: " + e.message));
+
+// ---- robot from simple shapes ------------------------------------------------------------------------
+const white = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: .5 });
+const grey = new THREE.MeshStandardMaterial({ color: 0x55585e, roughness: .6 });
+const blue = new THREE.MeshStandardMaterial({ color: 0x2c6fbf, roughness: .5 });
+function cyl(parent, a, b, r, mat) {                 // cylinder from point a to point b (parent coords)
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+  const len = va.distanceTo(vb);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 32), mat);
+  m.position.copy(va).add(vb).multiplyScalar(.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.clone().sub(va).normalize());
+  m.castShadow = true; parent.add(m); return m;
+}
+function boxAt(parent, lo, hi, mat) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]), mat);
+  m.position.set((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
+  m.castShadow = true; parent.add(m); return m;
+}
+// each joint: a fixed group (URDF origin: xyz, then R = Rz Ry Rx) holding a group that turns about z
+const joints = [];
+let parent = scene;
+for (const [xyz, rpy] of CHAIN) {
+  const fixed = new THREE.Group();
+  fixed.position.set(...xyz);
+  fixed.rotation.set(rpy[0] * deg, rpy[1] * deg, rpy[2] * deg, "ZYX");
+  const turn = new THREE.Group();
+  fixed.add(turn); parent.add(fixed); joints.push(turn); parent = turn;
+}
+const [L1, L2, L3, L4, L5, L6] = joints;
+// simple shapes, shown until (or if not) Techman's link meshes load; all named "simple"
+const simple = [];
+function S(m) { m.name = "simple"; simple.push(m); return m; }
+S(cyl(scene, [0, 0, 0], [0, 0, D1 - 40], 80, white));  // base
+S(cyl(scene, [0, 0, 0], [0, 0, 12], 95, grey));
+S(cyl(L1, [0, 0, -40], [0, 0, 60], 72, white));         // J1 housing (z up)
+S(cyl(L2, [0, 0, -10], [0, 0, 150], 70, blue));         // J2 motor (axis z of frame 2 = sideways)
+S(cyl(L2, [0, 0, 70], [A2, 0, 70], 52, white));         // upper arm, out to the side of the J1 axis
+S(cyl(L3, [0, 0, 20], [0, 0, 140], 60, blue));          // J3 motor
+S(cyl(L3, [0, 0, 60], [A3, 0, 60], 42, white));         // forearm
+S(cyl(L3, [A3, 0, 60], [A3, 0, -D4 - 45], 48, white));  // forearm end down to the J4 axis
+S(cyl(L4, [0, 0, -45], [0, 0, 45], 50, blue));          // J4
+S(cyl(L4, [0, 0, 0], [0, -D5 + 45, 0], 46, white));
+S(cyl(L5, [0, 0, -45], [0, 0, 45], 46, blue));          // J5
+S(cyl(L5, [0, 0, 0], [0, -D6 + 10, 0], 42, white));
+S(cyl(L6, [0, 0, -10], [0, 0, 0], 32, grey));           // J6 / flange
+L6.add(new THREE.AxesHelper(80));                    // flange frame
+loader.load(base + "tm5_links.glb", g => {           // link_0 on the base, link_i on joint i
+  for (let i = 0; i <= 6; i++) {
+    const n = g.scene.getObjectByName("link_" + i);
+    if (!n) continue;
+    shade(n); (i === 0 ? scene : joints[i - 1]).add(n);
+  }
+  simple.forEach(m => m.removeFromParent());
+}, undefined, e => logLine("bad", "tm5_links.glb not loaded (simple shapes instead): " + e.message));
+// gripper: body 94 x 90 x 123 (Schunk EGP box, as in the RoboDK station: bench_cell_v4.EGP) + two fingers to TIP
+boxAt(L6, [-47, -45, 0], [47, 45, 123], grey);
+const fingers = [-1, 1].map(s => boxAt(L6, [-1.5, -4, 123], [1.5, 4, TIP], new THREE.MeshStandardMaterial({ color: 0xd0d3d8 })));
+const GAP_OPEN = 50, GAP_CLOSED = 12;               // finger gap [mm] (illustrative)
+let gap = GAP_OPEN, gapFrom = GAP_OPEN, gapTo = GAP_OPEN, gapT0 = 0, gapDur = 1;
+function setGap(g) { fingers[0].position.x = -g / 2 - 1.5; fingers[1].position.x = g / 2 + 1.5; }
+setGap(gap);
+function animateGrip(to, secs) { gapFrom = gap; gapTo = to; gapT0 = performance.now(); gapDur = Math.max(.2, secs) * 1000; }
+
+const moveLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+  new THREE.LineBasicMaterial({ color: 0xe74c3c }));
+moveLine.visible = false; scene.add(moveLine);
+
+// ---- joint motion: the stream comes at 5 Hz, so ease towards the newest sample --------------------------
+let shown = [0, 0, 90, 0, 90, 0], target = shown.slice(), last = shown.slice(), tLast = 0, period = 200;
+function pushJoints(q) {
+  last = shown.slice(); target = q.slice();
+  const now = performance.now(); if (tLast) period = Math.min(500, Math.max(20, now - tLast)); tLast = now;
+}
+function applyJoints(q) { q.forEach((a, i) => joints[i].rotation.z = a * deg); }
+
+// ---- UI ----------------------------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const fmt = v => v.map(x => x.toFixed(1)).join(", ");
+const logEl = $("log");
+const MEANING = {
+  "TMSCT": "script command", "TMSTA 00": "in a Listen node?", "TMSTA 01": "QueueTag done?",
+  "CPERR": "protocol error", "TMSVR": "joint/pose stream" };
+function explain(header, data) {
+  if (header === "TMSTA") return MEANING["TMSTA " + data.slice(0, 2)] || "status";
+  return MEANING[header] || header;
+}
+function logLine(cls, text) {
+  const d = document.createElement("div"); d.className = cls; d.textContent = text;
+  const stick = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 5;
+  logEl.appendChild(d); while (logEl.childNodes.length > 300) logEl.firstChild.remove();
+  if (stick) logEl.scrollTop = logEl.scrollHeight;
+}
+const short = s => s.length > 140 ? s.slice(0, 140) + " …" : s;
+function gripperGap(text) { return /^closed/.test(text) ? GAP_CLOSED : text === "open" ? GAP_OPEN : null; }
+
+const NODE_SECS = { set: 3, grip: 4, release: 3 };  // tmflow_mock.NODE_TIME
+function handle(ev) {
+  switch (ev.t) {
+    case "hello": $("title").textContent = `TM5-900 - ${ev.title} (${ev.flow})`; break;
+    case "state": {
+      pushJoints(ev.joints);
+      $("node").textContent = (ev.node || "–") + (ev.listening ? "  (listening)" : "") + (ev.running ? "" : "  - stopped");
+      $("grip").textContent = ev.gripper;
+      $("motion").textContent = ev.error ? "ERROR: " + ev.error : ev.busy ? `moving, ${ev.queued} queued` : "idle";
+      $("motion").className = ev.error ? "bad" : "mono";
+      $("joints").textContent = fmt(ev.joints);
+      $("flange").textContent = fmt(ev.flange);
+      $("vars").textContent = Object.entries(ev.vars || {}).map(([k, v]) => `${k}=${v}`).join(" ") || "–";
+      const g = gripperGap(ev.gripper);
+      if (g !== null && performance.now() - gapT0 > gapDur && Math.abs(g - gap) > .5) animateGrip(g, .3);
+      break;
+    }
+    case "node":
+      if (ev.kind === "grip") animateGrip(GAP_CLOSED, NODE_SECS.grip);
+      if (ev.kind === "release" || ev.kind === "set") animateGrip(GAP_OPEN, NODE_SECS[ev.kind]);
+      logLine("", `node ${ev.prev} -> ${ev.node}`); break;
+    case "move":
+      moveLine.geometry.setFromPoints([new THREE.Vector3(...ev.frm), new THREE.Vector3(...ev.to)]);
+      moveLine.visible = true;
+      logLine("", `${ev.kind} -> (${fmt(ev.to)})  ${ev.secs} s`); break;
+    case "grip": logLine("", `${ev.node}: ${ev.result.toUpperCase()} -> ${ev.next}`); break;
+    case "rx": logLine("rx", `<- $${ev.header}  [${explain(ev.header, ev.data)}]  ${short(ev.data.replace(/\r\n/g, " | "))}`); break;
+    case "tx": {
+      const h = (ev.data.match(/^\$(\w+)/) || [])[1] || "";
+      const body = ev.data.replace(/^\$\w+,\d+,/, "").replace(/,\*\w\w$/, "");
+      logLine(h === "CPERR" ? "bad" : "tx", `-> $${h}  [${explain(h, body)}]  ${short(body)}`); break;
+    }
+    case "conn": logLine("", `client ${ev.sid} connected (node ${ev.node}, ${ev.listening ? "listening" : "not listening"})`); break;
+    case "disc": logLine("", `client ${ev.sid} disconnected`); break;
+    case "tag": logLine("", `QueueTag ${ev.n} reached`); break;
+    case "var": logLine("", `${ev.name} = ${ev.value}`); break;
+  }
+}
+
+// ---- connection: the mock's SSE, or a demo when there is none -----------------------------------------
+let gotData = false, demo = null;
+function setLink(cls, text) { $("dot").className = "dot " + cls; $("link").textContent = text; }
+if (location.protocol.startsWith("http")) {
+  const es = new EventSource("/events");
+  es.onopen = () => setLink("on", "live: " + location.host + "/events");
+  es.onmessage = e => { gotData = true; if (demo) { clearInterval(demo); demo = null; } handle(JSON.parse(e.data)); };
+  es.onerror = () => setLink("off", "no stream (mock stopped?) - retrying");
+}
+setTimeout(() => { if (!gotData) startDemo(); }, 2500);
+function startDemo() {
+  setLink("demo", "demo (no mock) - serve the mock with --sim and open /sim");
+  const poses = [[-4.5, 24.7, -142.5, 26.3, -87.2, 18.3], [-25.5, 5.5, -130.2, 33.2, -92.8, 13.4], [29.3, -39.9, 110.0, 19.9, 90.0, 119.3]];
+  let k = 0, t = 0, from = poses[2], to = poses[0];
+  demo = setInterval(() => {
+    t += .05; if (t >= 1) { t = 0; from = to; k = (k + 1) % poses.length; to = poses[k]; animateGrip(k === 1 ? GAP_CLOSED : GAP_OPEN, .6); }
+    const s = t * t * (3 - 2 * t);
+    const q = from.map((a, i) => a + (to[i] - a) * s);
+    pushJoints(q); $("joints").textContent = fmt(q);
+  }, 100);
+}
+
+// ---- loop -------------------------------------------------------------------------------------------
+function resize() { const w = el.clientWidth, h = el.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+renderer.setAnimationLoop(() => {
+  const s = Math.min(1, (performance.now() - tLast) / period);
+  shown = last.map((a, i) => a + (target[i] - a) * s);
+  applyJoints(shown);
+  const u = Math.min(1, (performance.now() - gapT0) / gapDur);
+  gap = gapFrom + (gapTo - gapFrom) * u; setGap(gap);
+  controls.update(); renderer.render(scene, camera);
+});
+window.__sim = { joints, handle, scene };            // for checks from the console
+</script>
+</body>
+</html>

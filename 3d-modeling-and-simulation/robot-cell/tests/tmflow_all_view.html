@@ -1,0 +1,792 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock TMflow All</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<!-- Served by tmflow_mock.py serve at /all: the three live views on one page, all fed by one /events stream.
+       TMflow  - the flow (from listen_loop_flow.html via /diagram), node, pose, gripper, var_cmd, mock log
+       Python  - the script side: its demo_run.py / hande_bridge.py step (step events from "run"), the Listen-node
+                 message sequence and the packets on the Listen port
+       3D      - our own TM5-900 + v4 cell (robot_sim/sim_scene.js, meshes from /sim/), driven by the joints in the
+                 mock's state events - so with --robodk too, whatever does the kinematics.
+     Panes: TMflow | Python on top and 3D below, or three columns on wide screens (auto, or the header's layout
+     buttons). The square button on a pane's bar maximises it (Esc back). Drawing code for the flow and sequence
+     follows tmflow_mock_view.html; step words follow tmflow_demo_view.html. -->
+<style id="base">
+/* fallback tokens, replaced by the diagram's own <style> once it loads */
+:root { --bg: #eef0f3; --surface: #fff; --canvas: #e4e8ee; --fg: #1b2230; --muted: #5b6577; --line: #b9c1cd;
+  --accent: #2350c8; --accent-tint: #dfe7fb; --listen: #6b4fc2; --listen-tint: #ece6fb; --grip: #a8650c;
+  --grip-tint: #fbefdc; --ok: #1f8a3b; --fail: #c23b2b; --loss: #c0661a; --f-ui: "Archivo", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, monospace; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-ui); }
+</style>
+<style id="live">
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--fail); margin-right: 6px; }
+.dot.on { background: var(--ok); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font: 0.86rem var(--f-mono); margin: 0; font-variant-numeric: tabular-nums; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.say small { display: block; }
+.log { font: 12px/1.55 var(--f-mono); overflow: auto; padding: 8px 10px; margin: 0; }
+.log div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.log .err { font-weight: 600; }
+.log .t { margin-right: 8px; }
+.fallback { display: flex; flex-wrap: wrap; gap: 6px; }
+/* live marks on the group's drawings */
+.node.active rect.box { stroke: var(--accent) !important; stroke-width: 4 !important; }
+.edge.active { stroke: var(--accent) !important; stroke-width: 3.5 !important; }
+.edge.recent { stroke: var(--accent) !important; stroke-opacity: 0.35; stroke-width: 2.5 !important; }
+.msg.live { stroke: var(--accent) !important; stroke-width: 4 !important; }
+.msg-text.live { fill: var(--accent) !important; font-weight: 700 !important; }
+.msg.err { stroke: var(--fail) !important; stroke-width: 4 !important; }
+.msg-text.err { fill: var(--fail) !important; font-weight: 700 !important; }
+.self.live { fill: var(--accent-tint) !important; stroke: var(--accent); stroke-width: 2; }
+</style>
+<!-- ===== TMFLOW SKIN START ===== reusable: copy this whole <style> block into another page and put
+     class="tm-skin" on its <main> (or any wrapper). The mock server has no .css route, so it lives inline.
+     Colours sampled from TMflow screenshots in the Omron TM training decks (TC114 L04/L09, TC115 L03) and the
+     Listen Node tech note. TMflow has no dark theme, so the skinned page stays light in both page themes.
+     Font: Segoe UI with Open Sans fallback (add Open Sans to the page's Google Fonts link). -->
+<style id="tmflow-skin">
+.tm-skin { --tm-bar: #10232a; --tm-ink: #231815; --tm-line: #817d7d; --tm-frame: #cccccc; --tm-flow: #e1f9ec;
+  --tm-comp: #d4f7f9; --tm-sel: #dcf77e; --tm-green: #8dc035; --tm-orange: #f9c446; --tm-icon: #444444;
+  --tm-tag: #cececc; --tm-in: #0000ff; --tm-out: #008000; --tm-fail: #e60012;
+  --tm-font: "Segoe UI", "Open Sans", Arial, sans-serif;
+  color-scheme: light; color: var(--tm-ink); font-family: var(--tm-font); }
+html:has(.tm-skin), body:has(.tm-skin) { background: #e4e7e9; color-scheme: light; }
+body:has(.tm-skin) { color: #231815; font-family: "Segoe UI", "Open Sans", Arial, sans-serif; }
+.tm-skin code, .tm-skin .mono { font-family: var(--tm-font); }
+
+/* header: TMflow's dark top bar */
+.tm-skin .top { background: var(--tm-bar); color: #fff; padding: 10px 16px; border-radius: 3px; align-items: center; }
+.tm-skin .top .eyebrow { font: 12px var(--tm-font); letter-spacing: 0; text-transform: none; color: #9fb0b7; }
+.tm-skin .top h1 { font: 400 1.25rem/1.25 var(--tm-font); color: #fff; letter-spacing: 0; }
+.tm-skin .top .status { font: 13px var(--tm-font); color: #fff; }
+.tm-skin .dot { background: var(--tm-fail); } .tm-skin .dot.on { background: var(--tm-green); }
+
+/* panels: white window, thin frame, square-ish corners */
+.tm-skin .panel { background: #fff; color: var(--tm-ink); border: 1px solid #8a969b; border-radius: 3px;
+  padding: 0; gap: 0; overflow: hidden; }
+.tm-skin .panel > * { margin: 0; }
+.tm-skin .tm-bar { display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; background: var(--tm-bar);
+  color: #fff; font: 13px var(--tm-font); padding: 9px 14px; }
+.tm-skin .tm-bar b { color: var(--tm-green); font-weight: 400; }
+.tm-skin .panel > .eyebrow { font: 600 12px/1.3 var(--tm-font); letter-spacing: 0; text-transform: none; color: var(--tm-ink);
+  background: #eef0f1; border-bottom: 1px solid var(--tm-frame); padding: 6px 14px; }
+/* status line as TMflow's Step Run box: black, white bold */
+.tm-skin .say { background: #000; color: #fff; font: 700 15px/1.35 var(--tm-font); text-align: center; padding: 9px 14px; }
+.tm-skin .say small { font: 400 12.5px var(--tm-font); color: #b9c3c7; }
+/* canvases: plain white, thin grey frame */
+.tm-skin .canvas { background: #fff; background-image: none; border: 1px solid var(--tm-frame); border-radius: 0; margin: 10px; }
+.tm-skin #flow svg { min-width: 520px; }
+
+/* flow nodes: rounded white box, grey line, italic name; Start/Stop mint and upright; components
+   (HANDE_V002 SET/GRIP/RELEASE) light cyan; orange icon on components and the Gateway */
+.tm-skin .canvas .node rect.box { fill: #fff; stroke: var(--tm-line); stroke-width: 1.4; rx: 13px; }
+.tm-skin .canvas .node .name { font: italic 400 13.5px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .canvas .node .sub { font: 10px var(--tm-font); fill: #7a7a7a; }
+.tm-skin .canvas .node .glyph { font: 700 12px var(--tm-font); fill: #fff; }
+.tm-skin .canvas .node .icon { rx: 3px; }
+.tm-skin .canvas .t-point .icon { fill: var(--tm-icon); }
+.tm-skin .canvas .t-grip rect.box { fill: var(--tm-comp); }
+.tm-skin .canvas .t-grip .icon, .tm-skin .canvas .t-logic .icon { fill: var(--tm-orange); }
+.tm-skin .canvas .t-listen .icon { fill: var(--tm-tag); }
+.tm-skin .canvas .t-listen .glyph { fill: #555; }
+.tm-skin .canvas :is(#a-start, #b-start, #b-stop) rect.box { fill: var(--tm-flow); }
+.tm-skin .canvas :is(#a-start, #b-start, #b-stop) .name { font-style: normal; }
+.tm-skin .canvas :is(#a-start, #b-start) :is(.icon, .glyph), .tm-skin .canvas #b-stop .glyph { display: none; }
+.tm-skin .canvas #b-stop .icon { fill: var(--tm-ink); transform-box: fill-box; transform-origin: center; transform: scale(0.45); }
+/* running node: TMflow's lime highlight around the node */
+.tm-skin .canvas .node.active rect.box { stroke: var(--tm-sel) !important; stroke-width: 16px !important; paint-order: stroke; }
+.tm-skin .canvas .node.listen-open rect.box { fill: #fff; }
+.tm-skin .canvas .node.listen-open .sub { fill: var(--tm-out); font-weight: 600; }
+/* edges: thin black orthogonal lines; the edge into the running node blue */
+.tm-skin .canvas .edge { stroke: #1a1a1a; stroke-width: 1.4; }
+.tm-skin .canvas .edge.active { stroke: var(--tm-in) !important; stroke-width: 2.4 !important; stroke-opacity: 1; }
+.tm-skin .canvas .edge.recent { stroke: var(--tm-in) !important; stroke-opacity: 0.3; stroke-width: 2 !important; }
+.tm-skin .canvas .head { fill: #1a1a1a; }
+.tm-skin .canvas .head-active { fill: var(--tm-in); }
+/* ports: white circles, Pass/Fail labels green/red as on the Listen node */
+.tm-skin .canvas .port { fill: #fff; stroke: #333; stroke-width: 1.3; }
+.tm-skin .canvas .plabel { font: 700 10px var(--tm-font); }
+.tm-skin .canvas .l-ok { fill: var(--tm-out); } .tm-skin .canvas .l-fail { fill: var(--tm-fail); }
+.tm-skin .canvas .l-loss { fill: #d97a00; } .tm-skin .canvas .l-cond { fill: #555; }
+.tm-skin .canvas .stub { stroke: #888; }
+.tm-skin .canvas .note { font: 10.5px var(--tm-font); fill: #666; }
+.tm-skin .canvas .note-strong { font: 600 10.5px var(--tm-font); fill: var(--tm-ink); }
+/* plain node list (project not in the diagram) */
+.tm-skin .fallback { padding: 14px; gap: 14px; }
+.tm-skin .fallback span { font: italic 13px var(--tm-font); color: var(--tm-ink); background: #fff; border: 1.4px solid var(--tm-line);
+  border-radius: 13px; padding: 6px 16px; }
+.tm-skin .fallback span.active { border-color: var(--tm-line); border-width: 1.4px; box-shadow: 0 0 0 7px var(--tm-sel); }
+
+/* message sequence: lanes drawn as TMflow nodes, black messages, live message blue, live activity lime */
+.tm-skin .seq svg { min-width: 640px; }
+.tm-skin .seq .lane-box { fill: #fff; stroke: var(--tm-line); stroke-width: 1.4; rx: 13px; }
+.tm-skin .seq .lane-title { font: 600 13px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .lane-sub { font: italic 10.5px var(--tm-font); fill: #7a7a7a; }
+.tm-skin .seq .lifeline { stroke: #b5b5b5; stroke-width: 1.5; }
+.tm-skin .seq .msg { stroke: #1a1a1a; stroke-width: 1.4; }
+.tm-skin .seq .msg.key-msg { stroke: #1a1a1a; stroke-width: 2.2; }
+.tm-skin .seq .msg.var-msg { stroke: var(--tm-out); stroke-width: 1.8; }
+.tm-skin .seq .msg-text { font: 11.5px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .msg-text.key-msg { fill: var(--tm-ink); font-weight: 700; }
+.tm-skin .seq .msg-text.var-msg { fill: var(--tm-out); font-weight: 600; }
+.tm-skin .seq .fn { font: 600 11px var(--tm-font); fill: var(--tm-out); }
+.tm-skin .seq .self { fill: var(--tm-flow); stroke: var(--tm-line); stroke-width: 1; }
+.tm-skin .seq .self-text { font: 11px var(--tm-font); fill: var(--tm-ink); }
+.tm-skin .seq .headf, .tm-skin .seq .heada { fill: #1a1a1a; } .tm-skin .seq .headv { fill: var(--tm-out); }
+.tm-skin .seq .msg.live { stroke: var(--tm-in) !important; stroke-width: 3 !important; }
+.tm-skin .seq .msg-text.live { fill: var(--tm-in) !important; font-weight: 700 !important; }
+.tm-skin .seq .msg.err { stroke: var(--tm-fail) !important; stroke-width: 3 !important; }
+.tm-skin .seq .msg-text.err { fill: var(--tm-fail) !important; font-weight: 700 !important; }
+.tm-skin .seq .self.live { fill: var(--tm-sel) !important; stroke: var(--tm-green); stroke-width: 2; }
+
+/* key/value tables as a TMflow Display Board */
+.tm-skin .kv { margin: 0 10px 10px; border: 1px solid var(--tm-frame); gap: 0; font: 13px/1.45 var(--tm-font); }
+.tm-skin .kv::before { content: "Display Board"; grid-column: 1 / -1; background: var(--tm-bar); color: #fff;
+  font: 600 12.5px var(--tm-font); padding: 5px 10px; }
+.tm-skin #py-kv::before { content: "Listen node · port 5890"; }
+.tm-skin .kv dt { color: #555; background: #f3f4f5; padding: 3px 10px; border-top: 1px solid #e3e3e3; }
+.tm-skin .kv dd { padding: 3px 10px; border-top: 1px solid #e3e3e3; }
+.tm-skin .kv dd.flash { background: var(--tm-sel); border-radius: 0; }
+/* logs as TMflow's Event Logger (packets stay monospace) */
+.tm-skin .log { margin: 0 10px 10px; background: #fff; border: 1px solid var(--tm-frame); border-radius: 0; color: var(--tm-ink); }
+.tm-skin .log .rx { color: var(--tm-ink); } .tm-skin .log .ev { color: #444; }
+.tm-skin .log .tx { color: var(--tm-in); } .tm-skin .log .err { color: var(--tm-fail); }
+.tm-skin .log .t { color: #999; }
+.tm-skin .foot { color: #555; font: 13px var(--tm-font); }
+</style>
+<!-- ===== TMFLOW SKIN END ===== -->
+<style id="all">
+/* one screen: header + panes, each pane scrolls on its own */
+html, body { height: 100%; }
+body { padding: 0; overflow: hidden; }
+.tm-skin.page { max-width: none; height: 100vh; box-sizing: border-box; padding: 8px; margin: 0;
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
+.tm-skin .top { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; padding: 6px 14px; }
+.tm-skin .top h1 { font-size: 1.05rem; margin: 0; }
+.tm-skin .top .eyebrow { margin: 0; }
+.tm-skin .top .right { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.panes { display: grid; gap: 8px; min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas: "tm py" "sim sim"; }
+.panes.cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "tm py sim"; }
+#p-tm { grid-area: tm; } #p-py { grid-area: py; } #p-sim { grid-area: sim; }
+.tm-skin .pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.tm-skin .pane > .scroll { flex: 1; min-height: 0; overflow: auto; padding-bottom: 4px; }
+.tm-skin .scroll > .eyebrow { font: 600 12px/1.3 var(--tm-font); letter-spacing: 0; text-transform: none; color: var(--tm-ink);
+  background: #eef0f1; border-top: 1px solid var(--tm-frame); border-bottom: 1px solid var(--tm-frame); padding: 5px 14px; margin: 0 0 8px; }
+.tm-skin .pane .tm-bar { flex-wrap: nowrap; padding: 6px 8px 6px 14px; }
+.tm-skin .pane .tm-bar .sp { flex: 1; }
+.tm-skin .pane .say { padding: 7px 12px; font-size: 14px; }
+.tm-skin .canvas svg { width: 100%; height: auto; display: block; }
+.tm-skin #flow svg, .tm-skin .seq svg { min-width: 0; }
+.tm-skin #flow svg { max-height: 62vh; }
+.tm-skin .log { max-height: 260px; min-height: 80px; }
+.pane.max .log { max-height: none; }
+/* buttons on the dark bars, TMflow style */
+.tm-skin .btn { font: 12px var(--tm-font); color: #fff; background: transparent; border: 1px solid #4a5d64; border-radius: 3px;
+  padding: 2px 9px; cursor: pointer; line-height: 1.5; white-space: nowrap; }
+.tm-skin .btn:hover { border-color: var(--tm-green); }
+.tm-skin .btn.on { background: var(--tm-green); border-color: var(--tm-green); color: var(--tm-bar); }
+.tm-skin .btn.max { font-size: 14px; padding: 0 8px; }
+/* maximised pane: the whole window */
+.tm-skin .pane.max { position: fixed; inset: 8px; z-index: 20; box-shadow: 0 0 0 9999px #10232a99; }
+.tm-skin .pane.max #flow svg { max-height: none; }
+/* 3D pane */
+#sim { position: relative; flex: 1; min-height: 0; background: #f4f5f6; }
+#sim canvas { display: block; position: absolute; inset: 0; }
+#sim .hud { position: absolute; z-index: 1; left: 10px; top: 10px; background: #ffffffe0; border: 1px solid var(--tm-frame);
+  font: 12.5px/1.45 var(--tm-font); padding: 5px 10px; pointer-events: none; max-width: calc(100% - 40px); }
+#sim .hud b { font-weight: 600; }
+#sim .note { position: absolute; inset: 0; display: grid; place-items: center; color: #555; font: 14px var(--tm-font); }
+/* demo_run.py steps, as compact TMflow node chips */
+#steps { display: flex; flex-wrap: wrap; gap: 5px 4px; padding: 8px 10px; margin: 10px 10px 0; border: 1px solid var(--tm-frame); }
+#steps[hidden] { display: none; }
+#steps .group { font: 600 11.5px var(--tm-font); color: #555; flex-basis: 100%; margin-top: 2px; }
+#steps .group:first-child { margin-top: 0; }
+#steps .step { font: italic 12px var(--tm-font); border: 1.2px solid var(--tm-line); border-radius: 11px; padding: 1px 10px; background: #fff; }
+#steps .step.grip { background: var(--tm-comp); }
+#steps .step.done { color: #888; border-color: #c4c4c4; }
+#steps .step.now { box-shadow: 0 0 0 4px var(--tm-sel); font-weight: 600; }
+#steps .step.done::before { content: "✓ "; color: var(--tm-out); font-style: normal; }
+/* the bridge banner: TMflow's Step Run box, the step in big words */
+.tm-skin .banner { background: #000; color: #fff; text-align: center; padding: 8px 14px 9px; border-left: 8px solid #555; }
+.tm-skin .banner.home { border-left-color: var(--tm-icon); } .tm-skin .banner.grip { border-left-color: var(--tm-orange); }
+.tm-skin .banner.move { border-left-color: var(--tm-sel); } .tm-skin .banner.end { border-left-color: var(--tm-green); }
+.tm-skin .banner.fail { border-left-color: var(--tm-fail); }
+.tm-skin .banner .count { font: 12.5px var(--tm-font); color: #b9c3c7; }
+.tm-skin .banner .badge { margin-left: 10px; background: var(--tm-orange); color: var(--tm-ink); padding: 0 8px; border-radius: 3px; font-size: 11.5px; }
+.tm-skin .banner .badge[hidden] { display: none; }
+.tm-skin .banner .big { font: 700 22px/1.25 var(--tm-font); }
+.tm-skin .banner .fn { font: 13px Consolas, "IBM Plex Mono", monospace; color: var(--tm-sel); min-height: 1.3em; }
+/* plain-language exchange lines */
+.tm-skin .talk { margin: 0 10px 10px; border: 1px solid var(--tm-frame); font: 13.5px/1.45 var(--tm-font); max-height: 46vh; overflow: auto; }
+.pane.max .talk { max-height: none; }
+.talk > div { padding: 3px 10px; border-top: 1px solid #ececec; display: flex; gap: 8px; align-items: baseline; }
+.talk > div:first-child { border-top: 0; }
+.talk .none { color: #888; }
+.talk .t { color: #999; font-size: 11.5px; min-width: 2.8em; font-variant-numeric: tabular-nums; }
+.talk .who { font-weight: 600; white-space: nowrap; }
+.talk .py .who { color: var(--tm-in); } .talk .rb .who { color: var(--tm-out); } .talk .gr .who { color: #b06d00; }
+.talk .err, .talk .err .who { color: var(--tm-fail); }
+.talk .n { margin-left: auto; color: #888; font-size: 11.5px; white-space: nowrap; }
+.talk .head { background: var(--tm-flow); font-weight: 600; }
+#details[hidden] { display: none; }
+/* scenarios: dropdown + Run / Stop in the header, the script's own output in the bridge pane */
+.scen { display: inline-flex; gap: 6px; align-items: center; }
+.scen[hidden] { display: none; }
+.tm-skin .scen select { font: 12.5px var(--tm-font); background: #fff; color: var(--tm-ink); border: 1px solid #4a5d64; border-radius: 3px;
+  padding: 2px 4px; max-width: 290px; }
+.tm-skin .btn:disabled { opacity: .4; cursor: default; border-color: #4a5d64; }
+.scen .state { font: 600 12px var(--tm-font); padding: 1px 9px; border-radius: 3px; background: #4a5d64; color: #fff; white-space: nowrap; }
+.scen .state.running, .scen .state.starting { background: var(--tm-sel); color: var(--tm-ink); }
+.scen .state.finished { background: var(--tm-green); color: var(--tm-ink); }
+.scen .state.failed { background: var(--tm-fail); } .scen .state.stopped { background: var(--tm-orange); color: var(--tm-ink); }
+.tm-skin .out { margin: 0 10px 10px; border: 1px solid var(--tm-frame); }
+.tm-skin .out summary { cursor: pointer; font: 600 12px var(--tm-font); background: #eef0f1; padding: 5px 10px; }
+.tm-skin .out pre { margin: 0; padding: 6px 10px; max-height: 240px; overflow: auto; font: 12px/1.45 Consolas, "IBM Plex Mono", monospace;
+  white-space: pre-wrap; overflow-wrap: anywhere; }
+/* /demo (= /all?demo): the flow and the bridge, no 3D, bigger words */
+.demo .panes, .demo .panes.cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "tm py"; }
+.demo #p-sim, .demo [data-layout], .demo #details-btn { display: none !important; }
+.tm-skin.demo .banner .big { font-size: 30px; }
+.tm-skin.demo .banner .count { font-size: 14px; }
+.tm-skin.demo .talk { font-size: 15px; max-height: none; }
+@media (max-width: 1000px) {
+  body { overflow: auto; }
+  .tm-skin.page { height: auto; }
+  .panes, .panes.cols, .demo .panes, .demo .panes.cols { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "tm" "py" "sim"; }
+  .tm-skin .pane { height: 85vh; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<main class="page tm-skin">
+  <header class="top">
+    <div>
+      <div class="eyebrow">MMA4002 · TM5-900 · mock TMflow, Python and 3D cell, live</div>
+      <h1 id="title">Mock TMflow</h1>
+    </div>
+    <div class="right">
+      <span class="scen" id="scen" hidden><select id="sc-sel" aria-label="Scenario"></select>
+        <button class="btn" id="sc-run">▶ Run</button><button class="btn" id="sc-stop" disabled>■ Stop</button>
+        <span class="state" id="sc-state">idle</span></span>
+      <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
+        <button class="btn" data-layout="cols">3 columns</button></span>
+      <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
+    </div>
+  </header>
+
+  <section class="panes" id="panes">
+    <div class="panel pane" id="p-tm">
+      <div class="tm-bar"><span>Display Board</span><b>Flow</b><span>TMflow + robot (mock)</span><span class="sp"></span>
+        <button class="btn max" title="Maximise (Esc back)">□</button></div>
+      <div class="say" id="tm-say">waiting for the project to start<small></small></div>
+      <div class="scroll">
+        <div class="canvas" id="flow"></div>
+        <dl class="kv" id="tm-kv"></dl>
+        <div class="eyebrow">Mock log</div>
+        <div class="log" id="tm-log"></div>
+      </div>
+    </div>
+
+    <div class="panel pane" id="p-py">
+      <div class="tm-bar"><b>Bridge</b><span>Python script ↔ robot</span><span class="sp"></span>
+        <button class="btn" id="details-btn" title="Listen-node sequence, board and packets">Details</button>
+        <button class="btn max" title="Maximise (Esc back)">□</button></div>
+      <div class="banner idle" id="banner">
+        <div class="count"><span id="b-count">Waiting for the script</span><span class="badge" id="air" hidden>dry run: in the air, nothing gripped</span></div>
+        <div class="big" id="b-say">Ready</div>
+        <div class="fn" id="b-fn">start one with: tmflow_mock.py run demo_run.py --air</div>
+      </div>
+      <div class="scroll">
+        <div id="steps" hidden></div>
+        <div class="eyebrow">Python and the robot, in plain words (newest first)</div>
+        <div class="talk" id="talk"><div class="none">nothing yet</div></div>
+        <details class="out" id="out-box"><summary>Script output <span id="out-n"></span></summary><pre id="out"></pre></details>
+        <div id="details" hidden>
+          <div class="eyebrow">Details · the Listen node on the wire</div>
+          <div class="say" id="py-say">no script connected<small></small></div>
+          <div class="canvas seq" id="seq"></div>
+          <dl class="kv" id="py-kv"></dl>
+          <div class="eyebrow">Packets on the Listen port (newest first)</div>
+          <div class="log" id="py-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel pane" id="p-sim">
+      <div class="tm-bar"><b>Simulator</b><span>TM5-900 + v4 cell (robot_sim)</span><span class="sp"></span>
+        <button class="btn" data-cam="iso">3D</button><button class="btn" data-cam="top">Top</button>
+        <button class="btn" data-cam="side">Side</button>
+        <button class="btn max" title="Maximise (Esc back)">□</button></div>
+      <div id="sim"><div class="note" id="sim-note">loading the 3D view…</div>
+        <div class="hud" id="hud" hidden></div></div>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+// ---- TMflow + Python panes: as tmflow_mock_view.html ----------------------------------------------------
+// mock node name -> [diagram node id]; "a>b" -> diagram edge id. hande_bridge.py's Bridge/Lost are
+// TMflow's auto-named Listen1/Listen2 (BRIDGE, LOST in the script).
+const DIAGRAMS = {
+  hande: { svg: '#flow-b', marker: 'bh', label: { Listen1: 'Listen1 (Bridge)', Listen2: 'Listen2 (Lost)' },
+    nodes: { Start: 'b-start', Home: 'b-home', SET1: 'b-set1', Listen1: 'b-bridge', Gateway: 'b-gw', GRIP1: 'b-grip1',
+             RELEASE1: 'b-rel1', Home2: 'b-home2', Stop: 'b-stop', Listen2: 'b-lost' },
+    edges: { 'Start>Home': 'e-b-start-home', 'Home>SET1': 'e-b-home-set', 'SET1>Listen1': 'e-b-set-bridge',
+             'Listen1>Gateway': 'e-b-bridge-gw', 'Gateway>GRIP1': 'e-b-gw-grip', 'Gateway>RELEASE1': 'e-b-gw-rel',
+             'Gateway>Home2': 'e-b-gw-home2', 'Gateway>Stop': 'e-b-gw-stop', 'GRIP1>Listen1': 'e-b-grip-ok',
+             'GRIP1>Listen2': 'e-b-grip-lost', 'Listen2>Listen1': 'e-b-lost-bridge', 'RELEASE1>Listen1': 'e-b-rel-bridge',
+             'Home2>Listen1': 'e-b-home2-bridge' } },
+  testjb2: { svg: '#flow-a', marker: 'ah', label: {},
+    nodes: { Start: 'a-start', P3: 'a-p3', SET1: 'a-set1', Listen1: 'a-l1', RELEASE1: 'a-rel1', Listen2: 'a-l2',
+             GRIP1: 'a-grip1', Listen3: 'a-l3' },
+    edges: { 'Start>P3': 'e-a-start-p3', 'P3>SET1': 'e-a-p3-set', 'SET1>Listen1': 'e-a-set-l1', 'Listen1>RELEASE1': 'e-a-l1-rel',
+             'RELEASE1>Listen2': 'e-a-rel-l2', 'Listen2>GRIP1': 'e-a-l2-grip', 'GRIP1>Listen1': 'e-a-grip-l1',
+             'GRIP1>Listen3': 'e-a-grip-l3' } },
+  testproject: null,                                     // not in the diagram: plain node list
+};
+const TESTPROJECT = ['SET1', 'RELEASE1', 'Listen1', 'GRIP1', 'Listen2', 'RELEASE2', 'Listen3', 'Stop'];
+// rows of the diagram's "One handover, message by message" sequence, in drawing order
+const SEQ = { connect: 0, ask: 1, answer: 2, moves: 3, poll: 4, done: 5, setvar: 6, exit: 7 };
+const KIND = { home: 'point node: TMflow moves the arm', set: 'HANDE_V002 SET: gripper initializes',
+  grip: 'HANDE_V002 GRIP: fingers close', release: 'HANDE_V002 RELEASE: fingers open',
+  gateway: 'Gateway: reads var_cmd', listen: 'Listen node: port open, the script moves the robot',
+  stop: 'the project has stopped' };
+
+const $ = s => document.querySelector(s);
+const DEMO = new URLSearchParams(location.search).has('demo');   // /demo = /all?demo: flow + bridge, no 3D
+let D = null, diagramDoc = null, curEdge = null, prevEdge = null, lastState = null;
+let py = { sid: null, exited: false, recv: 0, lastSent: '—', lastReply: '—' };
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const f1 = v => v.map(x => x.toFixed(1)).join(', ');
+
+async function loadDiagram() {
+  try {
+    const html = await (await fetch('/diagram')).text();
+    diagramDoc = new DOMParser().parseFromString(html, 'text/html');
+    const style = diagramDoc.querySelector('style');
+    if (style) $('#base').textContent = style.textContent;   // the group's tokens and drawing styles
+    const seq = diagramDoc.querySelector('.seq svg');
+    if (seq) {
+      $('#seq').append(document.importNode(seq, true));
+      const subs = $('#seq').querySelectorAll('.lane-sub');
+      if (subs[0]) subs[0].textContent = 'mock 127.0.0.1';
+      if (subs[1]) subs[1].textContent = 'this PC';
+    }
+  } catch (e) { $('#seq').textContent = 'listen_loop_flow.html not found next to the mock: no diagrams.'; }
+}
+
+function showFlow(name, title) {
+  D = DIAGRAMS[name];
+  $('#title').textContent = `Mock TMflow · project ${title}`;
+  $('#flow').innerHTML = '';
+  const svg = D && diagramDoc && diagramDoc.querySelector(`${D.svg} svg`);
+  if (svg) { $('#flow').append(document.importNode(svg, true)); return; }
+  D = null;
+  const list = document.createElement('div'); list.className = 'fallback';
+  (name === 'testproject' ? TESTPROJECT : []).forEach(n => { const s = document.createElement('span'); s.dataset.n = n; s.textContent = n; list.append(s); });
+  $('#flow').append(list);
+}
+
+function markNode(node, prev, kind) {
+  document.querySelectorAll('#flow .active, #flow .listen-open').forEach(el => el.classList.remove('active', 'listen-open'));
+  if (!D) { const s = $(`#flow [data-n="${node}"]`); if (s) s.classList.add('active'); return; }
+  const g = D.nodes[node] && $(`#flow #${D.nodes[node]}`);
+  if (g) { g.classList.add('active'); if (kind === 'listen') g.classList.add('listen-open'); }
+  const setEdge = (el, cls) => { if (!el) return; el.classList.add(cls); if (cls === 'active') el.setAttribute('marker-end', `url(#${D.marker}-a)`); };
+  document.querySelectorAll('#flow .edge').forEach(e => { e.classList.remove('active', 'recent'); e.setAttribute('marker-end', `url(#${D.marker})`); });
+  prevEdge = curEdge; curEdge = D.edges[`${prev}>${node}`] && $(`#flow #${D.edges[`${prev}>${node}`]}`);
+  setEdge(prevEdge, 'recent'); setEdge(curEdge, 'active');
+}
+
+function seqMark(row, err) {
+  const svg = $('#seq svg'); if (!svg) return;
+  svg.querySelectorAll('.live, .err').forEach(el => el.classList.remove('live', 'err'));
+  const cls = err ? 'err' : 'live';
+  if (row && row.self !== undefined) { const r = svg.querySelectorAll('rect.self')[row.self]; if (r) r.classList.add('live'); return; }
+  const line = svg.querySelectorAll('line.msg')[row]; if (!line) return;
+  line.classList.add(cls);
+  let t = line.nextElementSibling;                          // the message's label follows its line
+  while (t && !(t.classList.contains('msg-text'))) t = t.nextElementSibling;
+  if (t) t.classList.add(cls);
+}
+
+function addLog(box, cls, text, at) {
+  const d = document.createElement('div'); d.className = cls;
+  d.innerHTML = `<span class="t">${at !== undefined ? at.toFixed(1) : ''}</span>${esc(text)}`;
+  box.prepend(d);
+  while (box.childElementCount > 300) box.lastChild.remove();
+}
+
+function kv(el, rows) {
+  const old = Object.fromEntries([...el.querySelectorAll('dt')].map(dt => [dt.textContent, dt.nextElementSibling.textContent]));
+  el.innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="${old[k] !== undefined && old[k] !== String(v) ? 'flash' : ''}">${esc(v)}</dd>`).join('');
+}
+
+function say(el, head, small) { el.innerHTML = `${esc(head)}<small>${esc(small || '')}</small>`; }
+const nodeLabel = n => (D && D.label[n]) || n;
+
+// Classify one packet from the script into the sequence diagram's rows.
+function rxRow(header, data) {
+  if (header === 'TMSTA') return data.startsWith('01') ? SEQ.poll : SEQ.ask;
+  if (header !== 'TMSCT') return SEQ.connect;
+  if (/ScriptExit\(\)/.test(data)) return SEQ.exit;
+  if (/var_\w+\s*=/.test(data) && !/Line|PTP/.test(data)) return SEQ.setvar;
+  if (/Line|PTP|QueueTag/.test(data)) return SEQ.moves;
+  return SEQ.connect;                                        // ChangeBase/ChangeTCP right after connecting
+}
+
+function pyDoing(header, data) {
+  if (header === 'TMSTA' && data.startsWith('00')) return ['asks which Listen node the flow is in', 'where(r) / Bridge._connect: $TMSTA 00'];
+  if (header === 'TMSTA') return [`polls QueueTag ${data.split(',')[1]}: has the arm arrived?`, 'Listen.move() waits for the tag'];
+  const code = data.split(',').slice(1).join(',');
+  if (/ScriptExit\(\)/.test(code)) return ['leaves the Listen node (ScriptExit)', 'r.exit() / b.grip() / b.release() / b.home(): the flow runs the next node'];
+  const m = code.match(/(var_\w+)\s*=\s*(\S+)/);
+  if (m && !/Line|PTP/.test(code)) return [`sets ${m[1]} = ${m[2]}`, m[2] === '0' ? 'Bridge._connect resets var_cmd' : 'Bridge._handover: tells the Gateway what to do next'];
+  const n = (code.match(/Line|PTP/g) || []).length;
+  if (n) return [`sends ${n} move${n > 1 ? 's' : ''} + QueueTag`, 'Listen.move(): go(r, …) / b.move(…) / park(…)'];
+  return ['sets base and TCP after connecting', 'Listen.__init__: ChangeBase("RobotBase"), ChangeTCP(0,…)'];
+}
+
+function handlePanes(ev) {
+  switch (ev.t) {
+    case 'hello':
+      showFlow(ev.flow, ev.title);
+      break;
+    case 'node': {
+      markNode(ev.node, ev.prev, ev.kind);
+      if (ev.kind === 'listen') seqMark({ self: 0 });
+      else if (py.exited) seqMark({ self: 1 });
+      say($('#tm-say'), nodeLabel(ev.node), KIND[ev.kind] || '');
+      addLog($('#tm-log'), 'ev', `→ ${nodeLabel(ev.node)}`, ev.at);
+      if (ev.kind === 'stop') say($('#tm-say'), ev.node === 'Error' ? 'stopped on a robot error' : 'Stop', 'Ctrl+C the mock and serve again to restart the project');
+      break;
+    }
+    case 'log':
+      if (!/^(\S+: (Listen node|PTP|Hand-E|Pass)|  (line|jptp|cptp|var_|ScriptExit))/.test(ev.msg))
+        addLog($('#tm-log'), /ERROR|rejected/.test(ev.msg) ? 'err' : 'ev', ev.msg.trim(), ev.at);
+      break;
+    case 'move':
+      addLog($('#tm-log'), 'ev', `${ev.kind} (${f1(ev.frm)}) → (${f1(ev.to)})  ${ev.secs} s`, ev.at);
+      break;
+    case 'grip':
+      addLog($('#tm-log'), ev.result === 'ok' ? 'ev' : 'err', `${ev.node}: ${ev.result.toUpperCase()} → ${nodeLabel(ev.next)}`, ev.at);
+      break;
+    case 'conn':
+      py.sid = ev.sid; py.exited = false;
+      seqMark(SEQ.connect);
+      say($('#py-say'), `connected (session ${ev.sid})`, ev.listening ? `to ${nodeLabel(ev.node)}` : 'but the flow is not in a Listen node: it will get "false" and retry');
+      addLog($('#py-log'), 'ev', `session ${ev.sid}: connected`, ev.at);
+      break;
+    case 'rx': {
+      py.recv++; py.lastSent = `$${ev.header} ${ev.data.replace(/\r\n/g, ' ⏎ ')}`;
+      if (/ScriptExit\(\)/.test(ev.data)) py.exited = true;
+      seqMark(rxRow(ev.header, ev.data));
+      const [head, small] = pyDoing(ev.header, ev.data);
+      say($('#py-say'), head, small);
+      addLog($('#py-log'), 'rx', `script → ${py.lastSent}`, ev.at);
+      break;
+    }
+    case 'tx': {
+      py.lastReply = ev.data;
+      const bad = /CPERR|ERROR/.test(ev.data);
+      if (bad) seqMark(SEQ.answer, true);
+      else if (/^\$TMSTA,\d+,00,/.test(ev.data)) seqMark(SEQ.answer);
+      else if (/^\$TMSTA,\d+,01,\d+,true/.test(ev.data)) seqMark(SEQ.done);
+      addLog($('#py-log'), bad ? 'err' : 'tx', `node   → ${ev.data}`, ev.at);
+      break;
+    }
+    case 'var':
+      addLog($('#tm-log'), 'ev', `${ev.name} = ${ev.value}`, ev.at);
+      break;
+    case 'disc':
+      addLog($('#py-log'), 'ev', `session ${ev.sid}: closed`, ev.at);
+      if (ev.sid === py.sid) say($('#py-say'), py.exited ? 'waiting to reconnect' : 'connection closed',
+        py.exited ? 'lt.Listen() retries the Listen port every 0.5 s until the flow is back in a Listen node' : 'no ScriptExit: the flow keeps waiting in this Listen node (parked)');
+      break;
+    case 'state':
+      lastState = ev;
+      kv($('#tm-kv'), [
+        ['node', nodeLabel(ev.node || '—') + (ev.listening ? '  · listening' : '')],
+        ['motion', ev.error ? `ERROR: ${ev.error}` : ev.busy ? `moving (${ev.queued} queued)` : 'idle'],
+        ['last move', ev.last || '—'],
+        ['flange x y z', f1(ev.flange.slice(0, 3)) + ' mm'],
+        ['flange rx ry rz', f1(ev.flange.slice(3)) + ' °'],
+        ['joints', f1(ev.joints) + ' °'],
+        ['gripper', ev.gripper],
+        ...Object.entries(ev.vars).map(([k, v]) => [k, v]),
+      ]);
+      kv($('#py-kv'), [
+        ['session', py.sid ? `#${py.sid}` : '—'],
+        ['script step', run.fn],
+        ['last sent', py.lastSent],
+        ['last reply', py.lastReply],
+        ['packets in', py.recv],
+      ]);
+      hud();
+      break;
+  }
+}
+
+// ---- the script's steps (run / plan / step / done / end from "tmflow_mock.py run"): as tmflow_demo_view.html ----
+let plan = [], dynamic = true, air = false;
+const run = { fn: '—', script: '' };
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+function words(s) {
+  const i = s.args[0];
+  if (s.what) return cap(s.what);                       // the script's own label (hande_bridge.py pickplace)
+  return { home: 'Home', open_gripper: 'Open gripper', grab_plank: `Grab plank ${i}`, move_to_jig: 'Move to jig',
+    place_in_jig: `Place in slot ${i}`, release: 'Release', move: 'Move', lift: 'Lift', grip: 'Grip', finish: 'Back home',
+    '<lambda>': 'Next step' }[s.fn] || cap(s.fn.replace(/_/g, ' '));
+}
+const isGrip = fn => ['open_gripper', 'grab_plank', 'release', 'grip'].includes(fn);
+const call = s => s.fn === '<lambda>' ? (s.what || 'step') : `${s.fn}(${s.args.join(', ')})`;
+
+const KINDS = { home: 'home', finish: 'home', open_gripper: 'grip', grab_plank: 'grip', release: 'grip', grip: 'grip' };
+function banner(cls, count, big, fn) {
+  $('#banner').className = 'banner ' + cls; $('#air').hidden = !air;
+  $('#b-count').textContent = count; $('#b-say').textContent = big; $('#b-fn').textContent = fn || '';
+}
+function drawSteps() {
+  const box = $('#steps'); box.hidden = !plan.length; box.innerHTML = '';
+  const planks = plan.some(p => p.fn === 'grab_plank');
+  plan.forEach((s, k) => {
+    const group = s.fn === 'grab_plank' ? `Plank ${s.args[0]}` : k === 0 ? (planks ? 'Start' : 'Steps') : null;
+    if (group !== null) { const g = document.createElement('div'); g.className = 'group'; g.textContent = group; box.append(g); }
+    const d = document.createElement('span');
+    d.className = `step ${isGrip(s.fn) ? 'grip' : ''} ${s.state || ''}`; d.textContent = words(s); d.title = call(s);
+    box.append(d);
+    if (s.state === 'now') requestAnimationFrame(() => d.scrollIntoView({ block: 'nearest' }));
+  });
+}
+function handleSteps(ev) {
+  switch (ev.t) {
+    case 'run':
+      plan = []; dynamic = true; run.fn = '—'; run.script = `${ev.script} ${ev.args.join(' ')}`;
+      air = ev.args.includes('--air') || ev.args.some(a => a.startsWith('--above'));
+      banner('idle', 'Starting', 'Ready', run.script); drawSteps();
+      talk('head', '', `${run.script}: started`, ev.at); break;
+    case 'plan':
+      plan = ev.steps.map(s => ({ ...s, state: '' })); dynamic = false; drawSteps(); break;
+    case 'step': {
+      if (dynamic || ev.n > plan.length) plan.push({ fn: ev.fn, args: ev.args, what: ev.what });
+      const s = plan[ev.n - 1];
+      if (ev.what) s.what = ev.what;
+      plan.forEach((p, k) => { if (k < ev.n - 1) p.state = 'done'; });
+      s.state = 'now'; run.fn = call(s);
+      const count = dynamic ? `Step ${ev.n}` : `Step ${ev.n} of ${plan.length}`;
+      banner(KINDS[s.fn] || 'move', count, words(s), run.fn);
+      talk('head', '', `${count} · ${words(s)} · ${run.fn}`, ev.at);
+      drawSteps(); break;
+    }
+    case 'done': { const s = plan[ev.n - 1]; if (s) { s.state = 'done'; drawSteps(); } run.fn = '—'; break; }
+    case 'end':
+      run.fn = '—';
+      if (ev.result === 'done') banner('end', plan.length && plan.every(p => p.state === 'done') ? 'All steps done' : 'Program ended',
+        'Finished', air ? 'dry run done, the arm is back home' : run.script);
+      else banner('fail', 'Program stopped', 'Stopped', ev.result === 'stopped' ? 'stopped by the operator' : ev.result);
+      talk(ev.result === 'done' ? 'head' : 'err', '', `${run.script}: ${ev.result === 'done' ? 'finished' : 'stopped (' + ev.result + ')'}`, ev.at);
+      break;
+  }
+}
+
+// ---- the exchange in plain words (Python ↔ robot), from the same events as the packet log -----------------
+const GATE = { 0: 'nothing yet (reset)', 1: 'close the gripper', 2: 'open the gripper', 3: 'go Home' };
+const WHO = { py: 'Python → robot', rb: 'Robot → Python', gr: 'Gripper', robot: 'Robot', ask: 'Python asks' };
+let ask = false;
+const tagsDone = new Set();
+function talk(cls, who, text, at) {
+  const box = $('#talk'), top = box.firstElementChild;
+  if (top && top.classList.contains('none')) top.remove();
+  const first = box.firstElementChild;
+  if (first && first.dataset.key === cls + who + text) {        // the same again (retries): count it
+    const n = first.querySelector('.n'); n.dataset.k = +(n.dataset.k || 1) + 1; n.textContent = `×${n.dataset.k}`; return;
+  }
+  const d = document.createElement('div'); d.className = cls === 'ask' ? 'py' : cls; d.dataset.key = cls + who + text;
+  d.dataset.at = at || 0;
+  d.innerHTML = `<span class="t">${at !== undefined ? at.toFixed(0) + ' s' : ''}</span>` +
+    (WHO[who] ? `<span class="who">${WHO[who]}:</span>` : '') + `<span>${esc(text)}</span><span class="n"></span>`;
+  // newest first, by time: a page opened mid-run gets the step events after the rest of the backlog
+  let after = box.firstElementChild;
+  while (after && +after.dataset.at > (at || 0)) after = after.nextElementSibling;
+  box.insertBefore(d, after);
+  while (box.childElementCount > 200) box.lastChild.remove();
+}
+// "up 100 mm, then across 160 mm" from the Line/PTP targets in one script, starting at the flange now
+function moveWords(code) {
+  const re = /(Line|PTP)\(\s*"?(CAP|CPP|JPP)"?\s*,([^)]*)\)/g, parts = [];
+  let m, from = lastState ? lastState.flange.slice(0, 3) : null;
+  while ((m = re.exec(code))) {
+    if (m[2] === 'JPP') { parts.push('to a joint pose'); from = null; continue; }
+    const p = m[3].split(',').slice(0, 3).map(Number);
+    if (from) {
+      const dz = p[2] - from[2], dh = Math.hypot(p[0] - from[0], p[1] - from[1]), w = [];
+      if (dz > 5) w.push(`up ${dz.toFixed(0)} mm`);
+      if (dh > 5) w.push(`across ${dh.toFixed(0)} mm`);
+      if (dz < -5) w.push(`down ${(-dz).toFixed(0)} mm`);
+      parts.push(w.join(' and ') || 'a few mm');
+    } else parts.push(`to (${p.map(v => v.toFixed(0)).join(', ')})`);
+    from = p;
+  }
+  return parts;
+}
+function plain(ev) {
+  switch (ev.t) {
+    case 'conn': talk('py', '', 'Python connects to the robot (Listen port)', ev.at); break;
+    case 'rx': {
+      if (ev.header === 'TMSTA') { if (ev.data.startsWith('00')) ask = true; break; }   // polls: shown when answered
+      if (ev.header !== 'TMSCT') break;
+      const code = ev.data.split(',').slice(1).join(',');
+      const moves = moveWords(code), v = code.match(/var_cmd\s*=\s*(\d+)/), tag = code.match(/QueueTag\((\d+)/);
+      if (tag) tagsDone.delete(String(+tag[1]));
+      const now = plan.find(p => p.state === 'now'), what = now ? ` (${words(now)})` : '';
+      const exit = /ScriptExit\(\)/.test(code);
+      if (moves.length) talk('py', 'py', `move ${moves.join(', then ')}${what}`, ev.at);
+      if (v && v[1] === '0') talk('py', 'py', 'clear the next command (var_cmd = 0)', ev.at);
+      else if (v) talk('py', 'py', `next, ${GATE[v[1]] || 'var_cmd ' + v[1]} (var_cmd = ${v[1]})` + (exit ? ', and carry on' : ''), ev.at);
+      else if (exit) talk('py', 'py', 'done here: leave the Listen node, the flow carries on', ev.at);
+      if (!moves.length && !v && !exit && /Change(Base|TCP)/.test(code)) talk('py', 'py', 'use the robot base and the flange as tool', ev.at);
+      break;
+    }
+    case 'tx': {
+      const f = ev.data.split(',');
+      if (/CPERR|ERROR/.test(ev.data)) talk('err', 'rb', `rejected: ${ev.data}`, ev.at);
+      else if (f[0] === '$TMSTA' && f[2] === '00' && ask) {
+        ask = false;
+        talk('ask', 'ask', `are you in the Listen node? → ${f[3] === 'true' ? 'yes, ' + nodeLabel(f[4]) : 'not yet'}`, ev.at);
+      } else if (f[0] === '$TMSTA' && f[2] === '01' && f[4] === 'true' && !tagsDone.has(String(+f[3]))) {
+        tagsDone.add(String(+f[3]));
+        talk('rb', 'rb', `move finished (QueueTag ${+f[3]})`, ev.at);
+      }
+      break;
+    }
+    case 'node':
+      if (ev.kind === 'listen') talk('rb', 'robot', `in ${nodeLabel(ev.node)}, waiting for Python`, ev.at);
+      else if (ev.kind === 'home') talk('rb', 'robot', `${nodeLabel(ev.node)}: TMflow moves the arm home`, ev.at);
+      else if (ev.kind === 'set') talk('gr', 'gr', 'initialising', ev.at);
+      else if (ev.kind === 'grip') talk('gr', 'gr', 'closing…', ev.at);
+      else if (ev.kind === 'release') talk('gr', 'gr', 'opening', ev.at);
+      else if (ev.kind === 'stop') talk('err', 'robot', ev.node === 'Error' ? 'project stopped on an error' : 'project stopped (Stop node)', ev.at);
+      break;
+    case 'grip':
+      talk(ev.result === 'ok' ? 'gr' : 'err', 'gr', { ok: 'closed, part detected', fail: 'closed, FAIL', loss: 'closed on nothing (no part)' }[ev.result], ev.at);
+      break;
+  }
+}
+
+// ---- 3D pane --------------------------------------------------------------------------------------------
+let sim = null;
+function hud() {
+  if (!sim || !lastState) return;
+  const h = $('#hud'); h.hidden = false;
+  h.innerHTML = `<b>${esc(nodeLabel(lastState.node || '—'))}</b>${lastState.listening ? ' · listening' : ''} · gripper ${esc(lastState.gripper)}`
+    + (sim.held ? ` · carrying <b>${esc(sim.held)}</b>` : '') + (run.fn !== '—' ? `<br>script: <code>${esc(run.fn)}</code>` : '');
+}
+if (!DEMO) import('/sim/sim_scene.js').then(m => {
+  sim = m.createSim($('#sim'), { log: (cls, text) => addLog($('#tm-log'), cls, text, lastState && lastState.at) });
+  $('#sim-note').remove();
+  document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => sim.setView(b.dataset.cam));
+  window.__sim = sim;                                    // for checks from the console
+}).catch(e => { $('#sim-note').textContent = '3D view not loaded: ' + e.message; });
+
+// ---- scenarios: dropdown + Run / Stop (server-side whitelist, tests/scenarios.json) -----------------------
+const SC_TEXT = { idle: 'idle', running: 'running…', finished: 'finished ✓', failed: 'failed ✗', stopped: 'stopped' };
+function scState(s) {
+  const el = $('#sc-state'); el.className = 'state ' + s.state;
+  el.textContent = (SC_TEXT[s.state] || s.state) + (s.state === 'failed' && s.code !== null && s.code !== undefined ? ` (exit ${s.code})` : '');
+  el.title = s.name || '';
+  const busy = s.state === 'running';
+  $('#sc-sel').disabled = $('#sc-run').disabled = busy; $('#sc-stop').disabled = !busy;
+  if (s.name && busy) $('#sc-sel').value = s.name;
+}
+async function scPost(path, body) {
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) scState(j); else { $('#sc-state').className = 'state failed'; $('#sc-state').textContent = j.msg || `error ${r.status}`; }
+  } catch (e) { $('#sc-state').className = 'state failed'; $('#sc-state').textContent = 'mock not reachable'; }
+}
+fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
+  if (!j) return;                                        // a mock from before the scenarios: no controls
+  $('#sc-sel').innerHTML = j.scenarios.map(s => `<option value="${esc(s.name)}">${esc(s.label || s.name)}</option>`).join('');
+  try { const last = localStorage.getItem('tm-all-scenario'); if (j.scenarios.some(s => s.name === last)) $('#sc-sel').value = last; } catch (e) {}
+  $('#scen').hidden = false; scState(j);
+}).catch(() => {});
+$('#sc-run').onclick = () => { try { localStorage.setItem('tm-all-scenario', $('#sc-sel').value); } catch (e) {} scPost('/scenario/run', { name: $('#sc-sel').value }); };
+$('#sc-stop').onclick = () => scPost('/scenario/stop');
+let outLines = [];
+function outLine(line) {
+  outLines.push(line); if (outLines.length > 600) outLines = outLines.slice(-500);
+  const pre = $('#out'), stick = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 5;
+  pre.textContent = outLines.join('\n'); $('#out-n').textContent = `(${outLines.length} lines)`;
+  if (stick) pre.scrollTop = pre.scrollHeight;
+}
+// a scenario reset the mock: a fresh project, robot at home, nothing from the run before
+function resetPage(ev) {
+  ['#tm-log', '#py-log'].forEach(s => $(s).innerHTML = '');
+  $('#talk').innerHTML = '<div class="none">nothing yet</div>';
+  outLines = []; $('#out').textContent = ''; $('#out-n').textContent = '';
+  plan = []; dynamic = true; air = false; run.fn = '—'; run.script = ''; drawSteps();
+  py = { sid: null, exited: false, recv: 0, lastSent: '—', lastReply: '—' }; ask = false; tagsDone.clear();
+  curEdge = prevEdge = null; showFlow(ev.flow, ev.title);
+  banner('idle', 'Waiting for the script', 'Ready', '');
+  talk('head', '', `mock reset: project ${ev.title}`, ev.at);
+}
+
+// ---- details toggle (remembered per browser), /demo mode ---------------------------------------------------
+if (DEMO) { document.querySelector('main').classList.add('demo'); document.title = 'Robot Demo';
+  $('.top .eyebrow').textContent = 'MMA4002 · TM5-900 · outdoor bench assembly, live'; }
+let details = false;
+try { details = !DEMO && localStorage.getItem('tm-all-details') === '1'; } catch (e) {}
+function showDetails() { $('#details').hidden = !details; $('#details-btn').classList.toggle('on', details); }
+$('#details-btn').onclick = () => { details = !details; try { localStorage.setItem('tm-all-details', details ? '1' : '0'); } catch (e) {} showDetails(); };
+showDetails();
+
+// ---- layout + maximise ----------------------------------------------------------------------------------
+let layout = 'auto';
+try { layout = localStorage.getItem('tm-all-layout') || 'auto'; } catch (e) {}
+function applyLayout() {
+  const cols = layout === 'cols' || (layout === 'auto' && innerWidth >= 1700 && innerWidth / innerHeight >= 1.6);
+  $('#panes').classList.toggle('cols', cols);
+  document.querySelectorAll('[data-layout]').forEach(b => b.classList.toggle('on', b.dataset.layout === layout));
+}
+document.querySelectorAll('[data-layout]').forEach(b => b.onclick = () => {
+  layout = b.dataset.layout; try { localStorage.setItem('tm-all-layout', layout); } catch (e) {}
+  applyLayout();
+});
+addEventListener('resize', applyLayout); applyLayout();
+document.querySelectorAll('.pane .btn.max').forEach(b => b.onclick = () => {
+  const p = b.closest('.pane'), on = !p.classList.contains('max');
+  document.querySelectorAll('.pane.max').forEach(q => q.classList.remove('max'));
+  p.classList.toggle('max', on); b.textContent = on ? '✕' : '□';
+  if (!on) document.querySelectorAll('.pane .btn.max').forEach(x => x.textContent = '□');
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.pane.max .btn.max').forEach(b => b.click()); });
+
+// ---- one stream for all three panes ---------------------------------------------------------------------
+loadDiagram().then(() => {
+  const es = new EventSource('/events');
+  es.onopen = () => { $('#dot').classList.add('on'); $('#conn').textContent = 'live: tmflow_mock.py serve'; };
+  es.onerror = () => { $('#dot').classList.remove('on'); $('#conn').textContent = 'mock not running (start: tmflow_mock.py serve), retrying…'; };
+  es.onmessage = m => {
+    const ev = JSON.parse(m.data);
+    if (ev.t === 'reset') resetPage(ev);
+    else if (ev.t === 'scenario') scState(ev);
+    else if (ev.t === 'out') outLine(ev.line);
+    handlePanes(ev); handleSteps(ev); plain(ev);
+    if (sim) sim.handle(ev);
+  };
+});
+</script>

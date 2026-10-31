@@ -1,0 +1,51 @@
+--- a/3d-modeling-and-simulation/robot-cell/tests/tmflow_mock.py
++++ b/3d-modeling-and-simulation/robot-cell/tests/tmflow_mock.py
+@@ -20,6 +20,8 @@
+     python robot_cell/tests/tmflow_mock.py run robodk_mirror.py
+ --robodk uses the robot in RoboDK's open station (or adds Omron-TM5-900.robot to an empty one),
+ in simulation mode only. Second RoboDK instance: $env:ROBODK_API_PORT=20601 before serve.
++--sim instead: our own TM5-900 kinematics (robot_sim/tm5_kin.py, no RoboDK) and the 3D cell view
++(robot_sim/sim_view.html) at http://127.0.0.1:8090/sim/.
+ """
+ import argparse
+ import itertools
+@@ -535,6 +537,10 @@
+                 path = self.path.split("?")[0]
+                 if path == "/events":
+                     return view._sse(self)
++                if path == "/sim" or path.startswith("/sim/"):  # 3D view + meshes (robot_sim/)
++                    sys.path.insert(0, str(HERE / "robot_sim"))
++                    from sim_http import sim_get
++                    return sim_get(self)
+                 f = {"/": HERE / "tmflow_mock_view.html", "/diagram": diagram,
+                      "/demo": HERE / "tmflow_demo_view.html"}.get(path)
+                 if not f or not f.exists():
+@@ -647,7 +653,14 @@
+     if a.points:
+         lt.POINTS = Path(a.points).resolve()
+     pts = json.loads(lt.POINTS.read_text()) if lt.POINTS.exists() else {}
+-    kin = RoboDK(a.station, a.robot) if a.robodk else None
++    if a.sim:
++        sys.path.insert(0, str(HERE / "robot_sim"))
++        import tm5_kin
++        tm5_kin.use(a.sim)
++        kin = tm5_kin.TM5Kin()
++        log(f"kinematics: robot_sim/tm5_kin.py ({a.sim} geometry); 3D view: /sim/ on the live view")
++    else:
++        kin = RoboDK(a.station, a.robot) if a.robodk else None
+     if "home" in pts:
+         home = pts["home"]
+     else:                                               # no taught home: 150 mm above the pick spot
+@@ -786,7 +799,11 @@
+     s.add_argument("--grip", default="ok", help="GRIP results in turn: ok, fail, loss (e.g. ok,loss)")
+     s.add_argument("--fast", type=float, default=1, help="time scale (5 = five times faster than real)")
+     s.add_argument("--project-speed", type=float, default=100, help="TMflow project speed [%%]")
+-    s.add_argument("--robodk", action="store_true", help="IK/FK from RoboDK and show the robot moving there")
++    k = s.add_mutually_exclusive_group()
++    k.add_argument("--robodk", action="store_true", help="IK/FK from RoboDK and show the robot moving there")
++    k.add_argument("--sim", nargs="?", const="techman", choices=["techman", "robodk"],
++                   help="IK/FK from robot_sim/tm5_kin.py, robot shown at /sim/ (link lengths: techman = "
++                        "Techman's nominal, default; robodk = RoboDK's robot file)")
+     s.add_argument("--station", help="with --robodk: an open station's name, or an .rdk to open (default: active)")
+     s.add_argument("--robot", help="with --robodk: the robot's name (default: the station's first robot)")
+     s.add_argument("--rate", type=float, default=50, help="Ethernet Slave rate [Hz]")

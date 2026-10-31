@@ -1,0 +1,890 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Listen Bridge Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: workbench. Left = TMflow canvas, right = what the script is doing at this step. */
+:root {
+  --bg: #eef0f3; --surface: #ffffff; --canvas: #e4e8ee; --grid: #c9d0da;
+  --fg: #1b2230; --muted: #5b6577; --line: #b9c1cd;
+  --accent: #2350c8; --accent-tint: #dfe7fb;
+  --listen: #6b4fc2; --listen-tint: #ece6fb;
+  --grip: #a8650c; --grip-tint: #fbefdc;
+  --point: #1c7f62; --point-tint: #dcf1e9;
+  --logic: #44556b; --logic-tint: #dde3eb;
+  --ok: #1f8a3b; --fail: #c23b2b; --loss: #c0661a;
+  --wait: #f5e7c4;
+  --f-ui: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --surface: #1a2029; --canvas: #151a22; --grid: #29313d;
+  --fg: #e5e9f0; --muted: #98a2b3; --line: #3a4350;
+  --accent: #82a0ff; --accent-tint: #1e2947;
+  --listen: #a990f2; --listen-tint: #2a2443;
+  --grip: #e3a64d; --grip-tint: #3a2c17;
+  --point: #52c7a0; --point-tint: #163229;
+  --logic: #a9b8cc; --logic-tint: #252e3b;
+  --ok: #55c873; --fail: #f07462; --loss: #ec9650;
+  --wait: #3d3219;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #1a2029; --canvas: #151a22; --grid: #29313d;
+  --fg: #e5e9f0; --muted: #98a2b3; --line: #3a4350;
+  --accent: #82a0ff; --accent-tint: #1e2947;
+  --listen: #a990f2; --listen-tint: #2a2443;
+  --grip: #e3a64d; --grip-tint: #3a2c17;
+  --point: #52c7a0; --point-tint: #163229;
+  --logic: #a9b8cc; --logic-tint: #252e3b;
+  --ok: #55c873; --fail: #f07462; --loss: #ec9650;
+  --wait: #3d3219;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 var(--f-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.page { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
+h1, h2 { font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: 1.9rem; line-height: 1.15; }
+h2 { font-size: 1.25rem; }
+p { margin: 0; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--f-mono); font-size: 0.92em; }
+.lede { max-width: 70ch; color: var(--muted); margin-top: 8px; }
+.eyebrow { font: 600 0.72rem/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; display: grid; gap: 12px; }
+.foot { font-size: 0.88rem; color: var(--muted); max-width: 80ch; }
+
+/* tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+thead th { font: 600 0.75rem var(--f-mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+tbody th { font-weight: 600; color: var(--muted); width: 22%; }
+.compare td { width: 39%; }
+.tag { font: 600 0.72rem var(--f-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.tag.built { background: var(--point-tint); color: var(--point); }
+.tag.todo { background: var(--grip-tint); color: var(--grip); }
+.build td:first-child, .build td:nth-child(2) { font-family: var(--f-mono); font-size: 0.85rem; white-space: nowrap; }
+
+/* controls */
+.controls { display: grid; gap: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.seg button { font: 500 0.9rem var(--f-ui); color: var(--fg); background: transparent; border: 0; padding: 8px 14px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg.method button { font-weight: 600; padding: 10px 16px; }
+.btn { font: 600 0.9rem var(--f-ui); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 8px 16px; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.counter { font: 500 0.9rem var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 9ch; }
+.cmd { font: 0.85rem var(--f-mono); color: var(--muted); }
+.cmd code { color: var(--fg); background: var(--canvas); padding: 2px 6px; border-radius: 5px; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.steps button { font: 0.76rem var(--f-mono); color: var(--muted); background: var(--canvas); border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.steps button .n { color: var(--fg); font-weight: 600; margin-right: 4px; }
+.steps button.done { color: var(--fg); }
+.steps button.current { border-color: var(--accent); background: var(--accent-tint); color: var(--fg); }
+
+/* workbench */
+.work { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 980px) { .work { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); align-items: start; } }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.canvas {
+  overflow-x: auto; border-radius: 9px;
+  background-color: var(--canvas);
+  background-image: radial-gradient(var(--grid) 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+.canvas svg { display: block; width: 100%; height: auto; }
+#flow-a svg { min-width: 460px; }
+#flow-b svg { min-width: 540px; }
+figcaption { font-size: 0.86rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+/* flow drawing */
+.node rect.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: stroke 0.2s, stroke-width 0.2s; }
+.node.active rect.box { stroke: var(--accent); stroke-width: 3.5; }
+.node .name { font: 600 13px var(--f-mono); fill: var(--fg); }
+.node .sub { font: 10px var(--f-mono); fill: var(--muted); }
+.node .glyph { font: 700 12px var(--f-mono); text-anchor: middle; }
+.t-listen .icon { fill: var(--listen-tint); } .t-listen .glyph { fill: var(--listen); }
+.t-grip .icon { fill: var(--grip-tint); } .t-grip .glyph { fill: var(--grip); }
+.t-point .icon { fill: var(--point-tint); } .t-point .glyph { fill: var(--point); }
+.t-logic .icon { fill: var(--logic-tint); } .t-logic .glyph { fill: var(--logic); }
+.edge { fill: none; stroke: var(--muted); stroke-width: 1.6; transition: stroke 0.2s; }
+.edge.active { stroke: var(--accent); stroke-width: 3; }
+.stub { fill: none; stroke: var(--muted); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.head { fill: var(--muted); } .head-active { fill: var(--accent); }
+.port { stroke: var(--surface); stroke-width: 1.5; }
+.p-ok { fill: var(--ok); } .p-fail { fill: var(--fail); } .p-loss { fill: var(--loss); } .p-cond { fill: var(--logic); }
+.plabel { font: 600 10px var(--f-mono); }
+.l-ok { fill: var(--ok); } .l-fail { fill: var(--fail); } .l-loss { fill: var(--loss); } .l-cond { fill: var(--logic); }
+.note { font: 10.5px var(--f-mono); fill: var(--muted); }
+.note-strong { font: 600 10.5px var(--f-mono); fill: var(--fg); }
+
+/* step panel */
+.now { display: grid; gap: 8px; }
+.now-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+.now-title { font: 700 1.2rem var(--f-mono); }
+.pill { font: 600 0.75rem var(--f-ui); letter-spacing: 0.02em; padding: 3px 10px; border-radius: 999px; }
+.pill.script { background: var(--listen-tint); color: var(--listen); }
+.pill.tmflow { background: var(--grip-tint); color: var(--grip); }
+.pill.ready { background: var(--point-tint); color: var(--point); }
+.now p { max-width: 64ch; }
+.split { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) { .split { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.cell { background: var(--canvas); border-radius: 9px; padding: 10px 12px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.cell svg { width: 100%; height: auto; display: block; }
+.vars { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font: 0.86rem var(--f-mono); font-variant-numeric: tabular-nums; margin: 0; }
+.vars dt { color: var(--muted); }
+.vars dd { margin: 0; transition: background 0.3s; border-radius: 4px; padding: 0 4px; justify-self: start; overflow-wrap: anywhere; }
+.vars dd.changed { background: var(--accent-tint); }
+.table-line { stroke: var(--muted); stroke-width: 2; }
+.spot { fill: var(--line); }
+.spot-label { font: 600 11px var(--f-mono); fill: var(--muted); text-anchor: middle; }
+.arm { stroke: var(--muted); stroke-width: 4; }
+.gbody, .finger { fill: var(--fg); }
+.boxshape { fill: var(--grip); }
+.mover { transition: transform 0.45s ease; }
+.status { font: 0.8rem var(--f-mono); color: var(--muted); }
+
+/* sent + code */
+.sent { background: var(--canvas); border-radius: 9px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+.sent pre { margin: 0; font: 12px/1.6 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sent .q { color: var(--muted); }
+.sent .v { color: var(--listen); font-weight: 600; }
+.sent .x { color: var(--accent); font-weight: 600; }
+.code { overflow-x: auto; background: var(--canvas); border-radius: 9px; padding: 8px 0; }
+.code pre { margin: 0; font: 12.5px/1.6 var(--f-mono); }
+.code .ln { display: block; padding: 0 12px 0 0; white-space: pre; border-left: 3px solid transparent; }
+.code .ln b { display: inline-block; width: 3.2ch; margin: 0 10px 0 6px; text-align: right; color: var(--muted); font-weight: 400; user-select: none; }
+.code .ln.run { background: var(--accent-tint); border-left-color: var(--accent); }
+.code .ln.wait { background: var(--wait); border-left-color: var(--grip); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); }
+.key span { display: inline-flex; gap: 6px; align-items: center; }
+.key i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.helpers { display: grid; gap: 4px; font-size: 0.86rem; }
+.helpers code { color: var(--fg); }
+.proposed { font: 600 0.72rem var(--f-mono); color: var(--grip); }
+
+/* sequence */
+.seq svg { display: block; width: 100%; height: auto; min-width: 640px; }
+.lane-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.lane-title { font: 600 13px var(--f-mono); fill: var(--fg); text-anchor: middle; }
+.lane-sub { font: 10.5px var(--f-mono); fill: var(--muted); text-anchor: middle; }
+.lifeline { stroke: var(--line); stroke-width: 2; stroke-dasharray: 5 4; }
+.msg { stroke: var(--fg); stroke-width: 1.5; fill: none; }
+.msg.key-msg { stroke: var(--accent); stroke-width: 2.5; }
+.msg.var-msg { stroke: var(--listen); stroke-width: 2; stroke-dasharray: 6 4; }
+.msg-text { font: 11.5px var(--f-mono); fill: var(--fg); text-anchor: middle; }
+.msg-text.key-msg { fill: var(--accent); font-weight: 600; }
+.msg-text.var-msg { fill: var(--listen); font-weight: 600; }
+.fn { font: 600 11px var(--f-mono); fill: var(--listen); }
+.self { fill: var(--grip-tint); stroke: none; }
+.self-text { font: 11px var(--f-mono); fill: var(--fg); }
+.headf { fill: var(--fg); } .heada { fill: var(--accent); } .headv { fill: var(--listen); }
+
+@media (prefers-reduced-motion: reduce) { .mover, .edge, .node rect.box, .vars dd { transition: none; } }
+</style>
+
+<main class="page">
+  <header>
+    <div class="eyebrow">MMA4002 · TM5-900 · Listen-node bridge</div>
+    <h1>Two ways to run the gripper from Python</h1>
+    <p class="lede">The Python script can only move the robot while TMflow sits in a Listen node. The Hand-E only works through TMflow's own GRIP and RELEASE nodes. So every grip is a handover: the script leaves the Listen node, TMflow runs the gripper node, and the script reconnects. The two methods differ in who decides which gripper node comes next.</p>
+  </header>
+
+  <section class="panel">
+    <h2>Side by side</h2>
+    <div class="scroll">
+      <table class="compare">
+        <thead><tr><th></th><th>Without a variable · testjb2</th><th>With var_cmd · Bridge</th></tr></thead>
+        <tbody>
+          <tr><th>Next gripper action</th><td>Fixed by the wiring: RELEASE after Listen1, GRIP after Listen2.</td><td>Chosen by Python: it sets <code>var_cmd</code> before each <code>ScriptExit()</code>, and a Gateway reads it.</td></tr>
+          <tr><th>Listen nodes</th><td>Three: Listen1, Listen2, Listen3.</td><td>Two: Bridge for all moves, Lost when a grip fails.</td></tr>
+          <tr><th>Sequences it can run</th><td>Strictly grip, release, grip, release.</td><td>Any order: release only, two grips, regrip.</td></tr>
+          <tr><th>Finished run</th><td>Python lifts, moves home itself and parks in Listen2.</td><td><code>finish()</code>: TMflow drives to Home2 and waits in Bridge.</td></tr>
+          <tr><th>Next run</th><td>Starts in Listen2. No restart in TMflow.</td><td>Starts in Bridge. No restart in TMflow.</td></tr>
+          <tr><th>Grip finds nothing</th><td>LOSS goes to Listen3 and the run ends there.</td><td>Lost node: Python opens the fingers, goes home and stops with a message.</td></tr>
+          <tr><th>Dry run on air</th><td>Keeps looping only if an air grip exits FAIL.</td><td>Python treats Lost as expected when <code>--above</code> is set.</td></tr>
+          <tr><th>Status</th><td><span class="tag built">built</span> testjb2 exists, <code>listen_loop_test.py</code> written</td><td><span class="tag todo">to build</span> <code>hande_bridge.py</code> written; build the flow, then run <code>hande_bridge.py check</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel controls" aria-label="Walkthrough controls">
+    <div class="row">
+      <div class="seg method" role="group" aria-label="Method">
+        <button type="button" id="m-a" data-m="a" aria-pressed="true">Without a variable · testjb2</button>
+        <button type="button" id="m-b" data-m="b" aria-pressed="false">With var_cmd · Bridge</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Scenario" id="scenarios"></div>
+      <div class="row">
+        <button type="button" class="btn" id="prev">Back</button>
+        <span class="counter" id="counter">1 / 1</span>
+        <button type="button" class="btn primary" id="next">Next step</button>
+      </div>
+    </div>
+    <div class="cmd">Command: <code id="cmd"></code> &nbsp;·&nbsp; arrow keys step too</div>
+    <ol class="steps" id="steps" aria-label="Steps in this run"></ol>
+  </section>
+
+  <section class="work">
+    <div class="panel">
+      <figure>
+        <div class="eyebrow" id="flow-title">TMflow · project testjb2</div>
+
+        <div class="canvas" id="flow-a">
+          <svg viewBox="0 0 600 830" role="img" aria-label="testjb2: Start, P3, SET1, then a loop Listen1, RELEASE1, Listen2, GRIP1 and back to Listen1. GRIP1's LOSS exit goes to Listen3.">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+              <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="head-active" d="M0,0 L10,5 L0,10 z"/></marker>
+            </defs>
+            <g class="edges">
+              <path class="edge" id="e-a-start-p3" d="M285,66 V98" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-p3-set" d="M285,146 V178" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-set-l1" d="M250,226 V258 M320,226 V258 M250,258 H320 M285,258 V288" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-l1-rel" d="M285,336 V398" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-rel-l2" d="M250,446 V478 M320,446 V478 M250,478 H320 M285,478 V508" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-l2-grip" d="M285,556 V618" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-grip-l1" d="M235,666 V694 M285,666 V694 M285,694 H60 V313 H193" marker-end="url(#ah)"/>
+              <path class="edge" id="e-a-grip-l3" d="M345,666 V738" marker-end="url(#ah)"/>
+            </g>
+            <path class="stub" d="M345,336 V356 H440"/>
+            <path class="stub" d="M345,556 V576 H440"/>
+            <text class="note" x="446" y="360">flow stops</text>
+            <text class="note" x="446" y="580">flow stops</text>
+            <text class="note-strong" x="68" y="500">OK / FAIL</text>
+            <text class="note" x="68" y="514">back to Listen1</text>
+
+            <g class="node t-point" id="a-start"><rect class="box" x="195" y="20" width="180" height="46" rx="8"/><rect class="icon" x="205" y="30" width="26" height="26" rx="5"/><text class="glyph" x="218" y="47">S</text><text class="name" x="241" y="40">Start</text><text class="sub" x="241" y="55">flow start</text></g>
+            <g class="node t-point" id="a-p3"><rect class="box" x="195" y="100" width="180" height="46" rx="8"/><rect class="icon" x="205" y="110" width="26" height="26" rx="5"/><text class="glyph" x="218" y="127">P</text><text class="name" x="241" y="120">P3</text><text class="sub" x="241" y="135">taught point · home</text></g>
+            <g class="node t-grip" id="a-set1"><rect class="box" x="195" y="180" width="180" height="46" rx="8"/><rect class="icon" x="205" y="190" width="26" height="26" rx="5"/><text class="glyph" x="218" y="207">H</text><text class="name" x="241" y="200">SET1</text><text class="sub" x="241" y="215">HANDE_V002 · init</text></g>
+            <g class="node t-listen" id="a-l1"><rect class="box" x="195" y="290" width="180" height="46" rx="8"/><rect class="icon" x="205" y="300" width="26" height="26" rx="5"/><text class="glyph" x="218" y="317">L</text><text class="name" x="241" y="310">Listen1</text><text class="sub" x="241" y="325">Listen · place</text></g>
+            <g class="node t-grip" id="a-rel1"><rect class="box" x="195" y="400" width="180" height="46" rx="8"/><rect class="icon" x="205" y="410" width="26" height="26" rx="5"/><text class="glyph" x="218" y="427">H</text><text class="name" x="241" y="420">RELEASE1</text><text class="sub" x="241" y="435">HANDE_V002 · opens</text></g>
+            <g class="node t-listen" id="a-l2"><rect class="box" x="195" y="510" width="180" height="46" rx="8"/><rect class="icon" x="205" y="520" width="26" height="26" rx="5"/><text class="glyph" x="218" y="537">L</text><text class="name" x="241" y="530">Listen2</text><text class="sub" x="241" y="545">Listen · pick</text></g>
+            <g class="node t-grip" id="a-grip1"><rect class="box" x="195" y="620" width="180" height="46" rx="8"/><rect class="icon" x="205" y="630" width="26" height="26" rx="5"/><text class="glyph" x="218" y="647">H</text><text class="name" x="241" y="640">GRIP1</text><text class="sub" x="241" y="655">HANDE_V002 · closes</text></g>
+            <g class="node t-listen" id="a-l3"><rect class="box" x="255" y="740" width="180" height="46" rx="8"/><rect class="icon" x="265" y="750" width="26" height="26" rx="5"/><text class="glyph" x="278" y="767">L</text><text class="name" x="301" y="760">Listen3</text><text class="sub" x="301" y="775">Listen · on LOSS</text></g>
+            <text class="note" x="345" y="808" text-anchor="middle">exits not wired: the run ends here</text>
+
+            <circle class="port p-ok" cx="250" cy="226" r="4.5"/><text class="plabel l-ok" x="226" y="240">OK</text>
+            <circle class="port p-fail" cx="320" cy="226" r="4.5"/><text class="plabel l-fail" x="327" y="240">FAIL</text>
+            <circle class="port p-ok" cx="285" cy="336" r="4.5"/><text class="plabel l-ok" x="292" y="352">Pass</text>
+            <circle class="port p-fail" cx="345" cy="336" r="4.5"/><text class="plabel l-fail" x="352" y="349">Fail</text>
+            <circle class="port p-ok" cx="250" cy="446" r="4.5"/><text class="plabel l-ok" x="226" y="460">OK</text>
+            <circle class="port p-fail" cx="320" cy="446" r="4.5"/><text class="plabel l-fail" x="327" y="460">FAIL</text>
+            <circle class="port p-ok" cx="285" cy="556" r="4.5"/><text class="plabel l-ok" x="292" y="572">Pass</text>
+            <circle class="port p-fail" cx="345" cy="556" r="4.5"/><text class="plabel l-fail" x="352" y="569">Fail</text>
+            <circle class="port p-ok" cx="235" cy="666" r="4.5"/><text class="plabel l-ok" x="211" y="681">OK</text>
+            <circle class="port p-fail" cx="285" cy="666" r="4.5"/><text class="plabel l-fail" x="292" y="681">FAIL</text>
+            <circle class="port p-loss" cx="345" cy="666" r="4.5"/><text class="plabel l-loss" x="352" y="681">LOSS</text>
+          </svg>
+        </div>
+
+        <div class="canvas" id="flow-b" hidden>
+          <svg viewBox="0 0 740 800" role="img" aria-label="Bridge: Start, Home, SET1, then the Bridge Listen node and a Gateway on var_cmd. Branch 1 is GRIP1, 2 is RELEASE1, 3 is Home2, anything else is Stop. Every branch returns to Bridge; a failed grip goes through the Lost Listen node first.">
+            <defs>
+              <marker id="bh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+              <marker id="bh-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="head-active" d="M0,0 L10,5 L0,10 z"/></marker>
+            </defs>
+            <g class="edges">
+              <path class="edge" id="e-b-start-home" d="M360,66 V98" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-home-set" d="M360,146 V178" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-set-bridge" d="M325,226 V258 M395,226 V258 M325,258 H395 M360,258 V288" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-bridge-gw" d="M360,336 V398" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-gw-grip" d="M300,446 V470 H115 V538" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-gw-rel" d="M340,446 V492 H290 V538" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-gw-home2" d="M380,446 V492 H465 V538" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-gw-stop" d="M420,446 V470 H640 V538" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-grip-ok" d="M70,586 V612 H16 V313 H268" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-grip-lost" d="M120,586 V628 M170,586 V628 M120,628 H170 M145,628 V650" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-lost-bridge" d="M145,698 V724 H16 V313 H268" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-rel-bridge" d="M255,586 V612 M325,586 V612 M255,612 H325 M290,612 V760 H16 V313 H268" marker-end="url(#bh)"/>
+              <path class="edge" id="e-b-home2-bridge" d="M465,586 V776 H16 V313 H268" marker-end="url(#bh)"/>
+            </g>
+            <path class="stub" d="M420,336 V356 H500"/>
+            <text class="note" x="506" y="360">to Stop</text>
+            <path class="stub" d="M195,698 V716 H234"/>
+            <text class="note" x="240" y="720">to Stop</text>
+            <text class="note-strong" x="24" y="420">every branch</text>
+            <text class="note" x="24" y="434">returns to Bridge</text>
+
+            <g class="node t-point" id="b-start"><rect class="box" x="270" y="20" width="180" height="46" rx="8"/><rect class="icon" x="280" y="30" width="26" height="26" rx="5"/><text class="glyph" x="293" y="47">S</text><text class="name" x="316" y="40">Start</text><text class="sub" x="316" y="55">flow start</text></g>
+            <g class="node t-point" id="b-home"><rect class="box" x="270" y="100" width="180" height="46" rx="8"/><rect class="icon" x="280" y="110" width="26" height="26" rx="5"/><text class="glyph" x="293" y="127">P</text><text class="name" x="316" y="120">Home</text><text class="sub" x="316" y="135">taught point</text></g>
+            <g class="node t-grip" id="b-set1"><rect class="box" x="270" y="180" width="180" height="46" rx="8"/><rect class="icon" x="280" y="190" width="26" height="26" rx="5"/><text class="glyph" x="293" y="207">H</text><text class="name" x="316" y="200">SET1</text><text class="sub" x="316" y="215">HANDE_V002 · init</text></g>
+            <g class="node t-listen" id="b-bridge"><rect class="box" x="270" y="290" width="180" height="46" rx="8"/><rect class="icon" x="280" y="300" width="26" height="26" rx="5"/><text class="glyph" x="293" y="317">L</text><text class="name" x="316" y="310">Bridge</text><text class="sub" x="316" y="325">Listen · all moves</text></g>
+            <g class="node t-logic" id="b-gw"><rect class="box" x="270" y="400" width="180" height="46" rx="8"/><rect class="icon" x="280" y="410" width="26" height="26" rx="5"/><text class="glyph" x="293" y="427">G</text><text class="name" x="316" y="420">Gateway</text><text class="sub" x="316" y="435">reads var_cmd</text></g>
+            <g class="node t-grip" id="b-grip1"><rect class="box" x="40" y="540" width="150" height="46" rx="8"/><rect class="icon" x="50" y="550" width="26" height="26" rx="5"/><text class="glyph" x="63" y="567">H</text><text class="name" x="86" y="560">GRIP1</text><text class="sub" x="86" y="575">cmd 1 · closes</text></g>
+            <g class="node t-grip" id="b-rel1"><rect class="box" x="215" y="540" width="150" height="46" rx="8"/><rect class="icon" x="225" y="550" width="26" height="26" rx="5"/><text class="glyph" x="238" y="567">H</text><text class="name" x="261" y="560">RELEASE1</text><text class="sub" x="261" y="575">cmd 2 · opens</text></g>
+            <g class="node t-point" id="b-home2"><rect class="box" x="390" y="540" width="150" height="46" rx="8"/><rect class="icon" x="400" y="550" width="26" height="26" rx="5"/><text class="glyph" x="413" y="567">P</text><text class="name" x="436" y="560">Home2</text><text class="sub" x="436" y="575">cmd 3 · = Home</text></g>
+            <g class="node t-point" id="b-stop"><rect class="box" x="565" y="540" width="150" height="46" rx="8"/><rect class="icon" x="575" y="550" width="26" height="26" rx="5"/><text class="glyph" x="588" y="567">X</text><text class="name" x="611" y="560">Stop</text><text class="sub" x="611" y="575">else · end</text></g>
+            <g class="node t-listen" id="b-lost"><rect class="box" x="70" y="652" width="150" height="46" rx="8"/><rect class="icon" x="80" y="662" width="26" height="26" rx="5"/><text class="glyph" x="93" y="679">L</text><text class="name" x="116" y="672">Lost</text><text class="sub" x="116" y="687">Listen · no object</text></g>
+
+            <circle class="port p-ok" cx="325" cy="226" r="4.5"/><text class="plabel l-ok" x="301" y="240">OK</text>
+            <circle class="port p-fail" cx="395" cy="226" r="4.5"/><text class="plabel l-fail" x="402" y="240">FAIL</text>
+            <circle class="port p-ok" cx="360" cy="336" r="4.5"/><text class="plabel l-ok" x="367" y="352">Pass</text>
+            <circle class="port p-fail" cx="420" cy="336" r="4.5"/><text class="plabel l-fail" x="427" y="349">Fail</text>
+            <circle class="port p-cond" cx="300" cy="446" r="4.5"/><text class="plabel l-cond" x="305" y="462">1</text>
+            <circle class="port p-cond" cx="340" cy="446" r="4.5"/><text class="plabel l-cond" x="345" y="462">2</text>
+            <circle class="port p-cond" cx="380" cy="446" r="4.5"/><text class="plabel l-cond" x="385" y="462">3</text>
+            <circle class="port p-cond" cx="420" cy="446" r="4.5"/><text class="plabel l-cond" x="425" y="462">else</text>
+            <circle class="port p-ok" cx="70" cy="586" r="4.5"/><text class="plabel l-ok" x="46" y="600">OK</text>
+            <circle class="port p-fail" cx="120" cy="586" r="4.5"/><text class="plabel l-fail" x="125" y="600">FAIL</text>
+            <circle class="port p-loss" cx="170" cy="586" r="4.5"/><text class="plabel l-loss" x="175" y="600">LOSS</text>
+            <circle class="port p-ok" cx="255" cy="586" r="4.5"/><text class="plabel l-ok" x="231" y="600">OK</text>
+            <circle class="port p-fail" cx="325" cy="586" r="4.5"/><text class="plabel l-fail" x="331" y="600">FAIL</text>
+            <circle class="port p-ok" cx="145" cy="698" r="4.5"/><text class="plabel l-ok" x="151" y="713">Pass</text>
+            <circle class="port p-fail" cx="195" cy="698" r="4.5"/><text class="plabel l-fail" x="201" y="711">Fail</text>
+          </svg>
+        </div>
+
+        <figcaption>
+          <div class="legend">
+            <span><i style="background: var(--listen)"></i>Listen node: the script moves the robot</span>
+            <span><i style="background: var(--grip)"></i>HANDE node: TMflow runs the gripper</span>
+            <span><i style="background: var(--logic)"></i>Gateway: picks a branch from var_cmd</span>
+            <span><i style="background: var(--point)"></i>Start, point, stop: TMflow only</span>
+          </div>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="panel">
+      <div class="now" aria-live="polite">
+        <div class="now-head">
+          <span class="now-title" id="now-title"></span>
+          <span class="pill" id="now-who"></span>
+        </div>
+        <p id="now-text"></p>
+      </div>
+
+      <div class="split">
+        <div class="cell">
+          <div class="eyebrow">On the table</div>
+          <svg viewBox="0 0 320 130" role="img" aria-label="Side view of the two spots A and B, the box and the gripper" id="table">
+            <line class="table-line" x1="10" y1="110" x2="310" y2="110"/>
+            <rect class="spot" x="55" y="110" width="50" height="5"/>
+            <rect class="spot" x="215" y="110" width="50" height="5"/>
+            <text class="spot-label" x="80" y="127">A · pick</text>
+            <text class="spot-label" x="240" y="127">B · place</text>
+            <text class="spot-label" x="160" y="127">home</text>
+            <g class="mover" id="boxg"><rect class="boxshape" x="-15" y="-22" width="30" height="22" rx="2"/></g>
+            <g class="mover" id="gripper">
+              <line class="arm" x1="0" y1="-220" x2="0" y2="-34"/>
+              <rect class="gbody" x="-28" y="-34" width="56" height="10" rx="2"/>
+              <g class="mover" id="fl"><rect class="finger" x="-6" y="-24" width="6" height="24" rx="1"/></g>
+              <g class="mover" id="fr"><rect class="finger" x="0" y="-24" width="6" height="24" rx="1"/></g>
+            </g>
+          </svg>
+          <div class="status" id="table-status"></div>
+        </div>
+        <div class="cell">
+          <div class="eyebrow" id="vars-title">Script variables</div>
+          <dl class="vars" id="vars"></dl>
+        </div>
+      </div>
+
+      <div class="sent">
+        <div class="eyebrow">Sent to the robot in this step</div>
+        <pre id="sent"></pre>
+      </div>
+
+      <div class="row"><span class="eyebrow" id="code-title"></span><span class="proposed" id="code-proposed" hidden>not run on the robot yet</span></div>
+      <div class="code"><pre id="code"></pre></div>
+      <div class="key">
+        <span><i style="background: var(--accent)"></i>runs in this step</span>
+        <span><i style="background: var(--grip)"></i>script is blocked here, waiting for a Listen node</span>
+      </div>
+      <div class="helpers" id="helpers-a">
+        <div><code>where(r)</code> asks the node <code>$TMSTA 00</code> and returns its name, e.g. <code>Listen2</code>.</div>
+        <div><code>go(r, spot, above)</code> lifts 100 mm, crosses at that height, then goes straight down onto the spot.</div>
+        <div><code>r.exit()</code> sends <code>ScriptExit()</code>: the Listen node leaves by Pass and the connection closes.</div>
+        <div><code>park(r, why, home)</code> lifts 100 mm, moves home with a joint move if a home is given, and closes the connection without <code>ScriptExit()</code>, so the flow keeps waiting.</div>
+      </div>
+      <div class="helpers" id="helpers-b" hidden>
+        <div><code>Bridge()</code> connects to the Bridge node and sets <code>var_cmd = 0</code> on every connect, so a stray <code>ScriptExit()</code> goes to Stop instead of repeating the last gripper action.</div>
+        <div><code>b.move(spot)</code> lifts 100 mm, crosses and goes straight down, all inside the Bridge node.</div>
+        <div><code>b.grip()</code> / <code>b.release()</code> set <code>var_cmd</code> to 1 or 2, send <code>ScriptExit()</code> and wait for the flow to come back. Coming back in Lost means the grip failed.</div>
+        <div><code>b.finish()</code> lifts 100 mm and sets <code>var_cmd = 3</code>: TMflow drives to Home2 and waits in Bridge for the next run.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Building HandE_Bridge_v1 in TMflow</h2>
+    <p class="foot">Build this once. Python decides everything else, so the flow never needs editing for a new sequence. First make an integer project variable named <code>cmd</code> (TMflow shows it as <code>var_cmd</code>), start value 0. If a Listen node has a connection timeout, turn it off or make it long, otherwise it leaves by Fail while you are between runs.</p>
+    <div class="scroll">
+      <table class="build">
+        <thead><tr><th>Node</th><th>Type</th><th>Settings</th><th>Exits wired to</th></tr></thead>
+        <tbody>
+          <tr><td>Start</td><td>Start</td><td></td><td>Home</td></tr>
+          <tr><td>Home</td><td>Point</td><td>The pose every run starts and ends at. Copy its joints into the RoboDK station.</td><td>SET1</td></tr>
+          <tr><td>SET1</td><td>HANDE_V002 SET</td><td>Initialize_or_Not = true, as in testjb2</td><td>OK, FAIL → Bridge</td></tr>
+          <tr><td>Bridge</td><td>Listen</td><td>Port 5890, the name must be exactly <code>Bridge</code></td><td>Pass → Gateway · Fail → Stop</td></tr>
+          <tr><td>Gateway</td><td>Gateway</td><td><code>var_cmd == 1</code>, <code>== 2</code>, <code>== 3</code>, else</td><td>1 → GRIP1 · 2 → RELEASE1 · 3 → Home2 · else → Stop</td></tr>
+          <tr><td>GRIP1</td><td>HANDE_V002 GRIP</td><td>Same force and width as in testjb2</td><td>OK → Bridge · FAIL, LOSS → Lost</td></tr>
+          <tr><td>Lost</td><td>Listen</td><td>The name must be exactly <code>Lost</code></td><td>Pass → Bridge · Fail → Stop</td></tr>
+          <tr><td>RELEASE1</td><td>HANDE_V002 RELEASE</td><td></td><td>OK, FAIL → Bridge</td></tr>
+          <tr><td>Home2</td><td>Point</td><td>Same pose as Home</td><td>Bridge</td></tr>
+          <tr><td>Stop</td><td>Stop</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">This can't be generated as a file and imported. TMflow's project export is a password-protected zip, and RoboDK's Omron export only writes Point, SET and WaitFor nodes, never Listen, Gateway or Hand-E nodes. After building it, export it from TMflow to a USB stick (System → Import/Export) and keep that export in the repo, so it can be imported again on any TM robot.</p>
+  </section>
+
+  <section class="panel seq">
+    <h2>One handover, message by message</h2>
+    <p class="foot">Every Listen-node visit is the same conversation on port 5890. The dashed message is the only thing the var_cmd method adds: one line before <code>ScriptExit()</code>.</p>
+    <div class="canvas">
+      <svg viewBox="0 0 760 490" role="img" aria-label="Sequence: TMflow opens port 5890 in a Listen node, the script connects, asks which node, sends three Line moves and a QueueTag, polls until done, optionally sets var_cmd, then sends ScriptExit. TMflow runs the gripper node and opens a Listen node again while the script waits to reconnect.">
+        <defs>
+          <marker id="sf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="headf" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="heada" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="sv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="headv" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-box" x="70" y="16" width="200" height="46" rx="8"/>
+        <text class="lane-title" x="170" y="36">TMflow</text>
+        <text class="lane-sub" x="170" y="52">robot 10.0.12.101</text>
+        <rect class="lane-box" x="460" y="16" width="200" height="46" rx="8"/>
+        <text class="lane-title" x="560" y="36">Python script</text>
+        <text class="lane-sub" x="560" y="52">laptop 10.0.12.11</text>
+        <line class="lifeline" x1="170" y1="62" x2="170" y2="472"/>
+        <line class="lifeline" x1="560" y1="62" x2="560" y2="472"/>
+
+        <rect class="self" x="20" y="78" width="300" height="26" rx="6"/>
+        <text class="self-text" x="170" y="95" text-anchor="middle">enters a Listen node, opens port 5890</text>
+
+        <line class="msg" x1="560" y1="132" x2="172" y2="132" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="125">connect to :5890</text>
+        <text class="fn" x="572" y="136">lt.Listen() · Bridge()</text>
+
+        <line class="msg" x1="560" y1="172" x2="172" y2="172" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="165">$TMSTA 00   which node?</text>
+        <text class="fn" x="572" y="186">where(r)</text>
+        <line class="msg" x1="170" y1="196" x2="558" y2="196" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="212">true, Listen2   (or Bridge, Lost)</text>
+
+        <line class="msg" x1="560" y1="248" x2="172" y2="248" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="241">$TMSCT  Line ×3 + QueueTag</text>
+        <text class="fn" x="572" y="262">go(r, src) · b.move(A)</text>
+        <line class="msg" x1="560" y1="284" x2="172" y2="284" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="277">$TMSTA 01,tag   done yet?</text>
+        <line class="msg" x1="170" y1="304" x2="558" y2="304" marker-end="url(#sf)"/>
+        <text class="msg-text" x="365" y="320">true once the arm reaches the tag</text>
+
+        <line class="msg var-msg" x1="560" y1="356" x2="172" y2="356" marker-end="url(#sv)"/>
+        <text class="msg-text var-msg" x="365" y="349">$TMSCT  var_cmd = 1</text>
+        <text class="fn" x="572" y="360">with var_cmd only</text>
+
+        <line class="msg key-msg" x1="560" y1="398" x2="172" y2="398" marker-end="url(#sa)"/>
+        <text class="msg-text key-msg" x="365" y="391">$TMSCT  ScriptExit()</text>
+        <text class="fn" x="572" y="402">r.exit() · b.grip()</text>
+
+        <rect class="self" x="20" y="418" width="300" height="42" rx="6"/>
+        <text class="self-text" x="170" y="435" text-anchor="middle">Pass exit → the gripper node runs</text>
+        <text class="self-text" x="170" y="451" text-anchor="middle">→ a Listen node opens 5890 again</text>
+        <text class="fn" x="572" y="442">back to connect</text>
+        <text class="note" x="572" y="456">retries every 0.5 s</text>
+      </svg>
+    </div>
+  </section>
+
+  <p class="foot">testjb2 needs node names <code>Listen1</code>, <code>Listen2</code>, <code>Listen3</code>; they are set at the top of the script. Teach the spots with <code>listen_pick_place_test.py teach pick</code> and <code>teach place</code>, and home with <code>listen_loop_test.py teach-home</code> while the arm stands at P3. Source: <a href="listen_loop_test.py">listen_loop_test.py</a>.</p>
+</main>
+
+<script>
+const CODE_A = [
+  [74, '    held, moved = False, 0'],
+  [75, '    r = lt.Listen()'],
+  [76, '    while True:'],
+  [77, '        node = where(r)'],
+  [78, '        print("in", node)'],
+  [79, '        if node == PLACE_NODE:'],
+  [80, '            if held:'],
+  [81, '                go(r, dst, above)'],
+  [82, '                held, moved = False, moved + 1'],
+  [83, '                src, dst = dst, src'],
+  [84, '                print(f"move {moved}/{cycles}: placed, releasing")'],
+  [85, '            r.exit()'],
+  [86, '        elif node == PICK_NODE:'],
+  [87, '            if moved >= cycles:'],
+  [88, '                return park(r, "Done and home. Waiting in Listen2: run again, or stop the project.", home)'],
+  [89, '            go(r, src, above)'],
+  [90, '            held = True'],
+  [91, '            print("at pick, gripping")'],
+  [92, '            r.exit()'],
+  [93, '        elif node == LOSS_NODE:'],
+  [94, '            return park(r, "GRIP reported LOSS: no object between the fingers. Stop the project in TMflow.")'],
+  [95, '        else:'],
+  [96, '            raise RuntimeError(f"unexpected Listen node {node!r}: check the node names in testjb2")'],
+  [97, '        r = lt.Listen()'],
+];
+// [step key, text, line number in hande_bridge.py]
+const CODE_B = [
+  [1, '    b = Bridge(above, dry=above > 0)', 116],
+  [0, '    try:', 117],
+  [2, '        b.move(A)', 118],
+  [3, '        b.grip()', 119],
+  [4, '        b.move(B)', 120],
+  [5, '        b.release()', 121],
+  [6, '        b.move(B)', 122],
+  [7, '        b.grip()', 123],
+  [8, '        b.move(A)', 124],
+  [9, '        b.release()', 125],
+  [11, '    except GripLost:', 126],
+  [13, '        b.release()', 127],
+  [14, '        b.finish()', 128],
+  [15, '        raise SystemExit("Stopped: GRIP found no object. Fingers open, arm at Home, flow waiting in Bridge.")', 129],
+  [10, '    b.finish()', 130],
+];
+const REAL_B = Object.fromEntries(CODE_B.map(([k, , n]) => [k, n]));
+
+const CONNECT = ['ChangeBase("RobotBase")', 'ChangeTCP(0,0,0,0,0,0)'];
+const ask = node => [`?$TMSTA 00   → true,${node}`];
+const lines = (spot, air) => [
+  'Line("CAP", here + 100 mm z)',
+  `Line("CAP", ${spot} + 100 mm z)`,
+  `Line("CAP", ${spot}${air ? ' + 50 mm z' : ''})`,
+  'QueueTag(n,0)',
+  `?$TMSTA 01,n   → true when reached`,
+];
+const EXIT = ['!ScriptExit()'];
+const setv = n => [`=var_cmd = ${n}`];
+
+function buildA(key) {
+  const sc = { box: { exit: 'OK', air: false }, fail: { exit: 'FAIL', air: true }, loss: { exit: 'LOSS', air: true } }[key];
+  const s = { node: '—', held: false, moved: 0, src: 'A', dst: 'B', at: 'home', z: 'up', grip: 'unknown', box: sc.air ? null : 'A' };
+  const down = sc.air ? 'hover' : 'down';
+  const onto = spot => sc.air ? `down to 50 mm above ${spot} (dry run, <code>--above 50</code>)` : `straight down onto ${spot}`;
+  const steps = [];
+  const push = (label, id, edge, who, run, wait, text, sent) => steps.push({
+    label, id, edge, who, run, wait, text, sent,
+    vars: [['node', s.node], ['held', s.held ? 'True' : 'False'], ['moved', `${s.moved}   (cycles = 2)`], ['src', s.src], ['dst', s.dst]],
+    t: { at: s.at, z: s.z, grip: s.grip, box: s.box },
+  });
+
+  push('Start', 'a-start', null, 'tmflow', [74, 75], [75],
+    'Press Play on testjb2 in TMflow, then run the script and press Enter. It sets <code>held = False</code> and <code>moved = 0</code>, then waits in <code>lt.Listen()</code>, retrying port 5890 every 0.5 s.', null);
+  push('P3', 'a-p3', 'e-a-start-p3', 'tmflow', [], [75],
+    'TMflow moves the arm to P3, a point taught in TMflow. Teach home here too, so every run ends where the flow starts.', null);
+  s.grip = 'activated';
+  push('SET1', 'a-set1', 'e-a-p3-set', 'tmflow', [], [75],
+    'The Hand-E activates. SET1 has an OK and a FAIL exit, and both lead to Listen1.', null);
+  s.node = 'Listen1';
+  push('Listen1', 'a-l1', 'e-a-set-l1', 'script', [76, 77, 78, 79, 80, 85], [],
+    'Listen1 opens port 5890 and <code>lt.Listen()</code> connects. <code>where(r)</code> gets <code>"Listen1"</code>. <code>held</code> is False, so there is nothing to place yet. <code>r.exit()</code> sends <code>ScriptExit()</code> and Listen1 leaves by Pass.',
+    [...CONNECT, ...ask('Listen1'), ...EXIT]);
+
+  let first = true;
+  while (true) {
+    s.grip = 'open';
+    if (s.box === 'gripper') s.box = s.at;
+    push('RELEASE1', 'a-rel1', 'e-a-l1-rel', 'tmflow', [], [97], first
+      ? 'TMflow opens the gripper. The script has closed its connection and waits in <code>r = lt.Listen()</code> at the bottom of the loop.'
+      : (sc.air ? `The gripper opens above ${s.at}.` : `The gripper opens and the box stays at ${s.at}.`), null);
+    first = false;
+
+    s.node = 'Listen2';
+    if (s.moved >= 2) {
+      s.at = 'home'; s.z = 'up';
+      push('Listen2 · home', 'a-l2', 'e-a-rel-l2', 'script', [76, 77, 78, 79, 86, 87, 88], [],
+        `<code>moved</code> is ${s.moved}, equal to cycles, so <code>park(r, …, home)</code> lifts 100 mm, moves home with a joint move and closes the connection without <code>ScriptExit()</code>. The flow keeps waiting in Listen2, and Listen2 is exactly where a new run starts.`,
+        [...CONNECT, ...ask('Listen2'), 'Line("CAP", here + 100 mm z)', 'PTP("JPP", home joints, 20 %)', 'QueueTag(n,0)', '?$TMSTA 01,n   → true when reached', '(connection closed, no ScriptExit)']);
+      s.held = false; s.moved = 0; s.src = 'A'; s.dst = 'B';
+      s.held = true; s.at = 'A'; s.z = down;
+      push('Listen2 · next run', 'a-l2', null, 'script', range(74, 79).concat([86, 87, 89, 90, 91, 92]), [],
+        'Run the script again. The flow is still in Listen2, so <code>lt.Listen()</code> connects at once. <code>held</code> and <code>moved</code> start from zero, and it picks at A as before. No restart in TMflow.',
+        [...CONNECT, ...ask('Listen2'), ...lines('A', sc.air), ...EXIT]);
+      break;
+    }
+    const pickAt = s.src;
+    s.at = pickAt; s.z = down; s.held = true;
+    push(`Listen2 · pick ${pickAt}`, 'a-l2', 'e-a-rel-l2', 'script', [76, 77, 78, 79, 86, 87, 89, 90, 91, 92], [],
+      `<code>where(r)</code> gets <code>"Listen2"</code>. <code>moved</code> is ${s.moved}, below cycles (2), so <code>go(r, src)</code> lifts 100 mm, crosses to ${pickAt} and goes ${onto(pickAt)}. <code>held = True</code>, then <code>ScriptExit()</code> hands the robot to GRIP1.`,
+      [...CONNECT, ...ask('Listen2'), ...lines(pickAt, sc.air), ...EXIT]);
+
+    s.grip = 'closed';
+    if (!sc.air) s.box = 'gripper';
+    if (sc.exit === 'LOSS') {
+      push('GRIP1', 'a-grip1', 'e-a-l2-grip', 'tmflow', [], [97],
+        'The fingers close on air. The Hand-E finds no object, so GRIP1 takes its LOSS exit to Listen3.', null);
+      s.node = 'Listen3'; s.z = 'up';
+      push('Listen3', 'a-l3', 'e-a-grip-l3', 'script', [76, 77, 78, 79, 86, 93, 94], [],
+        '<code>where(r)</code> gets <code>"Listen3"</code>. <code>park()</code> lifts 100 mm, prints "GRIP reported LOSS" and closes the connection. Listen3 has no way back into the loop, so stop the project in TMflow.',
+        [...CONNECT, ...ask('Listen3'), 'Line("CAP", here + 100 mm z)', 'QueueTag(n,0)', '?$TMSTA 01,n   → true when reached', '(connection closed, no ScriptExit)']);
+      break;
+    }
+    push('GRIP1', 'a-grip1', 'e-a-l2-grip', 'tmflow', [], [97], sc.air
+      ? 'The fingers close on air and GRIP1 takes FAIL, which is wired back to Listen1 the same way as OK. The script cannot tell OK from FAIL, so the dry run keeps looping.'
+      : 'The fingers close on the box. GRIP1 takes its OK exit, which loops back to Listen1.', null);
+
+    s.node = 'Listen1';
+    const placeAt = s.dst;
+    s.at = placeAt; s.z = down; s.held = false; s.moved += 1;
+    [s.src, s.dst] = [s.dst, s.src];
+    push(`Listen1 · place ${placeAt}`, 'a-l1', 'e-a-grip-l1', 'script', range(76, 85), [],
+      `<code>held</code> is True, so <code>go(r, dst)</code> ${sc.air ? 'moves' : 'carries the box'} to ${placeAt}. <code>moved</code> becomes ${s.moved}, and <code>src</code> and <code>dst</code> swap so the next pick is at ${s.src}. <code>ScriptExit()</code> hands over to RELEASE1.`,
+      [...CONNECT, ...ask('Listen1'), ...lines(placeAt, sc.air), ...EXIT]);
+  }
+  return steps;
+}
+
+function buildB(key) {
+  const lost = key === 'lost';
+  const s = { cmd: '0', line: '—', at: 'home', z: 'up', grip: 'unknown', box: lost ? null : 'A' };
+  const steps = [];
+  const push = (label, id, edge, who, run, wait, text, sent) => steps.push({
+    label, id, edge, who, run, wait, text, sent,
+    vars: [['var_cmd', s.cmd], ['script at', s.line]],
+    t: { at: s.at, z: s.z, grip: s.grip, box: s.box },
+  });
+  const BRANCH = { 1: 'GRIP1', 2: 'RELEASE1', 3: 'Home2' };
+  const BR_EDGE = { 1: 'e-b-gw-grip', 2: 'e-b-gw-rel', 3: 'e-b-gw-home2' };
+  const FN = { 1: 'grip', 2: 'release', 3: 'finish' };
+
+  const handover = (n, ln, text, extra = [], where = `b.${FN[n]}()`, run = [ln]) => {
+    s.cmd = String(n); s.line = `line ${REAL_B[ln]} · ${where}`;
+    push(`Bridge · ${FN[n]}`, 'b-bridge', null, 'script', run, [], text, [...extra, ...setv(n), ...EXIT]);
+    push('Gateway', 'b-gw', 'e-b-bridge-gw', 'tmflow', [], [ln],
+      `The Gateway reads <code>var_cmd</code>. It is ${n}, so the flow takes branch ${n} to ${BRANCH[n]}.`, null);
+  };
+  const back = (fromEdge, ln, nextLn, spot, text) => {
+    s.cmd = '0'; s.line = `line ${REAL_B[nextLn]} · b.move(${spot})`; s.at = spot; s.z = 'down';
+    push(`Bridge · move ${spot}`, 'b-bridge', fromEdge, 'script', [ln, nextLn], [], text,
+      ['=var_cmd = 0', ...CONNECT, ...ask('Bridge'), ...lines(spot, false)]);
+  };
+
+  s.line = 'line 116 · waiting';
+  push('Start', 'b-start', null, 'tmflow', [1], [1],
+    'Press Play on HandE_Bridge_v1 in TMflow, then run <code>hande_bridge.py demo</code>. <code>Bridge()</code> waits for port 5890 to open.', null);
+  push('Home', 'b-home', 'e-b-start-home', 'tmflow', [], [1],
+    'TMflow moves the arm to Home. Every run starts and ends at this pose.', null);
+  s.grip = 'activated';
+  push('SET1', 'b-set1', 'e-b-home-set', 'tmflow', [], [1],
+    'The Hand-E activates. Both exits lead to Bridge.', null);
+  s.line = 'line 118 · b.move(A)'; s.at = 'A'; s.z = 'down';
+  push('Bridge · move A', 'b-bridge', 'e-b-set-bridge', 'script', [1, 2], [],
+    'Bridge opens port 5890 and <code>Bridge()</code> connects. It sets <code>var_cmd = 0</code> first. <code>b.move(A)</code> lifts 100 mm, crosses and goes straight down onto A. The robot stays in the Bridge node for every move.',
+    ['=var_cmd = 0', ...CONNECT, ...ask('Bridge'), ...lines('A', false)]);
+
+  handover(1, 3, '<code>b.grip()</code> sets <code>var_cmd = 1</code> and sends <code>ScriptExit()</code>. Bridge leaves by Pass. The script closes its connection and waits for a Listen node to open again.');
+  s.grip = 'closed';
+
+  if (lost) {
+    push('GRIP1', 'b-grip1', 'e-b-gw-grip', 'tmflow', [], [3],
+      'The fingers close on nothing: the box is missing. GRIP1 takes LOSS (an air grip has also come out as FAIL before), and both lead to Lost.', null);
+    s.cmd = '0'; s.line = 'line 119 · b.grip() failed';
+    push('Lost', 'b-lost', 'e-b-grip-lost', 'script', [3], [],
+      'Lost opens port 5890. <code>b.grip()</code> reconnects and asks where it is: <code>"Lost"</code>, so the grip failed. It sends <code>ScriptExit()</code>; Lost\'s Pass leads back to Bridge, and then it raises <code>GripLost</code>. In a dry run (<code>--above</code>) it would carry on with the sequence instead.',
+      ['=var_cmd = 0', ...CONNECT, ...ask('Lost'), ...EXIT]);
+    handover(2, 13, 'Back in Bridge. <code>GripLost</code> jumps to the except block. <code>b.release()</code> sets <code>var_cmd = 2</code> so the fingers open before the arm goes home.',
+      ['=var_cmd = 0', ...CONNECT, ...ask('Bridge')], 'b.release()', [3, 11, 13]);
+    steps[steps.length - 2].edge = 'e-b-lost-bridge';
+    steps[steps.length - 2].label = 'Bridge · except';
+    s.grip = 'open';
+    push('RELEASE1', 'b-rel1', 'e-b-gw-rel', 'tmflow', [], [13], 'The fingers open. OK and FAIL both lead back to Bridge.', null);
+    s.cmd = '0'; s.z = 'up';
+    handover(3, 14, '<code>b.finish()</code> lifts 100 mm, sets <code>var_cmd = 3</code> and sends <code>ScriptExit()</code>.',
+      ['=var_cmd = 0', ...CONNECT, ...ask('Bridge'), 'Line("CAP", here + 100 mm z)', 'QueueTag(n,0)', '?$TMSTA 01,n   → true when reached']);
+    steps[steps.length - 2].edge = 'e-b-rel-bridge';
+    s.at = 'home';
+    push('Home2', 'b-home2', 'e-b-gw-home2', 'tmflow', [], [14], 'TMflow drives the arm to Home2, the same pose as Home.', null);
+    s.line = 'ended: SystemExit';
+    push('Bridge · ready', 'b-bridge', 'e-b-home2-bridge', 'ready', [15], [],
+      'Back at Home and waiting in Bridge. The script stops with "GRIP found no object". Put the box back and run it again. No restart in TMflow.', null);
+    return steps;
+  }
+
+  s.box = 'gripper';
+  push('GRIP1', 'b-grip1', 'e-b-gw-grip', 'tmflow', [], [3], 'The fingers close on the box. OK leads back to Bridge.', null);
+  back('e-b-grip-ok', 3, 4, 'B', 'Bridge opens again and <code>b.grip()</code> returns. The flow came back to Bridge, not Lost, so the grip worked. <code>b.move(B)</code> carries the box to B.');
+  handover(2, 5, '<code>b.release()</code> sets <code>var_cmd = 2</code> and sends <code>ScriptExit()</code>.');
+  s.grip = 'open'; s.box = 'B';
+  push('RELEASE1', 'b-rel1', 'e-b-gw-rel', 'tmflow', [], [5], 'The fingers open and the box stays at B. Both exits lead back to Bridge.', null);
+  back('e-b-rel-bridge', 5, 6, 'B', '<code>b.release()</code> returns. <code>b.move(B)</code> lifts and comes straight back down to take the box again.');
+  handover(1, 7, '<code>b.grip()</code> again: <code>var_cmd = 1</code>, <code>ScriptExit()</code>. Two grips in this script are just two calls; the flow is unchanged.');
+  s.grip = 'closed'; s.box = 'gripper';
+  push('GRIP1', 'b-grip1', 'e-b-gw-grip', 'tmflow', [], [7], 'The fingers close on the box. OK, back to Bridge.', null);
+  back('e-b-grip-ok', 7, 8, 'A', '<code>b.move(A)</code> carries the box back to A.');
+  handover(2, 9, '<code>b.release()</code>: <code>var_cmd = 2</code>, <code>ScriptExit()</code>.');
+  s.grip = 'open'; s.box = 'A';
+  push('RELEASE1', 'b-rel1', 'e-b-gw-rel', 'tmflow', [], [9], 'The fingers open. The box is back at A, where it started.', null);
+  s.cmd = '0'; s.z = 'up';
+  handover(3, 10, '<code>b.release()</code> returns and <code>b.finish()</code> runs. It lifts 100 mm, sets <code>var_cmd = 3</code> and sends <code>ScriptExit()</code>.',
+    ['=var_cmd = 0', ...CONNECT, ...ask('Bridge'), 'Line("CAP", here + 100 mm z)', 'QueueTag(n,0)', '?$TMSTA 01,n   → true when reached']);
+  steps[steps.length - 2].edge = 'e-b-rel-bridge';
+  s.at = 'home';
+  push('Home2', 'b-home2', 'e-b-gw-home2', 'tmflow', [], [10], 'TMflow drives the arm to Home2, the same pose as Home, then goes back into Bridge.', null);
+  s.line = 'ended';
+  push('Bridge · ready', 'b-bridge', 'e-b-home2-bridge', 'ready', [], [],
+    'The flow waits in Bridge with the arm at Home and port 5890 open. The script has ended. Run it again, or any other sequence, and it connects here. No restart in TMflow.', null);
+  return steps;
+}
+
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+const METHODS = {
+  a: {
+    flow: 'flow-a', title: 'TMflow · project testjb2', code: CODE_A, codeTitle: 'listen_loop_test.py · run()', proposed: false,
+    helpers: 'helpers-a', varsTitle: 'Script variables', build: buildA, marker: ['url(#ah)', 'url(#ah-a)'],
+    scen: [['box', 'Box in the fingers', 'python tests/listen_loop_test.py --cycles 2'],
+           ['fail', 'Dry run, GRIP exits FAIL', 'python tests/listen_loop_test.py --above 50'],
+           ['loss', 'Dry run, GRIP exits LOSS', 'python tests/listen_loop_test.py --above 50']],
+  },
+  b: {
+    flow: 'flow-b', title: 'TMflow · project HandE_Bridge_v1', code: CODE_B, codeTitle: 'hande_bridge.py · demo()', proposed: true,
+    helpers: 'helpers-b', varsTitle: 'var_cmd and the script', build: buildB, marker: ['url(#bh)', 'url(#bh-a)'],
+    scen: [['box', 'Box moved there and back', 'python tests/hande_bridge.py demo'],
+           ['lost', 'Grip finds nothing', 'python tests/hande_bridge.py demo']],
+  },
+};
+
+const $ = id => document.getElementById(id);
+let method = 'a', scen = 'box', steps = [], idx = 0, prevVars = null;
+
+function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function renderCode() {
+  const m = METHODS[method];
+  $('code').innerHTML = m.code.map(([n, t, shown]) => `<span class="ln" data-n="${n}"><b>${shown ?? n}</b>${esc(t)}</span>`).join('');
+  $('code-title').textContent = m.codeTitle;
+  $('code-proposed').hidden = !m.proposed;
+}
+
+function renderScenarios() {
+  const m = METHODS[method];
+  $('scenarios').innerHTML = m.scen.map(([k, label]) =>
+    `<button type="button" id="sc-${method}-${k}" data-sc="${k}" aria-pressed="${k === scen}">${label}</button>`).join('');
+  $('cmd').textContent = m.scen.find(x => x[0] === scen)[2];
+}
+
+function renderSteps() {
+  $('steps').innerHTML = steps.map((st, i) =>
+    `<li><button type="button" data-i="${i}"><span class="n">${i + 1}</span>${st.label}</button></li>`).join('');
+}
+
+const SPOT_X = { home: 160, A: 80, B: 240 };
+const TIP_Y = { up: 40, hover: 72, down: 108 };
+
+function renderTable(t) {
+  const x = SPOT_X[t.at], y = TIP_Y[t.z];
+  $('gripper').style.transform = `translate(${x}px, ${y}px)`;
+  const gap = t.grip === 'closed' ? (t.box === 'gripper' ? 30 : 6) : 42;
+  $('fl').style.transform = `translate(${-gap / 2}px, 0)`;
+  $('fr').style.transform = `translate(${gap / 2}px, 0)`;
+  $('gripper').style.opacity = t.grip === 'unknown' ? 0.55 : 1;
+  const box = $('boxg');
+  box.style.display = t.box ? '' : 'none';
+  if (t.box === 'gripper') box.style.transform = `translate(${x}px, ${y + 2}px)`;
+  else if (t.box) box.style.transform = `translate(${SPOT_X[t.box]}px, 110px)`;
+  const pos = t.at === 'home' ? 'at home' : (t.z === 'up' ? `100 mm above ${t.at}` : t.z === 'hover' ? `50 mm above ${t.at}` : `at ${t.at}`);
+  const boxTxt = t.box ? (t.box === 'gripper' ? 'box in the fingers' : `box at ${t.box}`) : 'no box';
+  $('table-status').textContent = `gripper ${t.grip} · ${pos} · ${boxTxt}`;
+}
+
+function renderVars(vars) {
+  const prev = prevVars || {};
+  $('vars').innerHTML = vars.map(([k, v]) =>
+    `<dt>${k}</dt><dd class="${prevVars && prev[k] !== v ? 'changed' : ''}">${esc(String(v))}</dd>`).join('');
+  prevVars = Object.fromEntries(vars);
+}
+
+function renderSent(sent) {
+  if (!sent) { $('sent').innerHTML = '<span class="q">Nothing. The connection is closed while TMflow runs this node.</span>'; return; }
+  $('sent').innerHTML = sent.map(l => {
+    if (l[0] === '?') return `<span class="q">${esc(l.slice(1))}</span>`;
+    if (l[0] === '=') return `<span class="v">${esc(l.slice(1))}</span>`;
+    if (l[0] === '!') return `<span class="x">${esc(l.slice(1))}</span>`;
+    return esc(l);
+  }).join('\n');
+}
+
+const WHO = { script: 'Script has the robot', tmflow: 'TMflow has the robot', ready: 'Ready for the next run' };
+
+function render() {
+  const m = METHODS[method], st = steps[idx], svg = $(m.flow);
+  svg.querySelectorAll('.node').forEach(n => n.classList.toggle('active', n.id === st.id));
+  svg.querySelectorAll('.edge').forEach(e => {
+    const on = e.id === st.edge;
+    e.classList.toggle('active', on);
+    e.setAttribute('marker-end', on ? m.marker[1] : m.marker[0]);
+    if (on) e.parentNode.appendChild(e);
+  });
+  $('now-title').textContent = `${idx + 1}. ${st.label}`;
+  $('now-who').className = 'pill ' + st.who;
+  $('now-who').textContent = WHO[st.who];
+  $('now-text').innerHTML = st.text;
+  document.querySelectorAll('#code .ln').forEach(l => {
+    const n = +l.dataset.n;
+    l.classList.toggle('run', st.run.includes(n));
+    l.classList.toggle('wait', st.wait.includes(n));
+  });
+  renderTable(st.t);
+  renderVars(st.vars);
+  renderSent(st.sent);
+  $('counter').textContent = `${idx + 1} / ${steps.length}`;
+  $('prev').disabled = idx === 0;
+  $('next').disabled = idx === steps.length - 1;
+  document.querySelectorAll('#steps button').forEach((b, i) => {
+    b.classList.toggle('current', i === idx);
+    b.classList.toggle('done', i < idx);
+    if (i === idx) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+}
+
+function go(i) { idx = Math.max(0, Math.min(steps.length - 1, i)); render(); }
+
+function setScen(key) {
+  scen = key; steps = METHODS[method].build(key); idx = 0; prevVars = null;
+  renderScenarios(); renderSteps(); render();
+}
+
+function setMethod(key) {
+  method = key;
+  const m = METHODS[key];
+  document.querySelectorAll('.seg.method button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === key));
+  $('flow-a').hidden = key !== 'a';
+  $('flow-b').hidden = key !== 'b';
+  $('helpers-a').hidden = key !== 'a';
+  $('helpers-b').hidden = key !== 'b';
+  $('flow-title').textContent = m.title;
+  $('vars-title').textContent = m.varsTitle;
+  renderCode();
+  setScen(m.scen[0][0]);
+}
+
+$('prev').addEventListener('click', () => go(idx - 1));
+$('next').addEventListener('click', () => go(idx + 1));
+$('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(+b.dataset.i); });
+$('scenarios').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setScen(b.dataset.sc); });
+document.querySelectorAll('.seg.method button').forEach(b => b.addEventListener('click', () => setMethod(b.dataset.m)));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') go(idx + 1);
+  if (e.key === 'ArrowLeft') go(idx - 1);
+});
+
+setMethod('a');
+</script>
