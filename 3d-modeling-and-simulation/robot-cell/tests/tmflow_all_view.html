@@ -249,7 +249,7 @@ body { padding: 0; overflow: hidden; }
 .scen .state.running, .scen .state.starting { background: var(--tm-sel); color: var(--tm-ink); }
 .scen .state.finished { background: var(--tm-green); color: var(--tm-ink); }
 .scen .state.failed, .scen .state.rdk-failed { background: var(--tm-fail); }
-.scen .state.rdk-closing, .scen .state.rdk-loading, .scen .state.rdk-homing { background: var(--tm-sel); color: var(--tm-ink); }
+.scen .state.rdk-switching, .scen .state.rdk-closing, .scen .state.rdk-loading, .scen .state.rdk-homing { background: var(--tm-sel); color: var(--tm-ink); }
 .scen .state.rdk-ready { background: var(--tm-green); color: var(--tm-ink); } .scen .state.stopped { background: var(--tm-orange); color: var(--tm-ink); }
 /* speed: log slider + number, live (POST /speed), synced from the stream so every open tab agrees */
 .speed { display: inline-flex; gap: 6px; align-items: center; font: 12.5px var(--tm-font); color: #9fb0b7; white-space: nowrap; }
@@ -724,12 +724,12 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
 }).catch(e => { $('#sim-note').textContent = '3D view not loaded: ' + e.message; });
 
 // ---- scenarios: dropdown + Run / Stop (server-side whitelist, tests/scenarios.json) -----------------------
-const SC_TEXT = { idle: 'idle', running: 'running…', finished: 'finished ✓', failed: 'failed ✗', stopped: 'stopped' };
+const SC_TEXT = { idle: 'idle', starting: 'loading station…', running: 'running…', finished: 'finished ✓', failed: 'failed ✗', stopped: 'stopped' };
 function scState(s) {
   const el = $('#sc-state'); el.className = 'state ' + s.state;
   el.textContent = (SC_TEXT[s.state] || s.state) + (s.state === 'failed' && s.code !== null && s.code !== undefined ? ` (exit ${s.code})` : '');
   el.title = s.name || '';
-  const busy = s.state === 'running';
+  const busy = s.state === 'running' || s.state === 'starting';   // starting: RoboDK loads the scenario's station
   $('#sc-sel').disabled = $('#sc-run').disabled = busy || rdkBusy; $('#sc-stop').disabled = !busy;
   scBusy = busy; $('#rdk-reset').disabled = busy || rdkBusy;
   if (s.name && busy) $('#sc-sel').value = s.name;
@@ -779,7 +779,7 @@ $('#sp-num').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sp-nu
 
 // ---- Reset RoboDK (serve --robodk): close the station without saving, reload the .rdk, robot home ----------
 let scBusy = false, rdkBusy = false;
-const RDK_TEXT = { closing: 'RoboDK: closing…', loading: 'RoboDK: loading .rdk…', homing: 'RoboDK: homing…', ready: 'RoboDK reloaded ✓', failed: 'RoboDK reset failed ✗' };
+const RDK_TEXT = { switching: 'RoboDK: loading station…', closing: 'RoboDK: closing…', loading: 'RoboDK: loading .rdk…', homing: 'RoboDK: homing…', ready: 'RoboDK ready ✓', failed: 'RoboDK failed ✗' };
 function rdkState(state, msg) {
   const el = $('#rdk-state'); el.hidden = false; el.className = 'state rdk-' + state;
   el.textContent = RDK_TEXT[state] || state; el.title = msg || '';

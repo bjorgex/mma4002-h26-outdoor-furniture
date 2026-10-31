@@ -1,14 +1,14 @@
 [
-  {"name": "demo-air", "label": "demo_run: 1 plank, dry run (--air)", "script": "demo_run.py", "args": ["--air"], "flow": "hande", "grip": "ok", "fast": 2, "points": "demo_points_v4_cad.json"},
-  {"name": "demo-real", "label": "demo_run: 1 plank, real path (grips)", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "points": "demo_points_v4_cad.json"},
-  {"name": "demo-3", "label": "demo_run: 3 planks (3, 6, 2: CAD order)", "script": "demo_run.py", "args": ["--planks", "3"], "flow": "hande", "grip": "ok", "fast": 3, "points": "demo_points_v4_cad.json"},
-  {"name": "demo-fail", "label": "demo_run: GRIP answers FAIL", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "fail", "fast": 2, "points": "demo_points_v4_cad.json"},
-  {"name": "demo-loss", "label": "demo_run: GRIP closes on nothing (LOSS)", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "loss", "fast": 2, "points": "demo_points_v4_cad.json"},
+  {"name": "demo-air", "label": "demo_run: 1 plank, dry run (--air)", "script": "demo_run.py", "args": ["--air"], "flow": "hande", "grip": "ok", "fast": 2, "points": "demo_points_v4_cad.json", "station": "Bench V1 cell v4"},
+  {"name": "demo-real", "label": "demo_run: 1 plank, real path (grips)", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "points": "demo_points_v4_cad.json", "station": "Bench V1 cell v4"},
+  {"name": "demo-3", "label": "demo_run: 3 planks (3, 6, 2: CAD order)", "script": "demo_run.py", "args": ["--planks", "3"], "flow": "hande", "grip": "ok", "fast": 3, "points": "demo_points_v4_cad.json", "station": "Bench V1 cell v4"},
+  {"name": "demo-fail", "label": "demo_run: GRIP answers FAIL", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "fail", "fast": 2, "points": "demo_points_v4_cad.json", "station": "Bench V1 cell v4"},
+  {"name": "demo-loss", "label": "demo_run: GRIP closes on nothing (LOSS)", "script": "demo_run.py", "args": [], "flow": "hande", "grip": "loss", "fast": 2, "points": "demo_points_v4_cad.json", "station": "Bench V1 cell v4"},
   {"name": "bridge-pickplace-air", "label": "hande_bridge pickplace --air", "script": "tests/hande_bridge.py", "args": ["pickplace", "--air"], "flow": "hande", "grip": "loss", "fast": 2},
   {"name": "bridge-demo-above", "label": "hande_bridge demo --above 50", "script": "tests/hande_bridge.py", "args": ["demo", "--above", "50"], "flow": "hande", "grip": "ok", "fast": 2},
   {"name": "bridge-check-wrong-flow", "label": "hande_bridge check on the wrong flow (testjb2)", "script": "tests/hande_bridge.py", "args": ["check"], "flow": "testjb2", "grip": "ok", "fast": 2},
-  {"name": "v4-full", "label": "Bench V1 v4: full assembly", "script": "tests/v4_replay.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell"},
-  {"name": "v4-full-fast", "label": "Bench V1 v4: full assembly (fast)", "script": "tests/v4_replay.py", "args": ["--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell"},
-  {"name": "v5-full", "label": "Bench V1 v5: full assembly (guide starts on A)", "script": "tests/v4_replay.py", "args": ["--cell", "v5"], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell_v5"},
-  {"name": "v5-full-fast", "label": "Bench V1 v5: full assembly (guide starts on A, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v5", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v5"}
+  {"name": "v4-full", "label": "Bench V1 v4: full assembly", "script": "tests/v4_replay.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell", "station": "Bench V1 cell v4"},
+  {"name": "v4-full-fast", "label": "Bench V1 v4: full assembly (fast)", "script": "tests/v4_replay.py", "args": ["--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell", "station": "Bench V1 cell v4"},
+  {"name": "v5-full", "label": "Bench V1 v5: full assembly (guide starts on A)", "script": "tests/v4_replay.py", "args": ["--cell", "v5"], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell_v5", "station": "Bench V1 cell v5"},
+  {"name": "v5-full-fast", "label": "Bench V1 v5: full assembly (guide starts on A, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v5", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v5", "station": "Bench V1 cell v5"}
 ]

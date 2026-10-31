@@ -147,10 +147,13 @@ def cmd(s):
 
 def carry(action, parts):
     """Tell the mock's 3D pane what the next GRIP takes along / RELEASE puts down: a "carry" event through the same
-    /step queue "tmflow_mock.py run" posts this script's step calls with (its profile hook). A no-op otherwise."""
+    /step queue "tmflow_mock.py run" posts this script's step calls with (its profile hook). A no-op otherwise.
+    Waits until it is posted: the queue posts in the background, and on a busy PC the names could otherwise reach the
+    mock after the GRIP they are for (that grip then carries nothing, in RoboDK and in the 3D pane)."""
     steps = getattr(sys.getprofile(), "__self__", None)
     if hasattr(steps, "send"):
         steps.send("carry", action=action, parts=parts)
+        steps.q.join()
 
 
 def play(stage):

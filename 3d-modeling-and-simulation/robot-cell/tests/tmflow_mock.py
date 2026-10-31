@@ -24,7 +24,10 @@ Terminal 2, any test script unchanged, its robot IP pointed at the mock:
 in simulation mode only. Second RoboDK instance: $env:ROBODK_API_PORT=20601 before serve.
 --sim instead: our own TM5-900 kinematics (robot_sim/tm5_kin.py, no RoboDK). Either way the 3D cell view
 (robot_sim/sim_view.html) is at http://127.0.0.1:8090/sim/, and everything on one page (flow, script side +
-demo steps, 3D cell) at http://127.0.0.1:8090/all, all fed by the same /events. Next to another mock: serve
+demo steps, 3D cell) at http://127.0.0.1:8090/all, all fed by the same /events ("j": joints 25 times a second with
+the time they are for, which the 3D pane plays back a little behind, interpolated). With --robodk a scenario's
+"station" (scenarios.json) is loaded first if another one is open (closed without saving, one station at a time).
+Under run, the script's own time.sleep follows the speed slider too. Next to another mock: serve
 and run both take --listen/--slave (ports) and --view, e.g. serve --listen 7890 --slave 7891 --view 8097.
 """
 import argparse
@@ -52,6 +55,10 @@ ROBOT_PORTS = (lt.LISTEN, lt.SLAVE)                     # the real robot's ports
 
 HOST = "127.0.0.1"
 DT = 0.02                                               # motion/animation step, wall clock [s]
+MAX_STEP = 0.06                                         # a step that took longer (RoboDK busy) counts as this long:
+                                                        # the motion slows down instead of jumping to catch up
+JOINT_HZ = 25                                           # "j" joint samples to each /events client [Hz]
+SLEEP_MIN = 0.05                                        # run: the script's waits scaled by the speed, down to this [s]
 JOINT_SPEED = 180                                       # TM5-900 joint speed at PTP 100 % [deg/s]
 HOME_SPEED = 20                                         # TMflow point nodes (Home, P3) [% PTP]
 NODE_TIME = {"set": 3, "grip": 4, "release": 3, "leave": 0.5}   # gripper nodes, node switch [s]
@@ -158,8 +165,19 @@ class RoboDK:
         self.file = None                                # the .rdk the station came from, for reload()
         if station:                                     # --station: an open station by name, else an .rdk to open
             st = [s for s in self.RDK.getOpenStations() if s.Name() == station]
-            if not st:
-                self.file = Path(station).resolve()
+            if not st:                                  # a path, or a name: robot-cell/<name>.rdk
+                named = HERE.parent / f"{station}.rdk"
+                self.file = named.resolve() if not Path(station).is_file() and named.is_file() else Path(station).resolve()
+                if not self.file.is_file():
+                    raise SystemExit(f"no open station '{station}' and no file {self.file}")
+                # one station at a time: close one the scenarios switch to (the mock never saves them), e.g. the
+                # v5 cell a v5 run left open; any other open station is left alone
+                ours = {s.get("station") for s in json.loads(SCENARIOS.read_text(encoding="utf-8"))} if SCENARIOS.exists() else set()
+                for s in self.RDK.getOpenStations():
+                    if s.Name() in ours:
+                        log(f"RoboDK: closing station '{s.Name()}' without saving (one station at a time)")
+                        self.RDK.setActiveStation(s)
+                        self.RDK.CloseStation()
             self.RDK.setActiveStation(st[0] if st else self.RDK.AddFile(str(self.file)))
         self.file = self.file or self._station_file()
         self.robot_name, self.lock = robot, threading.RLock()
@@ -185,6 +203,7 @@ class RoboDK:
     def _attach(self):
         """Item handles from the active station: the robot, its tool and the parts' start poses + parents."""
         robolink = self.rl
+        self.station_name = self.RDK.ActiveStation().Name()
         self.RDK.setRunMode(robolink.RUNMODE_SIMULATE)  # never drive a real robot from here
         robots = self.RDK.ItemList(robolink.ITEM_TYPE_ROBOT)
         if self.robot_name:                             # --robot: by name (the v4 cell also has the AMR's robot)
@@ -199,25 +218,34 @@ class RoboDK:
         self.start = {o.Name(): (o, o.Parent(), o.Pose()) for o in self.RDK.ItemList(robolink.ITEM_TYPE_OBJECT)}
         self.pending, self.held = [], []
 
-    def reload(self, say):
+    def station(self):
+        """The loaded station's name (as of the last load: no RoboDK call, so it never waits on a reload)."""
+        return self.station_name
+
+    def reload(self, say, file=None):
         """The page's Reset RoboDK: close the station WITHOUT saving, open the same .rdk from disk, new item handles
-        and a new start snapshot. say(state, msg) reports progress. Never calls Save."""
-        if not self.file:
+        and a new start snapshot. file: another .rdk instead (a scenario's "station"); only one station is ever
+        open. say(state, msg) reports progress. Never calls Save."""
+        file = Path(file).resolve() if file else self.file
+        if not file:
             raise RuntimeError("don't know which .rdk this station came from (serve with --station <file.rdk>)")
+        if not file.is_file():                          # check before closing anything
+            raise RuntimeError(f"no station file {file}")
         with self.lock:                                 # ik/fk/show wait until the new station is in
             name = self.RDK.ActiveStation().Name()
             say("closing", f"closing station '{name}' without saving")
             self.RDK.CloseStation()
-            say("loading", f"opening {self.file.name} from disk")
-            st = self.RDK.AddFile(str(self.file))
+            say("loading", f"opening {file.name} from disk")
+            st = self.RDK.AddFile(str(file))
             if not st.Valid():
-                raise RuntimeError(f"RoboDK could not open {self.file}")
+                raise RuntimeError(f"RoboDK could not open {file}")
             self.RDK.setActiveStation(st)
+            self.file = file                            # Reset RoboDK reloads whichever station is loaded
             try:
                 self._attach()
             except SystemExit as e:                     # --robot not in the reloaded file: not the server's end
                 raise RuntimeError(str(e))
-        log(f"RoboDK: station '{st.Name()}' reloaded from {self.file}, {len(self.start)} parts")
+        log(f"RoboDK: station '{st.Name()}' loaded from {file}, {len(self.start)} parts")
 
     def carry(self, action, parts):
         if action == "grip":
@@ -242,12 +270,29 @@ class RoboDK:
                 o.setParentStatic(parent)
             self.held = []
 
-    def restore(self):
+    def restore(self, cell="cell"):
+        """Parts back to the start of the scenario's cell: robot_sim/cell_layout*.json (the .rdk's own start poses in
+        the robot base frame, as the 3D pane's cell), so also right when this server started on a station a run had
+        left the parts elsewhere in. Parts the snapshot found on the tool go back under 'Ground base'."""
         with self.lock:
             self.pending, self.held = [], []
+            ground = self.RDK.Item("Ground base", self.rl.ITEM_TYPE_FRAME)
             for o, parent, pose in self.start.values():
+                if parent.Type() == self.rl.ITEM_TYPE_TOOL and ground.Valid():
+                    parent = ground
                 o.setParent(parent)
                 o.setPose(pose)
+            f = HERE / "robot_sim" / f"cell_layout{cell[4:]}.json"
+            if not f.exists():
+                return
+            try:
+                parts = json.loads(f.read_text())["objects"]
+            except (OSError, ValueError, KeyError) as e:    # keep the snapshot's poses
+                return log(f"RoboDK: {f.name} not read ({e}): parts at the snapshot's poses")
+            base = self.robot.Parent().PoseAbs()        # the robot base frame
+            for part in parts:
+                if part["name"] in self.start:
+                    self.start[part["name"]][0].setPoseAbs(base * self.rm.Mat(part["pose"]))
 
     def ik(self, flange, near):
         with self.lock:
@@ -270,6 +315,7 @@ class Robot:
         self.flange, self.joints, self.kin, self.known = list(flange), list(joints), kin, known
         self.speed = speed / 100                        # project speed (the time scale: CLOCK)
         self.queue, self.tags, self.busy, self.error, self.last = [], {}, False, None, ""
+        self.stamp = time.time() - T0                   # when self.joints was last set (T0 clock, as events' "at")
         self.cv = threading.Condition()
         self.warned = set()
         threading.Thread(target=self._run, daemon=True).start()
@@ -297,6 +343,11 @@ class Robot:
     def state(self):
         with self.cv:
             return self.joints[:], self.flange[:]
+
+    def sample(self):
+        """(at, joints): during a move the time the joints were computed, else now (they hold still)."""
+        with self.cv:
+            return (self.stamp if self.busy else time.time() - T0), self.joints[:]
 
     def _run(self):
         while True:
@@ -360,12 +411,17 @@ class Robot:
         log(f"  {self.last}")
         emit("move", kind=kind, frm=f0[:3], to=f1[:3], secs=round(t, 2))
         done, last = 0.0, time.monotonic()              # simulated seconds of this move so far
+        due = last
         while done < t:
             if getattr(self, "stop", False):            # a scenario reset: a new Robot takes over
                 return
-            time.sleep(DT)
+            due += DT                                   # a steady DT grid, whatever the IK/RoboDK calls took
+            time.sleep(max(0.0, due - time.monotonic()))
             now = time.monotonic()
-            done, last = min(t, done + (now - last) * CLOCK.get()), now     # live time scale: the slider
+            if now - due > DT:                          # fell behind: start a new grid, no burst of short steps
+                due = now
+            # live time scale (the slider); a stalled step counts as MAX_STEP so nothing jumps to catch up
+            done, last = min(t, done + min(now - last, MAX_STEP) * CLOCK.get()), now
             s = done / t
             s = s * s * (3 - 2 * s)                     # ease in/out
             if kind == "jptp":
@@ -378,11 +434,12 @@ class Robot:
                 if j is None:
                     raise RuntimeError(f"Line through an unreachable pose at {fmt(f[:3])}")
             with self.cv:
-                self.flange, self.joints = list(f), list(j)
+                self.flange, self.joints, self.stamp = list(f), list(j), time.time() - T0
             if self.kin:
                 self.kin.show(j)
         if not self.kin:
             with self.cv:
+                self.stamp = time.time() - T0
                 self.flange = list(f1)
                 if kind == "jptp":
                     self.joints = j1
@@ -420,6 +477,7 @@ class Flow:
         self.lock = threading.Lock()
         self.server, self.sessions, self.sids = None, [], itertools.count(1)
         self.abort = False                              # a scenario reset: stop quietly, a new Flow takes over
+        self.leaving = None                             # sessions to close at the Listen node's Pass (ScriptExit)
 
     # --- the flow
     def run(self):
@@ -491,10 +549,12 @@ class Flow:
         while not self.exit_req.wait(0.1):
             if self.robot.error or self.abort:
                 return "Error"
-        self.robot.wait_idle()                          # assumption: queued moves finish before Pass
-        with self.lock:
+        with self.lock:                                 # (ScriptExit already did this; a reset's exit_req didn't)
             self.listening = False
-        self._drop_sessions()
+            ours = self.leaving if self.leaving is not None else list(self.sessions)
+            self.leaving = None
+        self.robot.wait_idle()                          # assumption: queued moves finish before Pass
+        self._drop_sessions(ours)
         CLOCK.sleep(NODE_TIME["leave"], lambda: self.abort)
         log(f"{node}: Pass -> {nxt}")
         return nxt
@@ -511,15 +571,17 @@ class Flow:
             self.server.close()
         self._drop_sessions()
 
-    def _drop_sessions(self):
+    def _drop_sessions(self, which=None):
+        """Close these sessions (default: all)."""
         with self.lock:
-            for c in self.sessions:
+            for c in list(self.sessions if which is None else which):
                 try:
                     c.shutdown(socket.SHUT_RDWR)
                     c.close()
                 except OSError:
                     pass
-            self.sessions.clear()
+                if c in self.sessions:
+                    self.sessions.remove(c)
 
     def _accept(self, server):
         while True:
@@ -599,6 +661,9 @@ class Flow:
                 self.robot.push(moves)
             if leave:
                 log("  ScriptExit()")
+                with self.lock:                         # at once, before the script can reconnect: the node stops
+                    self.listening = False              # listening, and only the sessions open now are closed at
+                    self.leaving = list(self.sessions)  # Pass (a new one is told "not listening" and retries)
                 self.exit_req.set()
         return lt.packet("TMSCT", f"{sid},OK"), then
 
@@ -776,6 +841,8 @@ class View:
                 "vars": f.vars, "gripper": f.gripper, "fast": CLOCK.get()}
 
     def _sse(self, h):
+        while self.flow is None:                        # a page reconnecting while serve still starts (RoboDK)
+            time.sleep(0.1)
         h.send_response(200)
         h.send_header("Content-Type", "text/event-stream")
         h.send_header("Cache-Control", "no-cache")
@@ -792,13 +859,22 @@ class View:
             send({"t": "hello", "flow": self.flow.name, "title": self.flow.title, "host": HOST, "fast": CLOCK.get()})
             for ev in backlog:                          # a page opened mid-run catches up
                 send(ev)
-            due = time.time()
+            # "j" (joints + the time they are for) JOINT_HZ times a second for the 3D pane, which plays them back a
+            # little behind, interpolated; "state" (everything else) 5 times a second. Both also while events queue.
+            due_j = due_s = time.time()
             while True:
-                try:
-                    send(q.get(timeout=max(0, due - time.time())))
-                except queue.Empty:
+                now = time.time()
+                if now >= due_j:
+                    at, q6 = self.robot.sample()
+                    send({"t": "j", "at": round(at, 3), "q": [round(x, 3) for x in q6]})
+                    due_j = max(due_j + 1 / JOINT_HZ, now)
+                if now >= due_s:
                     send(self.state())
-                    due = time.time() + 0.2
+                    due_s = now + 0.2
+                try:
+                    send(q.get(timeout=max(0, min(due_j, due_s) - time.time())))
+                except queue.Empty:
+                    pass
         except OSError:
             pass
         finally:
@@ -900,7 +976,8 @@ class Scenarios:
 
     def status(self):
         return {"t": "scenario", "name": self.name, "state": self.state, "code": self.code, "fast": CLOCK.get(),
-                "fast_user": CLOCK.user, "robodk": isinstance(self.kin, RoboDK), "rdk_busy": self.rdk_busy}
+                "fast_user": CLOCK.user, "robodk": isinstance(self.kin, RoboDK), "rdk_busy": self.rdk_busy,
+                "station": self.kin.station() if isinstance(self.kin, RoboDK) else None}
 
     def _set(self, state, code=None):
         self.state, self.code = state, code
@@ -915,22 +992,54 @@ class Scenarios:
                 return 409, f"{self.name} is still running: stop it first"
             if self.rdk_busy:
                 return 409, "RoboDK is reloading: wait for it"
-            self.name, self.stopped = name, False
             grips = [g.strip().lower() for g in sc.get("grip", "ok").split(",")]
             if sc.get("flow", "hande") not in FLOWS or not set(grips) <= {"ok", "fail", "loss"}:
                 return 400, f"scenario {name!r}: bad flow or grip"
-            if not CLOCK.user:                          # the page's slider, once used, wins over the scenario's 'fast'
-                CLOCK.set(float(sc.get("fast", self.a.fast)))
-            self.reset(sc.get("flow", "hande"), grips, sc.get("cell", "cell"))
-            script = (HERE.parent / sc["script"]).resolve()
-            cmd = [sys.executable, str(HERE / "tmflow_mock.py"), "run", "--listen", str(lt.LISTEN), "--slave",
-                   str(lt.SLAVE), "--view", str(self.a.view), "--points",
-                   str((HERE / sc["points"]).resolve() if sc.get("points") else Path(lt.POINTS).resolve()), str(script)] + [str(x) for x in sc.get("args", [])]
-            log(f"scenario {name}: {script.name} {' '.join(map(str, sc.get('args', [])))}")
-            self.proc = subprocess.Popen(cmd, cwd=HERE.parent, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
-                                         env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
-            self._set("running")
+            self.name, self.stopped = name, False
+            want = sc.get("station") if isinstance(self.kin, RoboDK) else None
+            if want and want != self.kin.station():     # --robodk: the scenario's station first (its own thread)
+                self.rdk_busy = True
+                self._set("starting")
+                threading.Thread(target=self._switch, args=(sc, grips, want), daemon=True).start()
+                return 200, f"loading station {want}"
+            return self._start(sc, grips)
+
+    def _switch(self, sc, grips, want):
+        """Close RoboDK's station without saving, open <want>.rdk (robot-cell/), then start the scenario. Any failure
+        fails the run: never runs in the wrong station."""
+        say = lambda state, msg: emit("rdk", state=state, msg=msg)     # noqa: E731
+        try:
+            say("switching", f"loading station '{want}'")
+            self.kin.reload(say, HERE.parent / f"{want}.rdk")
+            if self.kin.station() != want:
+                raise RuntimeError(f"{want}.rdk opened as station '{self.kin.station()}'")
+            say("ready", f"station '{want}' loaded")
+        except Exception as e:
+            log(f"scenario {sc['name']}: station switch failed: {e}")
+            say("failed", f"station '{want}': {e}")
+            emit("out", line=f"not started: RoboDK could not load station '{want}': {e}")
+            self.rdk_busy = False
+            with self.lock:
+                self._set("failed")
+            return
+        self.rdk_busy = False
+        with self.lock:
+            self._start(sc, grips)
+
+    def _start(self, sc, grips):
+        """Reset the mock for this scenario and start its script (self.lock held)."""
+        if not CLOCK.user:                              # the page's slider, once used, wins over the scenario's 'fast'
+            CLOCK.set(float(sc.get("fast", self.a.fast)))
+        self.reset(sc.get("flow", "hande"), grips, sc.get("cell", "cell"))
+        script = (HERE.parent / sc["script"]).resolve()
+        cmd = [sys.executable, str(HERE / "tmflow_mock.py"), "run", "--listen", str(lt.LISTEN), "--slave",
+               str(lt.SLAVE), "--view", str(self.a.view), "--points",
+               str((HERE / sc["points"]).resolve() if sc.get("points") else Path(lt.POINTS).resolve()), str(script)] + [str(x) for x in sc.get("args", [])]
+        log(f"scenario {sc['name']}: {script.name} {' '.join(map(str, sc.get('args', [])))}")
+        self.proc = subprocess.Popen(cmd, cwd=HERE.parent, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                                     env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
+        self._set("running")
         threading.Thread(target=self._watch, args=(self.proc,), daemon=True).start()
         return 200, "started"
 
@@ -999,7 +1108,7 @@ class Scenarios:
             time.sleep(0.05)
         old._close_server()
         VIEW.reset()
-        getattr(self.kin, "restore", lambda: None)()        # RoboDK: parts back where the server found them
+        getattr(self.kin, "restore", lambda c: None)(cell)  # RoboDK: parts at the cell's start, as the 3D pane
         robot = Robot(self.flange, self.home["joints"], self.kin, self.known, self.a.project_speed)
         if self.kin:
             self.kin.show(self.home["joints"])
@@ -1087,7 +1196,27 @@ def run_script(a):
         lt.POINTS = Path(a.points).resolve()
     path = Path(a.script)
     path = (path if path.exists() else HERE / path.name).resolve()
+    if a.view:
+        scale_sleep(a.view)
     run_traced(path, a.args, a.view)
+
+
+def scale_sleep(port):
+    """The script's own waits (QueueTag polls, the pause after ScriptExit, reconnect retries) at serve's live speed,
+    like the robot's moves: else at x20 the arm stands still for those real seconds and then rushes through a move.
+    Never shorter than SLEEP_MIN (the polls would flood the page). Speed read from serve's /scenarios."""
+    real, fast = time.sleep, [1.0]
+
+    def poll():
+        while True:
+            try:
+                with NO_PROXY.open(f"http://{HOST}:{port}/scenarios", timeout=2) as r:
+                    fast[0] = float(json.loads(r.read()).get("fast", 1)) or 1.0
+            except (OSError, ValueError):
+                pass
+            real(0.5)
+    threading.Thread(target=poll, daemon=True).start()
+    time.sleep = lambda s: real(max(s / fast[0], min(s, SLEEP_MIN)))
 
 
 def run_traced(path, args, view):

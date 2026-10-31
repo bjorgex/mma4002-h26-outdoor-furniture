@@ -140,7 +140,10 @@ export function createSim(el, { log = () => {} } = {}) {
   const heldName = () => !held.length ? null : held.length <= 3 ? held.map(([o]) => o.name).join(", ")
     : `${held[0][0].name} + ${held.length - 1} parts`;
   function settle() {                               // the arm at the newest joint sample (it stands still at a GRIP /
-    shown = target.slice(); last = target.slice();   // RELEASE), also when the render loop is throttled (hidden tab)
+    if (buf.length) {                                // RELEASE), also when the render loop is throttled (hidden tab)
+      const [at, q] = buf[buf.length - 1];
+      shown = q.slice(); floorAt = at;               // playback never goes back before this
+    }
     shown.forEach((a, i) => joints[i].rotation.z = a * deg);
     L6.updateWorldMatrix(true, false);
   }
@@ -178,25 +181,51 @@ export function createSim(el, { log = () => {} } = {}) {
     held = [];
   }
 
-  // joint motion: the stream comes at 5 Hz, so ease towards the newest sample
-  let shown = [0, 0, 90, 0, 90, 0], target = shown.slice(), last = shown.slice(), tLast = 0, period = 200;
-  function pushJoints(q) {
-    last = shown.slice(); target = q.slice();
-    const now = performance.now(); if (tLast) period = Math.min(500, Math.max(20, now - tLast)); tLast = now;
+  // joint motion: "j" samples (25 Hz, each with the mock's time "at" the joints are for) played back `delay` s behind
+  // the newest, interpolated between the two samples around the play time: the motion the mock computed, at its own
+  // pace, whatever the network or the speed slider does - no easing lag, no catch-up jumps. Until the first "j"
+  // (an older mock), the 5 Hz "state" joints feed the same buffer.
+  // The delay adapts to how late samples come (a busy PC delivers them in bursts): the late ones' excess over the
+  // lowest delay, decaying over ~10 s, plus a margin; 0.1 .. 0.6 s.
+  let shown = [0, 0, 90, 0, 90, 0], buf = [], off = null, jSeen = false, floorAt = -Infinity, fast = 1;
+  let jitter = 0.1, delay = 0.15;
+  function pushJoints(at, q) {
+    const now = performance.now() / 1000, l = now - at;
+    off = off === null || l < off ? l : off + (l - off) * 0.01;   // clock offset: lowest delay seen, slowly relaxed
+    jitter = Math.max(l - off, jitter * 0.996);
+    delay = Math.min(0.6, Math.max(0.1, jitter + 0.05));
+    const end = buf.length ? buf[buf.length - 1][0] : -Infinity;
+    if (at <= end) { if (at < end - 1) { buf = []; floorAt = -Infinity; } else return; }   // repeat, or a restarted mock
+    buf.push([at, q.slice()]);
+    while (buf.length > 2 && buf[1][0] < at - 3) buf.shift();       // hidden tab: no render loop pruning
+  }
+  function playback() {                              // the joints at play time, from buf
+    if (!buf.length || off === null) return shown;
+    const tr = Math.max(floorAt, performance.now() / 1000 - off - delay);
+    while (buf.length > 2 && buf[1][0] <= tr) buf.shift();         // keep one sample at or before tr
+    const [a0, q0] = buf[0];
+    if (tr <= a0 || buf.length === 1) return q0;
+    const [a1, q1] = buf[1];
+    const s = Math.min(1, (tr - a0) / (a1 - a0));
+    return q0.map((a, i) => a + (q1[i] - a) * s);
   }
   const gripperGap = text => /^closed/.test(text) ? GAP_CLOSED : text === "open" ? GAP_OPEN : null;
 
   function handle(ev) {
     switch (ev.t) {
+      case "hello": off = null; buf = []; floorAt = -Infinity; jitter = 0.1; if (ev.fast) fast = ev.fast; break;   // (re)connected
+      case "j": jSeen = true; pushJoints(ev.at, ev.q); break;
+      case "speed": fast = ev.fast || fast; break;
       case "state": {
-        pushJoints(ev.joints);
+        if (!jSeen) pushJoints(ev.at, ev.joints);
+        if (ev.fast) fast = ev.fast;
         const g = gripperGap(ev.gripper);
         if (g !== null && performance.now() - gapT0 > gapDur && Math.abs(g - gap) > .5) animateGrip(g, .3);
         break;
       }
       case "node":
-        if (ev.kind === "grip") animateGrip(GAP_CLOSED, NODE_SECS.grip);
-        if (ev.kind === "release" || ev.kind === "set") { animateGrip(GAP_OPEN, NODE_SECS[ev.kind]); drop(); }
+        if (ev.kind === "grip") animateGrip(GAP_CLOSED, NODE_SECS.grip / fast);   // the node's time at this speed
+        if (ev.kind === "release" || ev.kind === "set") { animateGrip(GAP_OPEN, NODE_SECS[ev.kind] / fast); drop(); }
         break;
       case "grip": if (ev.result === "ok") grab(); else carry = null; break;
       case "carry":                                  // from the script (POST /step): what the next GRIP takes along
@@ -221,12 +250,11 @@ export function createSim(el, { log = () => {} } = {}) {
   }
   new ResizeObserver(resize).observe(el); resize();
   renderer.setAnimationLoop(() => {
-    const s = Math.min(1, (performance.now() - tLast) / period);
-    shown = last.map((a, i) => a + (target[i] - a) * s);
+    shown = playback();
     shown.forEach((a, i) => joints[i].rotation.z = a * deg);
     const u = Math.min(1, (performance.now() - gapT0) / gapDur);
     gap = gapFrom + (gapTo - gapFrom) * u; setGap(gap);
     controls.update(); renderer.render(scene, camera);
   });
-  return { handle, setView, scene, joints, get held() { return heldName(); } };
+  return { handle, setView, scene, joints, get held() { return heldName(); }, get delay() { return delay; } };
 }
