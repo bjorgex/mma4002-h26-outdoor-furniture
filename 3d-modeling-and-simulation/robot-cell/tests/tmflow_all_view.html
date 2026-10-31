@@ -248,7 +248,15 @@ body { padding: 0; overflow: hidden; }
 .scen .state { font: 600 12px var(--tm-font); padding: 1px 9px; border-radius: 3px; background: #4a5d64; color: #fff; white-space: nowrap; }
 .scen .state.running, .scen .state.starting { background: var(--tm-sel); color: var(--tm-ink); }
 .scen .state.finished { background: var(--tm-green); color: var(--tm-ink); }
-.scen .state.failed { background: var(--tm-fail); } .scen .state.stopped { background: var(--tm-orange); color: var(--tm-ink); }
+.scen .state.failed, .scen .state.rdk-failed { background: var(--tm-fail); }
+.scen .state.rdk-closing, .scen .state.rdk-loading, .scen .state.rdk-homing { background: var(--tm-sel); color: var(--tm-ink); }
+.scen .state.rdk-ready { background: var(--tm-green); color: var(--tm-ink); } .scen .state.stopped { background: var(--tm-orange); color: var(--tm-ink); }
+/* speed: log slider + number, live (POST /speed), synced from the stream so every open tab agrees */
+.speed { display: inline-flex; gap: 6px; align-items: center; font: 12.5px var(--tm-font); color: #9fb0b7; white-space: nowrap; }
+.speed input[type=range] { width: 120px; accent-color: var(--tm-green); }
+.tm-skin .speed input[type=number] { width: 52px; font: 12.5px var(--tm-font); background: #fff; color: var(--tm-ink);
+  border: 1px solid #4a5d64; border-radius: 3px; padding: 1px 3px; }
+.speed b { color: #fff; font-weight: 400; }
 .tm-skin .out { margin: 0 10px 10px; border: 1px solid var(--tm-frame); }
 .tm-skin .out summary { cursor: pointer; font: 600 12px var(--tm-font); background: #eef0f1; padding: 5px 10px; }
 .tm-skin .out pre { margin: 0; padding: 6px 10px; max-height: 240px; overflow: auto; font: 12px/1.45 Consolas, "IBM Plex Mono", monospace;
@@ -283,7 +291,12 @@ body { padding: 0; overflow: hidden; }
     <div class="right">
       <span class="scen" id="scen" hidden><select id="sc-sel" aria-label="Scenario"></select>
         <button class="btn" id="sc-run">▶ Run</button><button class="btn" id="sc-stop" disabled>■ Stop</button>
-        <span class="state" id="sc-state">idle</span></span>
+        <span class="state" id="sc-state">idle</span>
+        <button class="btn" id="rdk-reset" hidden title="Close RoboDK's station WITHOUT saving, reload its .rdk from disk, robot to home">⟲ Reset RoboDK</button>
+        <span class="state" id="rdk-state" hidden></span></span>
+      <label class="speed" title="Simulation speed, × real time (0.25 to 50). Applies at once, also to a move in progress; once set here it wins over a scenario's own speed">Speed
+        <input type="range" id="sp-range" min="0" max="8" step="1" value="2" aria-label="Simulation speed">
+        <input type="number" id="sp-num" min="0.25" max="50" step="any" value="1" aria-label="Simulation speed, × real time"><b>×</b></label>
       <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
         <button class="btn" data-layout="cols">3 columns</button></span>
       <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)">Show:
@@ -717,7 +730,8 @@ function scState(s) {
   el.textContent = (SC_TEXT[s.state] || s.state) + (s.state === 'failed' && s.code !== null && s.code !== undefined ? ` (exit ${s.code})` : '');
   el.title = s.name || '';
   const busy = s.state === 'running';
-  $('#sc-sel').disabled = $('#sc-run').disabled = busy; $('#sc-stop').disabled = !busy;
+  $('#sc-sel').disabled = $('#sc-run').disabled = busy || rdkBusy; $('#sc-stop').disabled = !busy;
+  scBusy = busy; $('#rdk-reset').disabled = busy || rdkBusy;
   if (s.name && busy) $('#sc-sel').value = s.name;
 }
 async function scPost(path, body) {
@@ -731,10 +745,58 @@ fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
   if (!j) return;                                        // a mock from before the scenarios: no controls
   $('#sc-sel').innerHTML = j.scenarios.map(s => `<option value="${esc(s.name)}">${esc(s.label || s.name)}</option>`).join('');
   try { const last = localStorage.getItem('tm-all-scenario'); if (j.scenarios.some(s => s.name === last)) $('#sc-sel').value = last; } catch (e) {}
-  $('#scen').hidden = false; scState(j);
+  $('#rdk-reset').hidden = !j.robodk;                    // only with serve --robodk
+  rdkBusy = !!j.rdk_busy; $('#scen').hidden = false; scState(j); spShow(j.fast);
 }).catch(() => {});
 $('#sc-run').onclick = () => { try { localStorage.setItem('tm-all-scenario', $('#sc-sel').value); } catch (e) {} scPost('/scenario/run', { name: $('#sc-sel').value }); };
 $('#sc-stop').onclick = () => scPost('/scenario/stop');
+// ---- speed: slider steps 0.25 … 50 (log), the number box takes any value in between ------------------------
+const SP = [0.25, 0.5, 1, 2, 3, 5, 10, 20, 50];
+let spHeld = false;                                      // dragging / typing: the stream doesn't move the controls
+function spIndex(x) {                                    // nearest step on a log scale
+  let best = 0; SP.forEach((v, i) => { if (Math.abs(Math.log(v / x)) < Math.abs(Math.log(SP[best] / x))) best = i; });
+  return best;
+}
+function spShow(x) {
+  if (spHeld || typeof x !== 'number' || !isFinite(x)) return;
+  $('#sp-range').value = spIndex(x);
+  if (document.activeElement !== $('#sp-num')) $('#sp-num').value = +x.toFixed(2);
+}
+async function spPost(x) {
+  x = Math.min(50, Math.max(0.25, x));
+  try {
+    const r = await fetch('/speed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fast: x }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { spHeld = false; spShow(j.fast); }
+  } catch (e) {}
+}
+$('#sp-range').addEventListener('pointerdown', () => spHeld = true);
+['pointerup', 'pointercancel'].forEach(t => $('#sp-range').addEventListener(t, () => setTimeout(() => spHeld = false, 300)));
+$('#sp-range').addEventListener('input', () => { $('#sp-num').value = SP[+$('#sp-range').value]; });
+$('#sp-range').addEventListener('change', () => { spHeld = false; spPost(SP[+$('#sp-range').value]); });
+$('#sp-num').addEventListener('change', () => { const x = parseFloat($('#sp-num').value); if (isFinite(x) && x > 0) spPost(x); });
+$('#sp-num').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sp-num').blur(); });
+
+// ---- Reset RoboDK (serve --robodk): close the station without saving, reload the .rdk, robot home ----------
+let scBusy = false, rdkBusy = false;
+const RDK_TEXT = { closing: 'RoboDK: closing…', loading: 'RoboDK: loading .rdk…', homing: 'RoboDK: homing…', ready: 'RoboDK reloaded ✓', failed: 'RoboDK reset failed ✗' };
+function rdkState(state, msg) {
+  const el = $('#rdk-state'); el.hidden = false; el.className = 'state rdk-' + state;
+  el.textContent = RDK_TEXT[state] || state; el.title = msg || '';
+  rdkBusy = !/^(ready|failed)$/.test(state);
+  $('#rdk-reset').disabled = scBusy || rdkBusy; $('#sc-run').disabled = $('#sc-sel').disabled = scBusy || rdkBusy;
+}
+$('#rdk-reset').onclick = async () => {
+  if (!confirm('Close the RoboDK station WITHOUT saving and reload it from disk?')) return;
+  rdkState('closing', 'asking the mock…');
+  try {
+    const r = await fetch('/robodk/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) rdkState('failed', j.msg || `error ${r.status}`);   // 202: progress follows as "rdk" events
+    if (!r.ok) $('#rdk-state').textContent = 'RoboDK: ' + (j.msg || `error ${r.status}`);
+  } catch (e) { rdkState('failed', 'mock not reachable'); }
+};
+
 let outLines = [];
 function outLine(line) {
   outLines.push(line); if (outLines.length > 600) outLines = outLines.slice(-500);
@@ -847,6 +909,8 @@ loadDiagram().then(() => {
     if (ev.t === 'reset') resetPage(ev);
     else if (ev.t === 'scenario') scState(ev);
     else if (ev.t === 'out') outLine(ev.line);
+    else if (ev.t === 'rdk') rdkState(ev.state, ev.msg);
+    if ('fast' in ev && /^(speed|state|scenario|hello)$/.test(ev.t)) spShow(ev.fast);
     handlePanes(ev); handleSteps(ev); plain(ev);
     if (sim) sim.handle(ev);
   };
