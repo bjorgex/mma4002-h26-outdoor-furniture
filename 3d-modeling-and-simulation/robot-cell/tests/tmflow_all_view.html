@@ -251,6 +251,25 @@ body { padding: 0; overflow: hidden; }
 .scen .state.failed, .scen .state.rdk-failed { background: var(--tm-fail); }
 .scen .state.rdk-switching, .scen .state.rdk-closing, .scen .state.rdk-loading, .scen .state.rdk-homing { background: var(--tm-sel); color: var(--tm-ink); }
 .scen .state.rdk-ready { background: var(--tm-green); color: var(--tm-ink); } .scen .state.stopped { background: var(--tm-orange); color: var(--tm-ink); }
+/* loading: Run clicked → first step / first robot motion. Spinner in Run, lime→blue bar under the header,
+   the badge names the phase; once running a small pulsing dot stays in the badge */
+.tm-skin .top { position: relative; }
+.tm-skin #sc-run.loading, .tm-skin #sc-run.loading:disabled { opacity: 1; border-color: var(--tm-sel); color: var(--tm-sel); cursor: progress; }
+.tm-skin #sc-run .spin { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: -1px; border-radius: 50%;
+  border: 2px solid #4a5d64; border-top-color: var(--tm-sel); border-right-color: var(--tm-sel); animation: tm-spin .75s linear infinite; }
+#sc-load { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; overflow: hidden; background: #ffffff1a; border-radius: 0 0 3px 3px; pointer-events: none; }
+#sc-load[hidden] { display: none; }
+#sc-load::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 35%;
+  background: linear-gradient(90deg, transparent, var(--tm-sel) 30%, var(--tm-in) 85%, transparent); animation: tm-load 1.4s ease-in-out infinite; }
+.scen .state.live::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; vertical-align: 1px;
+  border-radius: 50%; background: var(--tm-in); animation: tm-pulse 1.1s ease-in-out infinite; }
+@keyframes tm-spin { to { transform: rotate(360deg); } }
+@keyframes tm-load { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+@keyframes tm-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.7); } }
+@media (prefers-reduced-motion: reduce) {
+  .tm-skin #sc-run .spin, #sc-load::before, .scen .state.live::before { animation: none; }
+  #sc-load::before { width: 100%; background: linear-gradient(90deg, var(--tm-sel), var(--tm-in)); }
+}
 /* speed: log slider + number, live (POST /speed), synced from the stream so every open tab agrees */
 .speed { display: inline-flex; gap: 6px; align-items: center; font: 12.5px var(--tm-font); color: #9fb0b7; white-space: nowrap; }
 .speed input[type=range] { width: 120px; accent-color: var(--tm-green); }
@@ -303,6 +322,7 @@ body { padding: 0; overflow: hidden; }
         <button class="btn" data-pane="p-tm">TMflow</button><button class="btn" data-pane="p-py">Bridge</button><button class="btn" data-pane="p-sim">3D</button></span>
       <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
     </div>
+    <div id="sc-load" role="progressbar" aria-label="Starting the scenario" hidden></div>
   </header>
 
   <section class="panes" id="panes">
@@ -733,13 +753,53 @@ function scState(s) {
   $('#sc-sel').disabled = $('#sc-run').disabled = busy || rdkBusy; $('#sc-stop').disabled = !busy;
   scBusy = busy; $('#rdk-reset').disabled = busy || rdkBusy;
   if (s.name && busy) $('#sc-sel').value = s.name;
+  if (loadPhase) {                                       // Run clicked here: name the phase until real progress
+    if (!busy) loadEnd();
+    else {
+      const ph = s.state === 'starting' ? 'station' : 'connecting';
+      if (ph !== loadPhase) { loadPhase = ph; loadQ = null; }
+      el.textContent = LOAD_TEXT[loadPhase]; $('#sc-run').disabled = true;
+    }
+  }
+  el.classList.toggle('live', !loadPhase && s.state === 'running');
+}
+// ---- loading state: from the click on Run to the first step event or the first robot motion ----------------
+const RUN_LABEL = $('#sc-run').textContent;
+const LOAD_TEXT = { starting: 'starting…', station: 'loading station…', connecting: 'connecting…' };
+let loadPhase = null, loadQ = null;                      // loadQ: joints when "connecting" began
+function loadSet(phase) {
+  loadPhase = phase; loadQ = null;
+  const b = $('#sc-run'); b.classList.add('loading'); b.disabled = true; b.setAttribute('aria-busy', 'true');
+  b.innerHTML = '<span class="spin" aria-hidden="true"></span>Starting…';
+  $('#sc-load').hidden = false;
+  const el = $('#sc-state'); el.className = 'state starting'; el.textContent = LOAD_TEXT[phase];
+}
+function loadEnd() {
+  if (!loadPhase) return;
+  loadPhase = loadQ = null;
+  const b = $('#sc-run'); b.classList.remove('loading'); b.removeAttribute('aria-busy'); b.textContent = RUN_LABEL;
+  b.disabled = scBusy || rdkBusy;
+  $('#sc-load').hidden = true;
+  const el = $('#sc-state'), running = el.classList.contains('running');
+  if (running) el.textContent = SC_TEXT.running;
+  el.classList.toggle('live', running);
+}
+function loadProgress(ev) {
+  if (!loadPhase) return;
+  if (ev.t === 'step') return loadEnd();
+  if (loadPhase !== 'connecting') return;
+  if (ev.t === 'move' || (ev.t === 'state' && ev.busy)) return loadEnd();
+  if (ev.t === 'j' && Array.isArray(ev.q)) {
+    if (!loadQ) loadQ = ev.q;
+    else if (ev.q.some((x, i) => Math.abs(x - loadQ[i]) > 0.05)) loadEnd();
+  }
 }
 async function scPost(path, body) {
   try {
     const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
     const j = await r.json().catch(() => ({}));
-    if (r.ok) scState(j); else { $('#sc-state').className = 'state failed'; $('#sc-state').textContent = j.msg || `error ${r.status}`; }
-  } catch (e) { $('#sc-state').className = 'state failed'; $('#sc-state').textContent = 'mock not reachable'; }
+    if (r.ok) scState(j); else { loadEnd(); $('#sc-state').className = 'state failed'; $('#sc-state').textContent = j.msg || `error ${r.status}`; }
+  } catch (e) { loadEnd(); $('#sc-state').className = 'state failed'; $('#sc-state').textContent = 'mock not reachable'; }
 }
 fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
   if (!j) return;                                        // a mock from before the scenarios: no controls
@@ -748,7 +808,7 @@ fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
   $('#rdk-reset').hidden = !j.robodk;                    // only with serve --robodk
   rdkBusy = !!j.rdk_busy; $('#scen').hidden = false; scState(j); spShow(j.fast);
 }).catch(() => {});
-$('#sc-run').onclick = () => { try { localStorage.setItem('tm-all-scenario', $('#sc-sel').value); } catch (e) {} scPost('/scenario/run', { name: $('#sc-sel').value }); };
+$('#sc-run').onclick = () => { try { localStorage.setItem('tm-all-scenario', $('#sc-sel').value); } catch (e) {} loadSet('starting'); scPost('/scenario/run', { name: $('#sc-sel').value }); };
 $('#sc-stop').onclick = () => scPost('/scenario/stop');
 // ---- speed: slider steps 0.25 … 50 (log), the number box takes any value in between ------------------------
 const SP = [0.25, 0.5, 1, 2, 3, 5, 10, 20, 50];
@@ -913,6 +973,7 @@ loadDiagram().then(() => {
     if ('fast' in ev && /^(speed|state|scenario|hello)$/.test(ev.t)) spShow(ev.fast);
     handlePanes(ev); handleSteps(ev); plain(ev);
     if (sim) sim.handle(ev);
+    loadProgress(ev);
   };
 });
 </script>
