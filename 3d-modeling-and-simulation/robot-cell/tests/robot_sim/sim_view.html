@@ -135,8 +135,10 @@ function shade(root, opts = {}) {
     if (/^(frame|Table)/.test(o.name)) { o.material.transparent = true; o.material.opacity = o.name === "Table" ? .9 : .8; }
   } });
 }
-loader.load(base + "cell.glb", g => { shade(g.scene, { flat: true }); scene.add(g.scene); window.__sim.cell = g.scene; },
-  undefined, e => logLine("bad", "cell.glb not loaded: " + e.message));
+// ?cell=cell_v5: the v5 start (guide on base A); default cell.glb (v4 start)
+const cellFile = (new URLSearchParams(location.search).get("cell") || "cell").replace(/[^\w]/g, "") + ".glb";
+loader.load(base + cellFile, g => { shade(g.scene, { flat: true }); scene.add(g.scene); window.__sim.cell = g.scene; },
+  undefined, e => logLine("bad", cellFile + " not loaded: " + e.message));
 
 // ---- robot from simple shapes ------------------------------------------------------------------------
 const white = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: .5 });

@@ -1,3 +1,4 @@
 logged,version,source,instructions,cycle_s,path_m,collisions,fingertips_out_mm,guide to A,planks,guide to B,frame 1 + planks,inner half out,outer half out,bench to AMR,home,method
 2026-10-17T04:26:00,v3,measure,255,239.8,15.93,,,32.5,124.5,34.8,46.4,,,,1.6,"one double-sided guide B->A->B, frame 1 + planks flipped into frame 2; guide stays trapped, no hand-over"
 2026-10-17T04:26:00,v4,measure,342,345.1,21.46,,,33.7,124.5,35.7,46.4,39.2,34.5,27.7,3.4,"v3 with the guide cut in two halves (taken out onto a pad), bench set down on the AMR"
+2026-10-31T14:50:06,v5,estimate,314,306.4,18.4,full check not run (RoboDK out of memory); new move Home->plank3 offline: gripper >=130 mm clear,,,,,,,,,,"v4 starting with the guide already on base A (its stage 1, guide B->A, gone): planks first. ESTIMATE without RoboDK: v4 measured 345.1 s - stage 1 33.7 s - 5.0 s joint moves (J6 chain from Home); replace with python cycle_times.py"

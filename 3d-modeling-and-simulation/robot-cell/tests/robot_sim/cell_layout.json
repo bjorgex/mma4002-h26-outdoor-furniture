@@ -1,5 +1,6 @@
 {
  "source": "bench_cell_v4.py build() poses + bench_layout.json work frame; meshes jig_parts/, benchV1_parts/",
+ "station": "Bench V1 cell v4",
  "units": "mm, robot base frame (z up)",
  "tip_mm": 160.0,
  "egp": [

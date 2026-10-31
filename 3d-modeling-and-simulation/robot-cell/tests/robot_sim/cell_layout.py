@@ -1,6 +1,7 @@
 """The version-4 bench cell ("Bench V1 cell v4") as web meshes in the robot base frame, for sim_view.html.
 
-    python robot_cell/tests/robot_sim/cell_layout.py      (shared venv: robodk's robomath + trimesh)
+    python robot_cell/tests/robot_sim/cell_layout.py              (shared venv: robodk's robomath + trimesh)
+    python robot_cell/tests/robot_sim/cell_layout.py --cell v5    v5 start: the guide on base A (bench_cell_v5.py)
 
 No RoboDK and no .rdk needed: this repeats bench_cell_v4.py's build() - the script the station is built
 from - with the same meshes and poses: the STLs in jig_parts/ (jig_parts.py, jig_parts_v4.py) and
@@ -10,8 +11,11 @@ frame (plate corners logged on our robot) * GROUND_IN_WORK. Imports bench_cell_v
 (build(), which talks to RoboDK, is not called). Parts are at their start positions: planks in the plank
 jig, frame 1 + pieces in base A, frame 2 + pieces and the guide on base B.
 Out: cell.glb (one node per object, named as in the station, mm, robot base frame) and cell_layout.json
-(the same objects: name, colour, pose, STL bounds).
+(the same objects: name, colour, pose, STL bounds); --cell v5: cell_v5.glb and cell_layout_v5.json, the same
+cell with the guide's halves starting on base A (bench_cell_v5.GUIDE_ON_A: v4 after its stage 1).
+The mock's 3D pane loads the one named by the scenario's "cell" (tests/scenarios.json).
 """
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -23,6 +27,7 @@ HERE = Path(__file__).resolve().parent
 CELL = HERE.parents[1]
 sys.path.insert(0, str(CELL))
 import bench_cell_v4 as v4                                # noqa: E402
+import bench_cell_v5 as v5                                # noqa: E402  (same constants, the guide starts on A)
 from robodk.robomath import Mat, eye, pi, rotx, rotz, transl   # noqa: E402
 
 
@@ -30,7 +35,10 @@ def to_np(m):
     return np.array([[m[i, j] for j in range(4)] for i in range(4)])
 
 
-def main():
+def main(cell="v4"):
+    v = v5 if cell == "v5" else v4
+    guide = v4.BASE_A * v5.GUIDE_ON_A if cell == "v5" else v4.BASE_B * v4.GUIDE_ON_B
+    glb, layout = ("cell_v5.glb", "cell_layout_v5.json") if cell == "v5" else ("cell.glb", "cell_layout.json")
     asm = {p["name"]: Mat(p["pose"]) for p in json.loads((v4.PARTS / "assembly.json").read_text())["parts"]}
     gb = Mat(v4.LAYOUT["work_frame"]) * v4.GROUND_IN_WORK          # ground base in robot base coordinates
     sx, sy, st = v4.GROUND_SIZE
@@ -80,16 +88,19 @@ def main():
         row, col = divmod(k - 1, 3)
         start = v4.PLANK_JIG * transl(v4.PITCH * (col + 0.5), v4.PITCH * (row + 0.5) + 2.5, 125) * rotx(pi / 2)
         add(f"plank{k}", "plank", plank, start, wood)
-    add("Guide inner", "guide", stl(v4.JIG / "guide_inner.stl"), v4.BASE_B * v4.GUIDE_ON_B, [0.95, 0.6, 0.15, 1])
-    add("Guide outer", "guide", stl(v4.JIG / "guide_outer.stl"), v4.BASE_B * v4.GUIDE_ON_B, guide_c)
+    add("Guide inner", "guide", stl(v4.JIG / "guide_inner.stl"), guide, [0.95, 0.6, 0.15, 1])
+    add("Guide outer", "guide", stl(v4.JIG / "guide_outer.stl"), guide, guide_c)
 
-    (HERE / "cell.glb").write_bytes(scene.export(file_type="glb"))
-    (HERE / "cell_layout.json").write_text(json.dumps(
-        {"source": "bench_cell_v4.py build() poses + bench_layout.json work frame; meshes jig_parts/, benchV1_parts/",
+    (HERE / glb).write_bytes(scene.export(file_type="glb"))
+    (HERE / layout).write_text(json.dumps(
+        {"source": f"{v.__name__}.py build() poses + bench_layout.json work frame; meshes jig_parts/, benchV1_parts/",
+         "station": v.STATION,
          "units": "mm, robot base frame (z up)", "tip_mm": v4.TIP, "egp": v4.EGP, "table_h": v4.TABLE_H,
          "objects": info}, indent=1))
-    print(f"{len(info)} objects -> cell.glb ({(HERE / 'cell.glb').stat().st_size / 1e3:.0f} kB), cell_layout.json")
+    print(f"{len(info)} objects -> {glb} ({(HERE / glb).stat().st_size / 1e3:.0f} kB), {layout}")
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--cell", choices=["v4", "v5"], default="v4", help="v4 (default): guide on base B; v5: on base A")
+    main(ap.parse_args().cell)

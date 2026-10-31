@@ -7,6 +7,8 @@
   {"name": "bridge-pickplace-air", "label": "hande_bridge pickplace --air", "script": "tests/hande_bridge.py", "args": ["pickplace", "--air"], "flow": "hande", "grip": "loss", "fast": 2},
   {"name": "bridge-demo-above", "label": "hande_bridge demo --above 50", "script": "tests/hande_bridge.py", "args": ["demo", "--above", "50"], "flow": "hande", "grip": "ok", "fast": 2},
   {"name": "bridge-check-wrong-flow", "label": "hande_bridge check on the wrong flow (testjb2)", "script": "tests/hande_bridge.py", "args": ["check"], "flow": "testjb2", "grip": "ok", "fast": 2},
-  {"name": "v4-full", "label": "Bench V1 v4: full assembly", "script": "tests/v4_replay.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2},
-  {"name": "v4-full-fast", "label": "Bench V1 v4: full assembly (fast)", "script": "tests/v4_replay.py", "args": ["--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6}
+  {"name": "v4-full", "label": "Bench V1 v4: full assembly", "script": "tests/v4_replay.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell"},
+  {"name": "v4-full-fast", "label": "Bench V1 v4: full assembly (fast)", "script": "tests/v4_replay.py", "args": ["--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell"},
+  {"name": "v5-full", "label": "Bench V1 v5: full assembly (guide starts on A)", "script": "tests/v4_replay.py", "args": ["--cell", "v5"], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell_v5"},
+  {"name": "v5-full-fast", "label": "Bench V1 v5: full assembly (guide starts on A, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v5", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v5"}
 ]

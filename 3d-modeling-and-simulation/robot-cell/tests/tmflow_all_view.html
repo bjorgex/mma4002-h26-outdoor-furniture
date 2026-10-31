@@ -191,7 +191,11 @@ body { padding: 0; overflow: hidden; }
   padding: 2px 9px; cursor: pointer; line-height: 1.5; white-space: nowrap; }
 .tm-skin .btn:hover { border-color: var(--tm-green); }
 .tm-skin .btn.on { background: var(--tm-green); border-color: var(--tm-green); color: var(--tm-bar); }
-.tm-skin .btn.max { font-size: 14px; padding: 0 8px; }
+.tm-skin .btn.max, .tm-skin .btn.min { font-size: 14px; padding: 0 8px; }
+/* pane show/hide: header chips (on = shown) + the pane bar's — button */
+.tm-skin .show-panes { display: inline-flex; gap: 4px; align-items: center; font: 12px var(--tm-font); }
+.tm-skin .show-panes .btn:not(.on) { opacity: .6; text-decoration: line-through; }
+.tm-skin .pane.hid { display: none !important; }
 /* maximised pane: the whole window */
 .tm-skin .pane.max { position: fixed; inset: 8px; z-index: 20; box-shadow: 0 0 0 9999px #10232a99; }
 .tm-skin .pane.max #flow svg { max-height: none; }
@@ -282,6 +286,8 @@ body { padding: 0; overflow: hidden; }
         <span class="state" id="sc-state">idle</span></span>
       <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
         <button class="btn" data-layout="cols">3 columns</button></span>
+      <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)">Show:
+        <button class="btn" data-pane="p-tm">TMflow</button><button class="btn" data-pane="p-py">Bridge</button><button class="btn" data-pane="p-sim">3D</button></span>
       <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
     </div>
   </header>
@@ -289,6 +295,7 @@ body { padding: 0; overflow: hidden; }
   <section class="panes" id="panes">
     <div class="panel pane" id="p-tm">
       <div class="tm-bar"><span>Display Board</span><b>Flow</b><span>TMflow + robot (mock)</span><span class="sp"></span>
+        <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div class="say" id="tm-say">waiting for the project to start<small></small></div>
       <div class="scroll">
@@ -302,6 +309,7 @@ body { padding: 0; overflow: hidden; }
     <div class="panel pane" id="p-py">
       <div class="tm-bar"><b>Bridge</b><span>Python script ↔ robot</span><span class="sp"></span>
         <button class="btn" id="details-btn" title="Listen-node sequence, board and packets">Details</button>
+        <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div class="banner idle" id="banner">
         <div class="count"><span id="b-count">Waiting for the script</span><span class="badge" id="air" hidden>dry run: in the air, nothing gripped</span></div>
@@ -328,6 +336,7 @@ body { padding: 0; overflow: hidden; }
       <div class="tm-bar"><b>Simulator</b><span>TM5-900 + v4 cell (robot_sim)</span><span class="sp"></span>
         <button class="btn" data-cam="iso">3D</button><button class="btn" data-cam="top">Top</button>
         <button class="btn" data-cam="side">Side</button>
+        <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div id="sim"><div class="note" id="sim-note">loading the 3D view…</div>
         <div class="hud" id="hud" hidden></div></div>
@@ -774,6 +783,59 @@ document.querySelectorAll('.pane .btn.max').forEach(b => b.onclick = () => {
   if (!on) document.querySelectorAll('.pane .btn.max').forEach(x => x.textContent = '□');
 });
 addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.pane.max .btn.max').forEach(b => b.click()); });
+
+// ---- show / hide panes (remembered per browser, separate for /all and /all?demo) --------------------------
+// The 3D canvas follows its box through the ResizeObserver in sim_scene.js (as for maximise), so showing the
+// pane again or reflowing the grid repaints it at the right size.
+const PANES = DEMO ? ['p-tm', 'p-py'] : ['p-tm', 'p-py', 'p-sim'];
+const AREA = { 'p-tm': 'tm', 'p-py': 'py', 'p-sim': 'sim' };
+const PANES_KEY = DEMO ? 'tm-all-hidden-demo' : 'tm-all-hidden';
+let hiddenPanes = new Set();
+try { (JSON.parse(localStorage.getItem(PANES_KEY) || '[]') || []).forEach(id => { if (PANES.includes(id)) hiddenPanes.add(id); }); } catch (e) {}
+if (hiddenPanes.size >= PANES.length) hiddenPanes.clear();
+if (DEMO) $('[data-pane="p-sim"]').hidden = true;
+function gridFor(vis) {
+  const ps = $('#panes').style;
+  if (vis.length === PANES.length && !matchMedia('(max-width: 1000px)').matches) {   // all shown: the CSS layouts
+    ps.gridTemplateColumns = ps.gridTemplateRows = ps.gridTemplateAreas = ''; return;
+  }
+  const a = vis.map(id => AREA[id]), fr = id => id === 'p-sim' ? 'minmax(0, 1.15fr)' : 'minmax(0, 1fr)';
+  if (matchMedia('(max-width: 1000px)').matches) {                               // narrow: one column
+    ps.gridTemplateColumns = 'minmax(0, 1fr)'; ps.gridTemplateRows = 'none'; ps.gridTemplateAreas = a.map(x => `"${x}"`).join(' ');
+  } else if (DEMO || $('#panes').classList.contains('cols') || !vis.includes('p-sim') || vis.length === 1) {
+    ps.gridTemplateColumns = vis.map(fr).join(' '); ps.gridTemplateRows = 'minmax(0, 1fr)'; ps.gridTemplateAreas = `"${a.join(' ')}"`;
+  } else {                                                                       // stacked: TMflow or Python over 3D
+    ps.gridTemplateColumns = 'minmax(0, 1fr)'; ps.gridTemplateRows = 'minmax(0, 1.15fr) minmax(0, 1fr)';
+    ps.gridTemplateAreas = a.map(x => `"${x}"`).join(' ');
+  }
+}
+function applyPanes() {
+  PANES.forEach(id => {
+    const p = document.getElementById(id), hid = hiddenPanes.has(id);
+    if (hid && p.classList.contains('max')) p.querySelector('.btn.max').click();
+    p.classList.toggle('hid', hid);
+  });
+  document.querySelectorAll('[data-pane]').forEach(b => {
+    const shown = !hiddenPanes.has(b.dataset.pane), last = shown && PANES.length - hiddenPanes.size <= 1;
+    b.classList.toggle('on', shown); b.disabled = last;
+    b.title = last ? 'the last pane stays shown' : (shown ? 'hide' : 'show') + ' this pane';
+  });
+  document.querySelectorAll('.pane .btn.min').forEach(b => b.disabled = PANES.length - hiddenPanes.size <= 1);
+  gridFor(PANES.filter(id => !hiddenPanes.has(id)));
+}
+function setPane(id, show) {
+  if (!PANES.includes(id)) return;
+  if (show) hiddenPanes.delete(id);
+  else if (PANES.length - hiddenPanes.size > 1) hiddenPanes.add(id);
+  try { localStorage.setItem(PANES_KEY, JSON.stringify([...hiddenPanes])); } catch (e) {}
+  applyPanes();
+}
+document.querySelectorAll('[data-pane]').forEach(b => b.onclick = () => setPane(b.dataset.pane, hiddenPanes.has(b.dataset.pane)));
+document.querySelectorAll('.pane .btn.min').forEach(b => b.onclick = () => setPane(b.closest('.pane').id, false));
+// after the layout handlers above (registered first, so they run first): reflow for the new mode / width
+document.querySelectorAll('[data-layout]').forEach(b => b.addEventListener('click', applyPanes));
+addEventListener('resize', applyPanes);
+applyPanes();
 
 // ---- one stream for all three panes ---------------------------------------------------------------------
 loadDiagram().then(() => {

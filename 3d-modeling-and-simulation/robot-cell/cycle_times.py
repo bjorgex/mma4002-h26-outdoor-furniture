@@ -27,6 +27,8 @@ VERSIONS = {        # version: build script, station, assembly method
            "one double-sided guide B->A->B, frame 1 + planks flipped into frame 2; guide stays trapped, no hand-over"),
     "v4": ("bench_cell_v4.py", "Bench V1 cell v4",
            "v3 with the guide cut in two halves (taken out onto a pad), bench set down on the AMR"),
+    "v5": ("bench_cell_v5.py", "Bench V1 cell v5",
+           "v4 starting with the guide already on base A (its stage 1, guide B->A, gone): planks first"),
 }
 PHASES = (          # (column, words in the move names)
     ("guide to A", ("guide B-A",)), ("planks", ("plank",)), ("guide to B", ("guide A-B",)),

@@ -4,6 +4,8 @@
 // Parts follow the gripper: GRIP OK takes along the parts named by the last "carry" event (v4_replay.py sends the
 // station's "Simulation: attach" names before each GRIP), else the cell part nearest the fingertips (within
 // GRAB_MM). RELEASE / SET puts down everything held, where it is.
+// The cell: cell.glb (v4 start), or the one a scenario reset names ("cell" in scenarios.json, e.g. cell_v5: the
+// guide starts on base A) - swapped in on that reset.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -59,14 +61,23 @@ export function createSim(el, { log = () => {} } = {}) {
       if (/^(frame|Table)/.test(o.name)) { o.material.transparent = true; o.material.opacity = o.name === "Table" ? .9 : .8; }
     } });
   }
-  let cell = null;
+  let cell = null, cellName = null;
   const start = new Map();                           // carriable part -> where it was in cell.glb (for a reset)
-  loader.load(BASE + "cell.glb", g => {
-    shade(g.scene, { flat: true }); scene.add(g.scene); cell = g.scene;
-    cell.traverse(o => { if (o !== cell && PARTS.test(o.name))
-      start.set(o, { parent: o.parent, pos: o.position.clone(), quat: o.quaternion.clone(), scale: o.scale.clone() }); });
-  },
-    undefined, e => log("err", "cell.glb not loaded: " + e.message));
+  function loadCell(name) {                          // "cell" (v4 start) or "cell_v5" (guide on base A)
+    if (name === cellName) return;
+    cellName = name;
+    loader.load(BASE + name + ".glb", g => {
+      if (name !== cellName) return;                 // another cell asked for meanwhile
+      if (cell) { held.forEach(([o]) => o.removeFromParent()); held = []; cell.removeFromParent(); }
+      start.clear();
+      shade(g.scene, { flat: true }); scene.add(g.scene); cell = g.scene;
+      cell.traverse(o => { if (o !== cell && PARTS.test(o.name))
+        start.set(o, { parent: o.parent, pos: o.position.clone(), quat: o.quaternion.clone(), scale: o.scale.clone() }); });
+      log("ev", `3D: cell ${name}.glb`);
+    },
+      undefined, e => log("err", `${name}.glb not loaded: ` + e.message));
+  }
+  loadCell("cell");
 
   // robot: each joint a fixed group (URDF origin: xyz, then R = Rz Ry Rx) holding a group that turns about z
   const white = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: .5 });
@@ -193,6 +204,7 @@ export function createSim(el, { log = () => {} } = {}) {
         break;
       case "reset":                                  // a scenario reset the mock: parts back where they started
         held = []; carry = null;
+        if ((ev.cell || "cell") !== cellName) { loadCell(ev.cell || "cell"); animateGrip(GAP_OPEN, .2); break; }
         start.forEach((s, o) => { s.parent.add(o); o.position.copy(s.pos); o.quaternion.copy(s.quat); o.scale.copy(s.scale); });
         animateGrip(GAP_OPEN, .2); moveLine.visible = false;
         break;

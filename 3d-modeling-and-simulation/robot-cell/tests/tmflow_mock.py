@@ -788,6 +788,7 @@ class Scenarios:
     def __init__(self, a, kin, home, known, flange):
         self.a, self.kin, self.home, self.known, self.flange = a, kin, home, known, flange
         self.proc, self.name, self.state, self.code, self.stopped = None, None, "idle", None, False
+        self.cell = "cell"                                  # the 3D cell of the last scenario (robot_sim/<cell>.glb)
         self.lock = threading.Lock()
 
     def list(self):
@@ -811,7 +812,7 @@ class Scenarios:
             grips = [g.strip().lower() for g in sc.get("grip", "ok").split(",")]
             if sc.get("flow", "hande") not in FLOWS or not set(grips) <= {"ok", "fail", "loss"}:
                 return 400, f"scenario {name!r}: bad flow or grip"
-            self.reset(sc.get("flow", "hande"), grips, float(sc.get("fast", self.a.fast)))
+            self.reset(sc.get("flow", "hande"), grips, float(sc.get("fast", self.a.fast)), sc.get("cell", "cell"))
             script = (HERE.parent / sc["script"]).resolve()
             cmd = [sys.executable, str(HERE / "tmflow_mock.py"), "run", "--listen", str(lt.LISTEN), "--slave",
                    str(lt.SLAVE), "--view", str(self.a.view), "--points",
@@ -844,11 +845,13 @@ class Scenarios:
             self.proc.kill()
             self.proc.wait()
             flow = LIVE["flow"]
-            self.reset(flow.name, flow.grips_given, LIVE["robot"].fast)   # back to idle: home, waiting in the flow
+            self.reset(flow.name, flow.grips_given, LIVE["robot"].fast, self.cell)   # back to idle: home, in the flow
         return 200, "stopped"
 
-    def reset(self, name, grips, fast):
-        """The mock as if serve had just started with this flow, GRIP results and time scale (no process restart)."""
+    def reset(self, name, grips, fast, cell="cell"):
+        """The mock as if serve had just started with this flow, GRIP results and time scale (no process restart).
+        cell: the 3D pane's start state (robot_sim/<cell>.glb: cell = v4's, cell_v5 = guide on base A)."""
+        self.cell = cell
         old = LIVE["flow"]
         old.abort, old.robot.stop = True, True
         old.robot.clear()
@@ -865,7 +868,7 @@ class Scenarios:
         flow = Flow(name, robot, self.home, grips, self.a.verbose)
         LIVE.update(robot=robot, flow=flow)
         VIEW.robot, VIEW.flow = robot, flow
-        emit("reset", flow=name, title=flow.title)
+        emit("reset", flow=name, title=flow.title, cell=cell)
         log(f"reset: project {flow.title}; GRIP -> {', '.join(grips)}; x{fast:g} time")
         threading.Thread(target=flow.run, daemon=True).start()
 

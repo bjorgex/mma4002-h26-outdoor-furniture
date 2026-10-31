@@ -5,7 +5,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 FILES = {"": "sim_view.html", "sim_view.html": "sim_view.html", "cell.glb": "cell.glb",
-         "tm5_links.glb": "tm5_links.glb", "cell_layout.json": "cell_layout.json", "sim_scene.js": "sim_scene.js"}
+         "tm5_links.glb": "tm5_links.glb", "cell_layout.json": "cell_layout.json", "sim_scene.js": "sim_scene.js",
+         "cell_v5.glb": "cell_v5.glb", "cell_layout_v5.json": "cell_layout_v5.json"}   # v5: guide starts on base A
 
 
 def sim_get(handler):
