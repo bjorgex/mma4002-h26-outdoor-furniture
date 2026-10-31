@@ -384,7 +384,8 @@ class Robot:
                 return f
         return None
 
-    def _move(self, kind, target, speed, acc):
+    def _move(self, kind, target, speed, acc, listen=False):
+        """listen: a Listen-node script move (numbered per run in its "move" event: the page's progress bar)."""
         f0, j0 = self.flange[:], self.joints[:]
         if kind == "cptp" and self.kin:                 # PTP to a Cartesian pose: joints are the path
             j1 = self.kin.ik(target, j0)
@@ -409,7 +410,8 @@ class Robot:
         t += acc / 1000
         self.last = f"{kind} {fmt(f0[:3])} -> {fmt(f1[:3])}  {t:.1f} s"
         log(f"  {self.last}")
-        emit("move", kind=kind, frm=f0[:3], to=f1[:3], secs=round(t, 2))
+        emit("move", kind=kind, frm=f0[:3], to=f1[:3], secs=round(t, 2),
+             **({"n": VIEW.count_move()} if listen and VIEW else {}))
         done, last = 0.0, time.monotonic()              # simulated seconds of this move so far
         due = last
         while done < t:
@@ -650,7 +652,7 @@ class Flow:
             elif item == ("clear",):
                 self.robot.clear()
             elif item:
-                moves.append(item)
+                moves.append(item if item[0] == "tag" else item + (True,))     # True: a Listen-node move
 
         def then():
             self.vars.update(sets)
@@ -795,6 +797,7 @@ class View:
 
         ThreadingHTTPServer.daemon_threads = True
         self.demo = []                                  # this run's step events, for a /demo page opened mid-run
+        self.moves = 0                                  # Listen-node moves since the run's "run" step event
         self.scenarios = None                           # Scenarios, set by serve
         self.httpd = ThreadingHTTPServer((HOST, port), Handler)
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
@@ -812,6 +815,13 @@ class View:
         with self.lock:
             self.recent.clear()
             self.demo = []
+            self.moves = 0
+
+    def count_move(self):
+        """The next Listen-node move's number in this run (the page: move n of the script's "moves" total)."""
+        with self.lock:
+            self.moves += 1
+            return self.moves
 
     def emit(self, ev):
         ev["at"] = round(time.time() - T0, 2)
@@ -826,6 +836,7 @@ class View:
         with self.lock:
             if ev.get("t") == "run":
                 self.demo = []
+                self.moves = 0
             if ev.get("t") == "carry" and LIVE:                 # RoboDK: what the next GRIP takes along
                 getattr(LIVE["robot"].kin, "carry", lambda *a: None)(ev.get("action"), ev.get("parts", []))
             self.demo.append(ev)

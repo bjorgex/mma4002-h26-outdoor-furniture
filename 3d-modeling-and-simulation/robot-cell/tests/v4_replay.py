@@ -156,6 +156,18 @@ def carry(action, parts):
         steps.q.join()
 
 
+def announce():
+    """The move plan for the mock page's progress bar: a "moves" event (total + moves per stage) through the same
+    /step queue as carry(). The mock numbers each Listen-node move it gets; the page shows n of total. A no-op
+    otherwise."""
+    steps = getattr(sys.getprofile(), "__self__", None)
+    if hasattr(steps, "send"):
+        names, moves = CELLS[CELL][1], load()
+        per = [sum("move" in s for s in moves if s["stage"] == k) for k in range(1, len(names) + 1)]
+        steps.send("moves", total=sum(per), stages=[{"fn": n, "moves": c} for n, c in zip(names, per)])
+        steps.q.join()
+
+
 def play(stage):
     """One stage: the moves between two gripper actions go out as one queue, then GRIP or RELEASE."""
     batch = []
@@ -226,6 +238,7 @@ def run():
     seq = steps()
     input(f"{STATION}: {PROGRAM} ({len(load())} steps from {MOVES.name}), HandE_Bridge_v1 in Listen1."
           " Enter to start ")
+    announce()
     b = hb.Bridge()
     for k, (do, args) in enumerate(seq, 1):
         print(f"{k}/{len(seq)} {do.__name__}: {do.__doc__}")

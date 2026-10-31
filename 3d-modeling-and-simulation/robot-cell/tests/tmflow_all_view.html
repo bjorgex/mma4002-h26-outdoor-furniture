@@ -226,6 +226,24 @@ body { padding: 0; overflow: hidden; }
 .tm-skin .banner .badge[hidden] { display: none; }
 .tm-skin .banner .big { font: 700 22px/1.25 var(--tm-font); }
 .tm-skin .banner .fn { font: 13px Consolas, "IBM Plex Mono", monospace; color: var(--tm-sel); min-height: 1.3em; }
+/* run progress: the whole run 0-100 %, by moves (v4_replay's "moves" plan) or by steps (demo_run), stage segments */
+.tm-skin .prog { background: #eef0f1; border-bottom: 1px solid var(--tm-frame); padding: 6px 12px 7px; }
+.tm-skin .prog[hidden] { display: none; }
+.prog .bar { position: relative; height: 16px; background: #fff; border: 1px solid var(--tm-line); border-radius: 2px; overflow: hidden; }
+.prog .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--tm-sel); transition: width .25s linear; }
+.prog.end .fill { background: var(--tm-green); } .prog.fail .fill { background: var(--tm-orange); }
+.prog .segs { position: absolute; inset: 0; display: flex; }
+.prog .seg { position: relative; box-sizing: border-box; border-right: 1px solid var(--tm-line); min-width: 0;
+  font: 10px/14px var(--tm-font); color: #555; text-align: center; overflow: hidden; white-space: nowrap; }
+.prog .seg:last-child { border-right: 0; }
+.prog .seg.done { color: var(--tm-ink); }
+.prog .seg.now { box-shadow: inset 0 0 0 2px var(--tm-in); color: var(--tm-in); font-weight: 700; }
+.prog .txt { font: 12.5px/1.4 var(--tm-font); color: var(--tm-ink); margin-top: 4px; font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog .txt b { font-weight: 600; }
+.tm-skin.demo .prog .bar { height: 20px; } .tm-skin.demo .prog .seg { font-size: 11.5px; line-height: 18px; }
+.tm-skin.demo .prog .txt { font-size: 14.5px; }
+@media (prefers-reduced-motion: reduce) { .prog .fill { transition: none; } }
 /* plain-language exchange lines */
 .tm-skin .talk { margin: 0 10px 10px; border: 1px solid var(--tm-frame); font: 13.5px/1.45 var(--tm-font); max-height: 46vh; overflow: auto; }
 .pane.max .talk { max-height: none; }
@@ -344,6 +362,10 @@ body { padding: 0; overflow: hidden; }
         <button class="btn" id="details-btn" title="Listen-node sequence, board and packets">Details</button>
         <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
+      <div class="prog" id="prog" hidden role="progressbar" aria-label="Run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="bar"><div class="fill" id="prog-fill"></div><div class="segs" id="prog-segs"></div></div>
+        <div class="txt" id="prog-txt"></div>
+      </div>
       <div class="banner idle" id="banner">
         <div class="count"><span id="b-count">Waiting for the script</span><span class="badge" id="air" hidden>dry run: in the air, nothing gripped</span></div>
         <div class="big" id="b-say">Ready</div>
@@ -643,6 +665,78 @@ function handleSteps(ev) {
       break;
   }
 }
+
+// ---- run progress: Listen-node moves n / total (v4_replay's "moves" event + the mock's numbered "move" events),
+// else steps done / steps planned (demo_run). Time left: simulated seconds so far per fraction done, at the live speed.
+const prog = { state: 'idle', total: 0, stages: [], n: 0, nAt: -1, mvT: 0, mvSecs: 0, stepN: 0, stepDone: 0,
+  shown: 0, f0: null, sim: 0, fast: 1, segKey: '' };
+const stageName = fn => cap(fn.replace(/_/g, ' ')).replace(/\b(base) ([ab])\b/i, (m, a, b) => `${a} ${b.toUpperCase()}`);
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function progEvent(ev) {
+  if ('fast' in ev && typeof ev.fast === 'number' && ev.fast > 0) prog.fast = ev.fast;
+  switch (ev.t) {
+    case 'reset': Object.assign(prog, { state: 'idle', total: 0, stages: [], n: 0, nAt: -1, stepN: 0, stepDone: 0, shown: 0 }); break;
+    case 'run':                                         // a page opened mid-run gets the moves before the run event
+      Object.assign(prog, { state: 'run', total: 0, stages: [], stepN: 0, stepDone: 0, shown: 0, f0: null, sim: 0, segKey: '' });
+      if (prog.nAt < ev.at) prog.n = 0;
+      break;
+    case 'moves': prog.total = ev.total; prog.stages = ev.stages; prog.segKey = ''; break;
+    case 'step': prog.stepN = ev.n; break;
+    case 'done': prog.stepDone = Math.max(prog.stepDone, ev.n); break;
+    case 'move': if (ev.n) { prog.n = ev.n; prog.nAt = ev.at; prog.mvT = performance.now(); prog.mvSecs = ev.secs; } break;
+    case 'end': prog.state = ev.result === 'done' ? 'end' : 'fail'; if (ev.result === 'done') prog.shown = 1; break;
+    default: return;
+  }
+  progDraw();
+}
+function progDraw() {
+  const box = $('#prog'), byMoves = prog.total > 0, nSteps = byMoves ? prog.stages.length : plan.length;
+  box.hidden = prog.state === 'idle' || !(byMoves || nSteps);
+  if (box.hidden) return;
+  if (prog.state === 'run') {
+    let f;
+    if (byMoves) {
+      const part = prog.n && prog.mvSecs > 0 ? Math.min(1, (performance.now() - prog.mvT) / 1000 * prog.fast / prog.mvSecs) : prog.n ? 1 : 0;
+      f = prog.n ? (prog.n - 1 + part) / prog.total : 0;
+    } else f = (Math.max(prog.stepN - 1, 0) + (prog.stepDone >= prog.stepN && prog.stepN ? 1 : 0)) / nSteps;
+    prog.shown = Math.max(prog.shown, Math.min(f, 1));   // never backwards within a run
+  }
+  // the stage now: the step event's number or the stage the move count is in, whichever is later (step events
+  // are posted asynchronously and can trail the first moves of their stage)
+  let cur = prog.stepN;
+  if (byMoves && prog.n) { let c = 0; cur = Math.max(cur, prog.stages.findIndex(s => (c += s.moves) >= prog.n) + 1); }
+  const segs = byMoves ? prog.stages.map(s => ({ w: s.moves, name: stageName(s.fn) })) : plan.map(s => ({ w: 1, name: words(s) }));
+  const key = segs.map(s => s.w + s.name).join('|');
+  if (key !== prog.segKey) {
+    prog.segKey = key; const tot = segs.reduce((a, s) => a + s.w, 0) || 1;
+    $('#prog-segs').innerHTML = segs.map((s, k) =>
+      `<div class="seg" style="flex:0 0 ${(100 * s.w / tot).toFixed(3)}%" title="${esc(`${k + 1}. ${s.name}${byMoves ? ` (${s.w} moves)` : ''}`)}">${k + 1}</div>`).join('');
+  }
+  [...$('#prog-segs').children].forEach((d, k) => {
+    d.classList.toggle('done', k + 1 < cur || prog.state === 'end'); d.classList.toggle('now', k + 1 === cur && prog.state === 'run');
+  });
+  const pct = Math.round(prog.shown * 100);
+  box.className = 'prog ' + (prog.state === 'run' ? '' : prog.state);
+  $('#prog-fill').style.width = (prog.shown * 100).toFixed(2) + '%';
+  box.setAttribute('aria-valuenow', pct);
+  const word = byMoves ? 'Stage' : 'Step', parts = [];
+  if (cur) parts.push(`<b>${word} ${cur} of ${nSteps}</b>`, esc(segs[cur - 1] ? segs[cur - 1].name : ''));
+  if (prog.n) parts.push(byMoves ? `move ${prog.n} / ${prog.total}` : `move ${prog.n}`);
+  parts.push(`${pct} %`);
+  if (prog.state === 'run' && prog.f0 !== null && prog.shown - prog.f0 > 0.02 && prog.sim > 2) {
+    parts.push(`~${mmss(prog.sim * (1 - prog.shown) / (prog.shown - prog.f0) / prog.fast)} left`);
+  } else if (prog.state === 'end') parts.push('done');
+  else if (prog.state === 'fail') parts.push('stopped');
+  $('#prog-txt').innerHTML = parts.join(' · ');
+}
+let progLast = performance.now();
+setInterval(() => {
+  const now = performance.now(), dt = (now - progLast) / 1000; progLast = now;
+  if (prog.state !== 'run') return;
+  if (prog.f0 === null) prog.f0 = prog.shown;           // opened mid-run: time left from what we saw ourselves
+  prog.sim += Math.min(dt, 1) * prog.fast;               // simulated seconds (the slider scales the moves and waits)
+  progDraw();
+}, 200);
 
 // ---- the exchange in plain words (Python ↔ robot), from the same events as the packet log -----------------
 const GATE = { 0: 'nothing yet (reset)', 1: 'close the gripper', 2: 'open the gripper', 3: 'go Home' };
@@ -971,7 +1065,7 @@ loadDiagram().then(() => {
     else if (ev.t === 'out') outLine(ev.line);
     else if (ev.t === 'rdk') rdkState(ev.state, ev.msg);
     if ('fast' in ev && /^(speed|state|scenario|hello)$/.test(ev.t)) spShow(ev.fast);
-    handlePanes(ev); handleSteps(ev); plain(ev);
+    handlePanes(ev); handleSteps(ev); plain(ev); progEvent(ev);
     if (sim) sim.handle(ev);
     loadProgress(ev);
   };
