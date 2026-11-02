@@ -29,6 +29,10 @@ VERSIONS = {        # version: build script, station, assembly method
            "v3 with the guide cut in two halves (taken out onto a pad), bench set down on the AMR"),
     "v5": ("bench_cell_v5.py", "Bench V1 cell v5",
            "v4 starting with the guide already on base A (its stage 1, guide B->A, gone): planks first"),
+    "v6": ("bench_cell_v6.py", "Bench V1 cell v6",
+           "v5 without the parking pad: each guide half flipped straight back onto base A, cell ends as it starts"),
+    "v7": ("bench_cell_v7.py", "Bench V1 cell v7",
+           "v6 on Jig V2: bases turned 180 deg on the robot's work plate, 6 mm grid plate, rack outside, guide arms"),
 }
 PHASES = (          # (column, words in the move names)
     ("guide to A", ("guide B-A",)), ("planks", ("plank",)), ("guide to B", ("guide A-B",)),

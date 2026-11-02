@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1820.0" height="1240.0" viewBox="0 0 910.0 620.0" font-family="Arial, Helvetica, sans-serif">
+<rect width="910.0" height="620.0" fill="#ffffff"/>
+<text x="40" y="32" font-size="16" font-weight="bold">Jig base V2 - 600 x 500 x 6 mm plywood</text>
+<rect x="40.00" y="60.00" width="600.00" height="500.00" fill="#e2bf8a" stroke="#c0392b" stroke-width="1.2"/>
+<rect x="40.00" y="60.00" width="1.00" height="500.00" fill="#8d6e4a"/>
+<rect x="89.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="139.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="189.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="239.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="289.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="339.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="389.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="439.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="489.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="539.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="589.00" y="60.00" width="2.00" height="500.00" fill="#8d6e4a"/>
+<rect x="639.00" y="60.00" width="1.00" height="500.00" fill="#8d6e4a"/>
+<rect x="40.00" y="559.00" width="600.00" height="1.00" fill="#8d6e4a"/>
+<rect x="40.00" y="509.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="459.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="409.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="359.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="309.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="259.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="209.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="159.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="109.00" width="600.00" height="2.00" fill="#8d6e4a"/>
+<rect x="40.00" y="60.00" width="600.00" height="1.00" fill="#8d6e4a"/>
+<rect x="40.00" y="183.00" width="270.00" height="310.00" fill="#ff000014" stroke="#e00000" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="175.0" y="177.0" font-size="12" text-anchor="middle" fill="#c00000" font-weight="bold">robot work plate 270 x 310</text>
+<rect x="69.00" y="348.00" width="196.00" height="196.00" fill="#4a7fc177" stroke="#1f4fa0" stroke-width="1.2"/>
+<text x="167.0" y="442.0" font-size="14" text-anchor="middle" fill="#0d2d66" font-weight="bold">BASE A</text>
+<rect x="69.00" y="132.00" width="196.00" height="196.00" fill="#4a7fc177" stroke="#1f4fa0" stroke-width="1.2"/>
+<text x="167.0" y="226.0" font-size="14" text-anchor="middle" fill="#0d2d66" font-weight="bold">BASE B</text>
+<rect x="439.00" y="308.00" width="132.00" height="60.00" fill="#4a7fc177" stroke="#1f4fa0" stroke-width="1.2"/>
+<text x="505.0" y="334.0" font-size="14" text-anchor="middle" fill="#0d2d66" font-weight="bold">PLANK RACK</text>
+<rect x="69.00" y="348.00" width="16.00" height="196.00" fill="#1f4fa055"/>
+<rect x="85.00" y="528.00" width="180.00" height="16.00" fill="#1f4fa055"/>
+<rect x="69.00" y="148.00" width="16.00" height="180.00" fill="#1f4fa055"/>
+<rect x="85.00" y="132.00" width="180.00" height="16.00" fill="#1f4fa055"/>
+<circle cx="77.00" cy="378.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="77.00" cy="438.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="77.00" cy="498.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="235.00" cy="536.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="175.00" cy="536.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="115.00" cy="536.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="77.00" cy="178.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="77.00" cy="238.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="77.00" cy="298.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="235.00" cy="140.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="175.00" cy="140.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="115.00" cy="140.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="447.00" cy="356.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="447.00" cy="320.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="563.00" cy="356.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="563.00" cy="320.00" r="2.40" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+<circle cx="60.00" cy="470.00" r="3.35" fill="#ffffff" stroke="#7a1fa2" stroke-width="1.4"/>
+<circle cx="60.00" cy="205.00" r="3.35" fill="#ffffff" stroke="#7a1fa2" stroke-width="1.4"/>
+<circle cx="290.00" cy="470.00" r="3.35" fill="#ffffff" stroke="#7a1fa2" stroke-width="1.4"/>
+<circle cx="290.00" cy="205.00" r="3.35" fill="#ffffff" stroke="#7a1fa2" stroke-width="1.4"/>
+<polygon points="6,331.0 34,340.0 6,349.0" fill="#222"/>
+<text x="20" y="326.0" font-size="11" text-anchor="middle">robot</text>
+<text x="340.0" y="578.0" font-size="11" text-anchor="middle">x [mm] 0 - 600, away from the robot -&gt;   (AMR on this side, y &lt; 0)</text>
+<text x="40" y="592.0" font-size="9" text-anchor="middle" fill="#555">0</text>
+<text x="140" y="592.0" font-size="9" text-anchor="middle" fill="#555">100</text>
+<text x="240" y="592.0" font-size="9" text-anchor="middle" fill="#555">200</text>
+<text x="340" y="592.0" font-size="9" text-anchor="middle" fill="#555">300</text>
+<text x="440" y="592.0" font-size="9" text-anchor="middle" fill="#555">400</text>
+<text x="540" y="592.0" font-size="9" text-anchor="middle" fill="#555">500</text>
+<text x="640" y="592.0" font-size="9" text-anchor="middle" fill="#555">600</text>
+<text x="34" y="563.0" font-size="9" text-anchor="end" fill="#555">0</text>
+<text x="34" y="463.0" font-size="9" text-anchor="end" fill="#555">100</text>
+<text x="34" y="363.0" font-size="9" text-anchor="end" fill="#555">200</text>
+<text x="34" y="263.0" font-size="9" text-anchor="end" fill="#555">300</text>
+<text x="34" y="163.0" font-size="9" text-anchor="end" fill="#555">400</text>
+<text x="34" y="63.0" font-size="9" text-anchor="end" fill="#555">500</text>
+<text x="665.0" y="58" font-size="13" font-weight="bold">Legend</text>
+<g transform="translate(665.0,70)"><rect width="18" height="12" fill="#e2bf8a" stroke="#c0392b" stroke-width="1.2"/><text x="26" y="10" font-size="11">plate, cut outline (red)</text></g>
+<g transform="translate(665.0,92)"><rect width="18" height="3" y="5" fill="#8d6e4a"/><text x="26" y="10" font-size="11">grid groove 2 x 1 mm, every 50 mm</text></g>
+<g transform="translate(665.0,114)"><circle cx="9" cy="6" r="3" fill="#fff" stroke="#c0392b" stroke-width="1"/><text x="26" y="10" font-size="11">M3 hole: base / rack flange</text></g>
+<g transform="translate(665.0,136)"><circle cx="9" cy="6" r="4" fill="#fff" stroke="#7a1fa2" stroke-width="1.4"/><text x="26" y="10" font-size="11">5.5 mm: plate to the table</text></g>
+<g transform="translate(665.0,158)"><rect width="18" height="12" fill="#4a7fc177" stroke="#1f4fa0" stroke-width="1.2"/><text x="26" y="10" font-size="11">jig footprint (scored line)</text></g>
+<g transform="translate(665.0,180)"><rect width="18" height="12" fill="#1f4fa055"/><text x="26" y="10" font-size="11">base flange (screwed from top)</text></g>
+<g transform="translate(665.0,202)"><rect width="18" height="12" fill="#ff000014" stroke="#e00000" stroke-width="2" stroke-dasharray="5 3"/><text x="26" y="10" font-size="11">robot work plate (table)</text></g>
+<text x="665.0" y="244" font-size="10" fill="#333">Bases A + B turned 180 deg:</text>
+<text x="665.0" y="259" font-size="10" fill="#333">backrest towards the robot,</text>
+<text x="665.0" y="274" font-size="10" fill="#333">guide grip pocket away from it.</text>
+<text x="665.0" y="289" font-size="10" fill="#333">No red squares: a TM Landmark</text>
+<text x="665.0" y="304" font-size="10" fill="#333">finds the plate (place: to decide).</text>
+<text x="665.0" y="319" font-size="10" fill="#333">Laser files: JigBase_V2.dxf / .svg.</text>
+</svg>

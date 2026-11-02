@@ -2,6 +2,7 @@
 
     python robot_cell/tests/robot_sim/cell_layout.py              (shared venv: robodk's robomath + trimesh)
     python robot_cell/tests/robot_sim/cell_layout.py --cell v5    v5 start: the guide on base A (bench_cell_v5.py)
+    python robot_cell/tests/robot_sim/cell_layout.py --cell v6    v6 start: as v5, no parking pad (bench_cell_v6.py)
 
 No RoboDK and no .rdk needed: this repeats bench_cell_v4.py's build() - the script the station is built
 from - with the same meshes and poses: the STLs in jig_parts/ (jig_parts.py, jig_parts_v4.py) and
@@ -28,6 +29,7 @@ CELL = HERE.parents[1]
 sys.path.insert(0, str(CELL))
 import bench_cell_v4 as v4                                # noqa: E402
 import bench_cell_v5 as v5                                # noqa: E402  (same constants, the guide starts on A)
+import bench_cell_v6 as v6                                # noqa: E402  (v5's start without the parking pad)
 from robodk.robomath import Mat, eye, pi, rotx, rotz, transl   # noqa: E402
 
 
@@ -36,9 +38,9 @@ def to_np(m):
 
 
 def main(cell="v4"):
-    v = v5 if cell == "v5" else v4
-    guide = v4.BASE_A * v5.GUIDE_ON_A if cell == "v5" else v4.BASE_B * v4.GUIDE_ON_B
-    glb, layout = ("cell_v5.glb", "cell_layout_v5.json") if cell == "v5" else ("cell.glb", "cell_layout.json")
+    v = {"v4": v4, "v5": v5, "v6": v6}[cell]
+    guide = v4.BASE_A * v5.GUIDE_ON_A if cell in ("v5", "v6") else v4.BASE_B * v4.GUIDE_ON_B
+    glb, layout = (f"cell_{cell}.glb", f"cell_layout_{cell}.json") if cell != "v4" else ("cell.glb", "cell_layout.json")
     asm = {p["name"]: Mat(p["pose"]) for p in json.loads((v4.PARTS / "assembly.json").read_text())["parts"]}
     gb = Mat(v4.LAYOUT["work_frame"]) * v4.GROUND_IN_WORK          # ground base in robot base coordinates
     sx, sy, st = v4.GROUND_SIZE
@@ -73,7 +75,8 @@ def main(cell="v4"):
         add(f"{name} riser", "jig", box((-90, -90, -riser), (90, 90, 0)), base, grey)
         add(name, "jig", stl(v4.JIG / f"{f}.stl"), base, jig_c)
     add("Plank jig", "jig", stl(v4.JIG / "plank_jig.stl"), v4.PLANK_JIG, jig_c)
-    add("Parking pad", "jig", stl(v4.JIG / "parking_pad.stl"), v4.PAD, grey)
+    if cell != "v6":                                        # v6: no parking pad
+        add("Parking pad", "jig", stl(v4.JIG / "parking_pad.stl"), v4.PAD, grey)
     add("AMR plate", "amr", box((0, 0, -10), (v4.AMR_PLATE[0], v4.AMR_PLATE[1], 0)), v4.AMR_AT, [0.4, 0.75, 0.45, 1])
     add("AMR top module", "amr", box((40, 40, 383 - v4.TABLE_H - st), (v4.AMR_PLATE[0] - 40, v4.AMR_PLATE[1] - 40, -10)),
         v4.AMR_AT, [0.85, 0.85, 0.88, 1])
@@ -102,5 +105,6 @@ def main(cell="v4"):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--cell", choices=["v4", "v5"], default="v4", help="v4 (default): guide on base B; v5: on base A")
+    ap.add_argument("--cell", choices=["v4", "v5", "v6"], default="v4",
+                    help="v4 (default): guide on base B; v5: on base A; v6: on base A, no parking pad")
     main(ap.parse_args().cell)

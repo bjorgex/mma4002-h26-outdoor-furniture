@@ -10,5 +10,7 @@
   {"name": "v4-full", "label": "Bench V1 v4: full assembly", "script": "tests/v4_replay.py", "args": [], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell", "station": "Bench V1 cell v4"},
   {"name": "v4-full-fast", "label": "Bench V1 v4: full assembly (fast)", "script": "tests/v4_replay.py", "args": ["--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell", "station": "Bench V1 cell v4"},
   {"name": "v5-full", "label": "Bench V1 v5: full assembly (guide starts on A)", "script": "tests/v4_replay.py", "args": ["--cell", "v5"], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell_v5", "station": "Bench V1 cell v5"},
-  {"name": "v5-full-fast", "label": "Bench V1 v5: full assembly (guide starts on A, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v5", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v5", "station": "Bench V1 cell v5"}
+  {"name": "v5-full-fast", "label": "Bench V1 v5: full assembly (guide starts on A, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v5", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v5", "station": "Bench V1 cell v5"},
+  {"name": "v6-full", "label": "Bench V1 v6: full assembly (guide back onto A, no pad)", "script": "tests/v4_replay.py", "args": ["--cell", "v6"], "flow": "hande", "grip": "ok", "fast": 2, "cell": "cell_v6", "station": "Bench V1 cell v6"},
+  {"name": "v6-full-fast", "label": "Bench V1 v6: full assembly (guide back onto A, no pad, fast)", "script": "tests/v4_replay.py", "args": ["--cell", "v6", "--speed", "2"], "flow": "hande", "grip": "ok", "fast": 6, "cell": "cell_v6", "station": "Bench V1 cell v6"}
 ]
