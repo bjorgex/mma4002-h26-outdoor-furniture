@@ -43,8 +43,12 @@ locations. `assignment-2-product-architectures/` now holds only that assignment'
 
 - **`bench-cad/`** — STEP exports of the current bench design. `BenchInterfaceV2.STEP` and
   `BenchWOBackrestV2.STEP` are the latest version.
-- **`jig-cad/`** — STEP exports of the assembly jig (`Jig V1/`, including the split/double-sided
-  guide variants described in `qa_notes.md`).
+- **`jig-cad/`** — STEP exports of the assembly jig. `Jig V2/` is the current set, flat: the V4
+  platform parts (bases A/B with insert holes, risers, wood plate, plank rack, parking pad, red
+  squares, `JigAssembly_V4.STEP`) plus the split guide halves. It is a copy — the generator scripts
+  (`jig_parts*.py`, `jig_platform_v4.py`) still read/write `Jig V1/` (`v4 platform/`,
+  `v4 split guide/`), so re-copy after regenerating. `Jig V1/` also holds the originals and the
+  older double-sided guide variants described in `qa_notes.md`.
 - **`concept-models/`** — parametric generation scripts for an earlier, different concept family
   (welded square-tube steel frames + planks: products B1/B2/C1/C2/P1/P2), built with
   [build123d](https://github.com/gumyr/build123d). Each script is run directly, e.g.

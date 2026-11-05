@@ -1,0 +1,749 @@
+"""RoboDK cell for Bench V1, version 7 (v7): v6 (bench_cell_v6.py) on the Jig V2 hardware (jig_v2.py), laid out
+on the robot's own work plate:
+    jig base     JigBase_V2: 600 x 500 x 6 mm plate, 50 mm grid (found by a TM Landmark: no red squares)
+    table        only the robot's workstation (the logged 270 x 310 work plate, bench_layout.json, plus the
+                 robot's side): the jig base overhangs it
+    bases A + B  JigBaseA/B_V2 (V1 + the 10 mm riser built in, flanges screwed from the top), on the work plate,
+                 mirror images about its centre line, both turned 180 deg: backrest towards the robot, the guide's
+                 grip pocket away from it (the only way the robot reaches the pocket this close: tested)
+    plank rack   PlankRack_V2 (blind slots: the planks stand 3 mm higher) outside the work plate
+    guide        the halves with one arm each (GuideInner/Outer_arm_V2)
+
+    python robot_cell/bench_cell_v7.py      (RoboDK's own Python; a RoboDK with a licence or trial)
+    $env:ROBODK_API_PORT=20601; python bench_cell_v7.py     another RoboDK instance
+    python robot_cell/bench_cell_v7.py --no-check   without the full-program fixture collision check
+
+Program "AssembleBench" (v6's stages; 4 and 5 swapped and new ways out, the bases being turned):
+    1  planks 1-6: plank rack -> through the guide into frame 1 on base A
+    2  guide (both halves): lifted off over the plank tops -> flipped -> base B
+    3  frame 1 with the planks: flipped, lowered through the guide into frame 2
+    4  outer half: slid down the bench off the seat planks, lifted, on down the bench (towards base A, empty by
+       then) until clear of frame 1, up, flipped, down on base A in its start pose
+    5  inner half: slid forward off the planks, lifted, on forward (away from the robot) until clear of frame 1,
+       up, across, flipped, down on base A next to the outer half
+    6  finished bench: re-gripped at frame 1's foot from above, lifted out of base B, carried over the guide on
+       base A and set down on the AMR plate beside the table
+End state: guide on base A as at the start, bench on the AMR (station script "Deliver (AMR)" drives it off).
+Targets are relative to the frame "Ground base" (the jig base, top at z = 0).
+"""
+import json
+import math
+import re
+import shutil
+from pathlib import Path
+
+from robodk import robolink, robomath
+from robodk.robomath import Mat, pi, rotx, rotz, transl
+
+import cycle_times
+import robot_cell as rc                                  # ROBOT_FILE, ROBOT, ik(), shape(), close_stations()
+
+HERE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
+PARTS, JIG, OUT = HERE / "benchV1_parts", HERE / "jig_parts", HERE / "bench_tmflow" / "v7"
+LAYOUT = json.loads((HERE / "bench_layout.json").read_text(encoding="utf-8"))
+VERSION, STATION, PROGRAM = "v7", "Bench V1 cell v7", "AssembleBench"
+AMR_FILE = "C:/RoboDK/Library/Add-in - Sensor2D safety sensor with AGV/Parts/Omron-LD-250.robot"
+POST, POSTS_DIR = "Omron_DAM", Path("C:/RoboDK/Posts")       # Omron post without the Explorer pop-up
+TIP = LAYOUT["tip_mm"]                                   # flange -> closed fingertips (estimate)
+TABLE_H = 750                                            # floor below the table top (assumed)
+
+# ground base (jig_parts_v4.py): 770 x 440 x 15, x away from the robot, y to the left, top at z = 0;
+# version 3's 590 x 440 plus the parking pad behind base B. MID: version 3's middle (home, wrist swaps)
+GROUND_SIZE, MID = (600, 500, 6), (295, 220)
+GROUND_IN_WORK = transl(0, -67, 6)                       # near edge on the logged plate's, centred on the robot, on the table
+RISER_A = RISER_B = 10                                   # base frames 10 mm over the plate (V2: built into the base)
+# far row, not turned: legs point sideways (base A right, base B left), the guide's grip pocket (side face of
+# its short arm) faces the robot, so the robot reaches it straight out from its base and turns the guide
+# over with J6; both flips are about x. (A straight move down to the horizontal guide grip only works from
+# ~550 mm out: guide grip ~630 mm.) Frame 1's foot ends at base B's outer side, where the wrist has room.
+import os                                                    # noqa: E402  (layout variants for testing)
+BASE_ROT = math.radians(float(os.environ.get("V7_BASE_ROT", "180")))   # both bases turned about z (deg)
+# B is A's mirror image about the work plate's centre line: turned the other way
+BASE_A = transl(135, 122, RISER_A) * rotz(BASE_ROT)
+BASE_B = transl(135, 322, RISER_B) * rotz(-BASE_ROT if abs(math.sin(BASE_ROT)) > 1e-6 else BASE_ROT)
+# inner half's way out after slide + lift (base-B axes): up the bench (v6) or on forward (sideways when turned 90)
+INNER_WAY = (0, -200, 0) if os.environ.get('V7_INNER', 'up') == 'up' else (-160, 0, 0)
+WORK_PLATE = (0, 67, 270, 377)                             # the robot's work plate (table) in ground base coordinates
+SQUARES = []                                               # no red vision squares: a TM Landmark finds the plate
+OUTER_OUT, INNER_OUT = 190, 200                           # base-B coordinates, after slide + lift, until clear of
+                                                         # frame 1: outer on down the bench, inner up the bench (v6)
+PLANK_JIG, PITCH = transl(*(float(v) for v in os.environ.get('V7_RACK', '420,192').split(',')), 0), 30                # near row, middle: the reach-in lanes are at the edges
+PLANK_FLOOR = 3                                           # PlankRack_V2: the planks stand on its floor
+PLANK_ORDER = (3, 6, 2, 5, 1, 4)                          # far column first, front row first: never over a standing plank
+FLIP_AT = tuple(float(v) for v in __import__('os').environ.get('V7_FLIP_AT', '200,222,450').split(','))                                 # frame 1 + planks turned over here, in the middle
+# AMR beside the table on base A's side (-y; on base B's side the arm swings out low when frame 1 goes into
+# base B), plate top level with the ground base; its LD-250 under the plate runs lengthwise along x (it
+# drives off along the table)
+AMR_AT, AMR_PLATE = transl(60, -340, 0), (300, 320)       # plate's corner (ground base frame), size x, y
+AMR_SHIFT, BENCH_LIFT = (74, -490, -19), 100                # bench base B -> plate (frame 2 0.5 mm above it); lift:
+                                                         # frame 2 (z 19) 49 mm over the guide back on A (top z 70)
+
+TRAVEL_Z = 380                                           # TCP for planks plank jig -> base A: clears the guide, not standing planks
+LIFT_Z = 450                                             # guide carried and flipped at this height (sweeps ~157 mm)
+WRIST_SWAP = 15                                          # J5 (deg) where the wrist changes branch
+SUB_LIFT = 40                                            # frame 1 + planks lifted this much out of the pocket
+BACK_OFF = 25                                            # out of the guide's grip pocket (fingers 15 mm in)
+APPROACH, FAST, SLOW, JOINT = 40, 100, 20, 50
+EVENT = robolink.INS_TYPE_EVENT
+ATTACH, DETACH, SET_POSITION = 0, 1, 5
+
+EGP = [((-47, -45, 0), (47, 45, 123)), ((-9, -4, 123), (-6, 4, TIP)), ((6, -4, 123), (9, 4, TIP))]
+
+# STEP (bench) -> base-local; flip about x that puts frame 1 + planks onto frame 2 in base B
+T_IN = transl(-2.715, -21.877, 134.5) * rotx(pi / 2)
+FLIP = transl(0, 0, 269) * rotx(pi)
+GUIDE_ON_B = transl(0, 0, 80) * rotx(pi)                 # the guide flipped onto base B (its slots mirror)
+GUIDE_ON_A = robomath.eye(4)                             # v5 start: the guide on base A (v4 after its stage 1)
+# grips (TCP poses): plank in plank coordinates, guide in its own (= base A) coordinates, foot in base A
+PLANK_GRIP = Mat([[0, -1, 0, 0], [0, 0, -1, 110], [1, 0, 0, 2.5], [0, 0, 0, 1]])
+PLANK_PUSH = Mat([[0, -1, 0, 0], [0, 0, -1, 125], [1, 0, 0, 2.5], [0, 0, 0, 1]])
+GUIDE_GRIP = Mat([[0, 0, 1, -72], [0, -1, 0, -70], [1, 0, 0, 40], [0, 0, 0, 1]])  # tool +x, 15 mm into the pocket,
+                                                         # fingers open vertically: wrist camera sideways
+# the guide's halves meet in the middle of the grip pocket (y -80..-60, cut at -70): GUIDE_GRIP clamps both,
+# the fingers (8 mm wide) 5 mm to one side hold one half
+INNER_GRIP, OUTER_GRIP = transl(0, 5, 0) * GUIDE_GRIP, transl(0, -5, 0) * GUIDE_GRIP
+# ways out on base B (y turned over): inner forward (-T_B), outer down the bench (+y); each then lifted
+# (gripper body over the bases and the empty plank jig), the inner up the bench (-y) over base A (empty
+# by then), both pushed back (+x) on to the pad (jig_parts_v4.py)
+T_B, SLIDE, LIFT = (0.984808, 0.173648), 8, 50
+C, S = math.cos(math.atan2(1.75, 10)), math.sin(math.atan2(1.75, 10))              # rear leg tilt 9.9 deg
+# rear foot, fingers 2.7 mm past the base edge, tilted 60 deg about the closing direction: the gripper leans
+# out (up-and-out at base A, down-and-out after the flip at base B, where the wrist would otherwise hit it)
+FOOT_GRIP = Mat([[C, S, 0, 60.8], [S, -C, 0, -96.7], [0, 0, -1, 12], [0, 0, 0, 1]]) * rotx(pi / 3)
+# the finished bench, re-gripped at the same foot straight from above (frame 1 is on top after the flip):
+# fingers on the same 7.5 mm of the foot, the gripper body above the bench (leaning in hits the planks)
+HAND_GRIP = transl(0, 0, 5) * FOOT_GRIP * rotx(-pi / 3) * rotx(pi)
+
+
+
+def build():
+    asm = {p["name"]: rc.Mat(p["pose"]) for p in json.loads((PARTS / "assembly.json").read_text())["parts"]}
+    RDK = robolink.Robolink()
+    RDK.COM.settimeout(300)                                   # RoboDK can be busy for a while after a reopen
+    RDK.setCollisionActive(robolink.COLLISION_OFF)            # MoveL_Test (link()) then answers 0 / -1 only
+    rc.close_stations(RDK, lambda name: name == STATION)
+    RDK.AddStation(STATION)
+    RDK.Render(False)
+    cell = RDK.AddFrame("Cell")
+    work = RDK.AddFrame("Work plate", cell)
+    work.setPose(rc.Mat(LAYOUT["work_frame"]))
+    gb = RDK.AddFrame("Ground base", work)
+    gb.setPose(GROUND_IN_WORK)
+    grey, wood, frame_c, red = [0.6, 0.6, 0.62, 1], [0.75, 0.55, 0.3, 1], [0.55, 0.62, 0.75, 1], [0.85, 0.1, 0.1, 1]
+    jig_c, guide_c = [0.35, 0.55, 0.85, 1], [0.95, 0.75, 0.2, 1]
+
+    def obj(name, stl, parent, pose, colour):
+        o = RDK.AddFile(str(stl), parent)
+        o.setName(name)
+        o.setColor(colour)
+        o.setPose(pose)
+        return o
+
+    sx, sy, st = GROUND_SIZE
+    wx0, wy0, wx1, wy1 = WORK_PLATE                         # the robot's workstation: its work plate + the robot's side
+    fixtures = [rc.shape(RDK, [((-350, wy0, -TABLE_H), (wx1, wy1, -st))], gb, [0.78, 0.74, 0.68, 1], "Table"),
+                obj("Ground base plate", JIG / "ground_base_v7.stl", gb, robomath.eye(4), [0.82, 0.68, 0.48, 1])]
+    for i, (qx, qy) in enumerate(SQUARES, 1):
+        obj(f"Vision square {i}", JIG / "vision_square.stl", gb, transl(qx, qy, 0), red)
+    for name, base, stl in (("Base A", BASE_A, "base_a_v7"), ("Base B", BASE_B, "base_b_v7")):
+        fixtures.append(obj(name, JIG / f"{stl}.stl", gb, base, jig_c))        # riser built in (below base z 0)
+    fixtures.append(obj("Plank jig", JIG / "plank_rack_v7.stl", gb, PLANK_JIG, jig_c))
+
+    robot = RDK.AddFile(str(rc.ROBOT_FILE))
+    robot.setName(rc.ROBOT)
+    robot.Parent().setParent(cell)
+    robot.Parent().setPose(robomath.eye(4))
+    real = json.loads((HERE / "real_points.json").read_text(encoding="utf-8"))
+    robot.setJoints(real[0]["joints"])
+    tool = robot.AddTool(transl(0, 0, TIP), "EGP")
+    rc.shape(RDK, EGP, tool, [0.25, 0.25, 0.28, 1])
+    robot.setPoseFrame(gb)
+    robot.setPoseTool(tool)
+
+    # AMR beside the table (the bench's hand-over) and its 2 m drive script
+    amr = RDK.AddFrame("AMR", gb)
+    amr.setPose(AMR_AT)
+    fixtures.append(rc.shape(RDK, [((0, 0, -10), (AMR_PLATE[0], AMR_PLATE[1], 0))], amr, [0.4, 0.75, 0.45, 1], "AMR plate"))
+    fixtures.append(rc.shape(RDK, [((40, 40, 383 - TABLE_H - st), (AMR_PLATE[0] - 40, AMR_PLATE[1] - 40, -10))], amr,
+                             [0.85, 0.85, 0.88, 1], "AMR top module"))
+    if Path(AMR_FILE).exists():
+        ld = RDK.AddFile(AMR_FILE, amr)
+        ld.setName("AMR LD-250")
+        ld.setJoints([0, 0, 0, 0])
+        # the model reaches ~360 mm from its origin towards the table (RoboDK collision check): 10 mm clear of it
+        ld.Parent().setPose(transl(AMR_PLATE[0] / 2, -40, -TABLE_H - st))
+        ld.Parent().setVisible(False)
+
+    # parts at their start (ground base coordinates)
+    f1 = obj("frame1", PARTS / "frame.stl", gb, BASE_A * T_IN * asm["frame1"], frame_c)
+    f2 = obj("frame2", PARTS / "frame.stl", gb, BASE_B * FLIP * T_IN * asm["frame2"], frame_c)
+    pieces_a, pieces_b, planks, final = [], [], [], {}
+    for k in range(1, 7):
+        P = T_IN * asm[f"plank{k}"]
+        pieces_a.append(obj(f"piece A{k}", PARTS / "interface_piece.stl", gb, BASE_A * P, red))
+        pieces_b.append(obj(f"piece B{k}", PARTS / "interface_piece.stl", gb, BASE_B * FLIP * P * rotz(pi), red))
+        row, col = divmod(k - 1, 3)
+        start = PLANK_JIG * transl(PITCH * (col + 0.5), PITCH * (row + 0.5) + 2.5, 125 + PLANK_FLOOR) * rotx(pi / 2)
+        planks.append(obj(f"plank{k}", PARTS / "plank_body.stl", gb, start, wood))
+        final[k] = (start, BASE_A * P)
+    inner = obj("Guide inner", JIG / "guide_inner_v7.stl", gb, BASE_A * GUIDE_ON_A, [0.95, 0.6, 0.15, 1])   # v5: on A
+    outer = obj("Guide outer", JIG / "guide_outer_v7.stl", gb, BASE_A * GUIDE_ON_A, guide_c)
+    guide = [inner, outer]
+    parts = [f1, f2] + guide + planks + pieces_a + pieces_b
+
+    # targets and program
+    j, bad = robomath.Mat([[v] for v in real[0]["joints"]]), []
+
+    def elbow_up(pose):
+        """Joints with the elbow as high as possible (low, horizontal grips: elbow-down hits the table);
+        of the two wrists the elbow allows, the one closer to the previous target (no wrist flip on the way)."""
+        sols = robot.SolveIK_All(gb.PoseAbs() * pose, tool.PoseTool())
+        lo, hi = (v.list() for v in robot.JointLimits()[:2])
+        best, a = None, j.list()[:6]
+        for c in range(sols.size(1)):
+            q = [sols[i, c] for i in range(6)]
+            if abs(q[0]) > 100 or any(not lo[i] <= q[i] <= hi[i] for i in range(5)):
+                continue
+            q[5] = min((q[5] + k for k in (-360, 0, 360) if lo[5] <= q[5] + k <= hi[5]), key=lambda v: abs(v - a[5]))
+            z = round(robot.JointPoses(q)[3].Pos()[2])             # elbow (joint 3) height
+            d = sum(w * (x - y) ** 2 for w, x, y in zip((3, 3, 2, 1, 1, 0.5), q, a))
+            if best is None or (z, -d) > (best[0], -best[1]):
+                best = (z, d, q)
+        return robomath.Mat([[v] for v in best[2]]) if best else None
+
+    def target(name, pose, seed=None, up=False, joints=None, fixed=False):
+        """Target with the joints closest to the previous target, or to `seed` (then the chain is kept),
+        or (up=True) with the elbow highest, or with the given `joints`. fixed: a joint target (a joint
+        move then ends in exactly these joints, not in another solution of the pose)."""
+        nonlocal j
+        if joints is not None:
+            q = joints
+        else:
+            q = elbow_up(pose) if up else rc.ik(robot, gb.PoseAbs() * pose, seed if seed is not None else j, tool.PoseTool())
+        if q is None:
+            bad.append(name)
+        elif seed is None:
+            j = q
+        q = q if q is not None else j
+        t = RDK.AddTarget(name, gb, robot)
+        t.setPose(pose)
+        t.setJoints(q)
+        if fixed:
+            t.setAsJointTarget()
+        t.setVisible(False)
+        return t
+
+    def at_z(pose, z):
+        p = Mat(pose)
+        p[2, 3] = z
+        return p
+
+    def attach(objs, name):
+        for o in objs:
+            prog.setParam("Add", {"Type": EVENT, "Behavior": ATTACH, "Name": f"Simulation: attach {o.Name()}",
+                                  "ToolPtr": str(tool.item), "AttachStrategy": 4, "AttachDistance": 3000,
+                                  "ObjectList": str(o.item)})
+
+    def release(name, frame=None):
+        prog.setParam("Add", {"Type": EVENT, "Behavior": DETACH, "Name": f"Simulation: release {name}",
+                              "ToolPtr": str(tool.item), "FramePtr": str((frame or gb).item)})
+
+    def gripper(close, wait=500):
+        prog.setDO(0, 1 if close else 0)
+        prog.Pause(wait)
+
+    home = target("Home", transl(MID[0], MID[1], TRAVEL_Z) * rotx(pi))
+    robot.setJoints(home.Joints())
+    prog = RDK.AddProgram(PROGRAM, robot)
+    prog.setParam("Add", {"Type": EVENT, "Behavior": SET_POSITION, "Name": "Simulation: parts to start",
+                          "ObjectList": ",".join(str(p.item) for p in parts),
+                          "ParentList": ",".join(str(gb.item) for _ in parts)})
+    prog.setPoseFrame(gb)
+    prog.setPoseTool(tool)
+    prog.setRounding(0)
+    prog.setSpeed(FAST, JOINT)
+    prog.MoveJ(home)
+
+    def link(prev, t):
+        """Straight move if the robot can make it from the joints `prev`, else a joint move."""
+        prog.MoveL(t) if robot.MoveL_Test(prev, t.Pose()) == 0 else prog.MoveJ(t)
+
+    def follow(q, pose, n=36):
+        """Joints the robot ends with after a straight move from the joints q to pose (the move keeps its
+        posture, the closest solution can be another one). None if a step is unreachable."""
+        p0 = gb.PoseAbs().inv() * robot.SolveFK(q) * tool.PoseTool()
+        R = p0.inv() * pose
+        a = math.acos(max(-1.0, min(1.0, (R[0, 0] + R[1, 1] + R[2, 2] - 1) / 2)))
+        k = (R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1])
+        s = math.sqrt(sum(v * v for v in k))
+        for i in range(1, n + 1):
+            f = i / n
+            P = p0 * axis_rot([v / s for v in k], f * a) if s > 1e-9 else Mat(p0)
+            for r, (u, v) in enumerate(zip(p0.Pos(), pose.Pos())):
+                P[r, 3] = u + (v - u) * f
+            q = rc.ik(robot, gb.PoseAbs() * P, q, tool.PoseTool())
+            if q is None:
+                return None
+        return q
+
+    def fk(q):
+        return gb.PoseAbs().inv() * robot.SolveFK(q) * tool.PoseTool()
+
+    def swap_wrist(label, q):
+        """Change the wrist branch (J5 sign) with the fingertips nearly still: turn about the tip, tool axis
+        towards J4's axis, until |J5| < WRIST_SWAP, then a J5-only joint move through 0 (a straight move
+        cannot pass this singularity). Returns the joints after the swap."""
+        qa, pa = Mat(q), fk(q)
+        x, y, z = pa.Pos()
+        for _ in range(180):
+            if abs(qa[4, 0]) < WRIST_SWAP:
+                break
+            zt, a4 = pa.VZ(), (gb.PoseAbs().inv() * robot.JointPoses(qa.list())[4]).VZ()   # J5 = 0: zt = a4
+            k = (zt[1] * a4[2] - zt[2] * a4[1], zt[2] * a4[0] - zt[0] * a4[2], zt[0] * a4[1] - zt[1] * a4[0])
+            n = math.sqrt(sum(v * v for v in k))
+            pa = transl(x, y, z) * axis_rot([v / n for v in k], math.radians(1)) * transl(-x, -y, -z) * pa
+            qa = rc.ik(robot, gb.PoseAbs() * pa, qa, tool.PoseTool())
+        ready = target(f"{label} wrist ready", pa, joints=follow(q, pa))
+        if max(abs(u - v) for u, v in zip(ready.Joints().list(), qa.list())) > 1:
+            bad.append(f"{label} wrist ready (posture)")
+        prog.MoveL(ready)
+        qb = Mat(qa)
+        qb[4, 0] = -qb[4, 0]
+        prog.MoveJ(target(f"{label} wrist swapped", fk(qb), joints=qb, fixed=True))
+        return qb
+
+    def straight(name, q, pose, like):
+        """Straight move from the joints q to pose; must end in the posture of the joints `like` (the
+        solution of pose closest to them)."""
+        t = target(name, pose, joints=follow(q, pose))
+        want = rc.ik(robot, gb.PoseAbs() * pose, like, tool.PoseTool())
+        if want is None or max(abs(u - v) for u, v in zip(t.Joints().list()[:5], want.list()[:5])) > 1:
+            bad.append(f"{name} (posture)")
+        prog.MoveL(t)
+        return t
+
+    def take(label, pick, objs, inside=True, high=LIFT_Z):
+        """Gripper to `pick` from the move before (over the middle, down from `high`), objs attached: inside
+        a grip pocket (fingers go in closed and open to grip) or outside (fingers go in open and close)."""
+        nonlocal j
+        prev = Mat(j)                                              # joints of the move before
+        out = pick * transl(0, 0, -BACK_OFF)                      # backed out of the pocket
+        low = target(f"{label} pick out low", out, up=True)      # solved first: the point above takes its posture
+        q = low.Joints()
+        if abs(q[5, 0]) > 240:                                    # v7: J6 near its +-270 limit: the moves after the
+            q[5, 0] -= math.copysign(360, q[5, 0])                # grip would run past it - the same pose a turn
+            low.setJoints(q)                                      # the other way
+            j = Mat(q)
+        hi = target(f"{label} pick out", at_z(out, high), seed=low.Joints())
+        via = Mat(out)                                             # turn the tool over the middle, then straight on
+        via[0, 3], via[1, 3], via[2, 3] = MID[0], MID[1], LIFT_Z
+        to_via = target(f"{label} via", via, seed=hi.Joints())
+        if to_via.Joints()[4, 0] * hi.Joints()[4, 0] < 0:
+            # v7: over the middle this grip only exists on the other wrist branch than at the pick, so a straight
+            # move via -> pick out would cross J5 = 0 (singularity): straight to the point over the pick instead,
+            # one joint move (a joint move may pass J5 = 0)
+            prog.MoveJ(target(f"{label} pick out (joints)", hi.Pose(), joints=hi.Joints(), fixed=True))
+        elif prev[4, 0] * to_via.Joints()[4, 0] < 0:               # other wrist: swapped over the middle first
+            centre = fk(prev)
+            centre[0, 3], centre[1, 3], centre[2, 3] = MID[0], MID[1], LIFT_Z
+            # v7: a joint move to the middle (the IK solution nearest the move before keeps J5's sign); a
+            # straight move from base A's side crossed J5 = 0 on the way
+            prog.MoveJ(target(f"{label} centre", centre, joints=rc.ik(robot, gb.PoseAbs() * centre, prev, tool.PoseTool())))
+            straight(f"{label} via", swap_wrist(label, Mat(j)), via, to_via.Joints())
+        else:
+            link(prev, to_via)
+        prog.MoveL(hi)
+        prog.MoveL(low)
+        prog.setSpeed(SLOW, JOINT)
+        gripper(inside, 300)                                      # pocket: fingers closed to go in
+        prog.MoveL(target(f"{label} pick", pick))
+        gripper(not inside)                                       # pocket: open, grips the pocket walls
+        attach(objs, label)
+
+    def let_go(label, pose, back=BACK_OFF, inside=True, frame=None):
+        """Let go (pocket: fingers closed), backed out by `back` along the tool, then up."""
+        gripper(inside)
+        release(label, frame)
+        prog.MoveL(target(f"{label} place out", pose * transl(0, 0, -back)))
+        prog.setSpeed(FAST, JOINT)
+        prog.MoveL(target(f"{label} place out up", at_z(pose * transl(0, 0, -back), LIFT_Z)))
+
+    def carry(label, pose, place):
+        """From `pose` (held, free to go straight up): up to LIFT_Z, across unflipped, flipped over `place`
+        (J6 turns 180), down, let go."""
+        prog.setSpeed(FAST, JOINT)
+        prog.MoveL(target(f"{label} up", at_z(pose, LIFT_Z)))
+        across = Mat(pose)                                         # straight across first, still unflipped
+        across[0, 3], across[1, 3], across[2, 3] = place[0, 3], place[1, 3], LIFT_Z
+        prog.MoveL(target(f"{label} across", across))
+        down = target(f"{label} place", place, up=True)           # solved first (posture for the way down)
+        prog.MoveJ(target(f"{label} over place", at_z(place, LIFT_Z), seed=down.Joints()))   # flipped: J6 turns 180
+        prog.MoveL(target(f"{label} place approach", at_z(place, place[2, 3] + APPROACH), seed=down.Joints()))
+        prog.setSpeed(SLOW, JOINT)
+        prog.MoveL(down)
+        let_go(label, place)
+
+    def move_guide(label, pick, place):
+        """Guide (both halves) held from inside its grip pocket, carried at LIFT_Z, flipped on the way."""
+        take(label, pick, guide)
+        prog.MoveL(target(f"{label} lift", at_z(pick, pick[2, 3] + 20)))
+        carry(label, pick, place)
+
+    def half_to_a(label, pick, half, moves, place):
+        """One half held in its side of the grip pocket, taken out in straight moves (dx, dy, dz), then
+        carried, flipped and set down at `place` (its start pose on base A)."""
+        take(label, pick, [half])
+        prog.setSpeed(SLOW, JOINT)
+        pose = Mat(pick)
+        for i, d in enumerate(moves, 1):
+            pose = transl(*d) * pose
+            prog.MoveL(target(f"{label} out {i}", pose))
+        carry(label, pose, place)
+
+    # (v4's stage 1, guide base B -> base A, is gone: the guide starts on base A)
+    # 1  planks into frame 1 through the guide
+    for k in PLANK_ORDER:
+        plank = planks[k - 1]
+        start, end = final[k]
+        pick, place, push = start * PLANK_GRIP, end * PLANK_GRIP, end * PLANK_PUSH
+        prog.MoveJ(target(f"plank{k} pick travel", at_z(pick, TRAVEL_Z)))
+        prog.MoveL(target(f"plank{k} pick approach", at_z(pick, pick[2, 3] + APPROACH)))
+        prog.setSpeed(SLOW, JOINT)
+        prog.MoveL(target(f"plank{k} pick", pick))
+        gripper(True)
+        attach([plank], f"plank{k}")
+        prog.MoveL(target(f"plank{k} pick out", at_z(pick, pick[2, 3] + 60)))
+        prog.setSpeed(FAST, JOINT)
+        prog.MoveL(target(f"plank{k} pick up", at_z(pick, TRAVEL_Z)))
+        prog.MoveJ(target(f"plank{k} place travel", at_z(place, TRAVEL_Z)))
+        prog.MoveL(target(f"plank{k} above guide", at_z(place, place[2, 3] + 75)))   # bottom 15 mm over the guide
+        prog.setSpeed(SLOW, JOINT)
+        prog.MoveL(target(f"plank{k} place", place))
+        gripper(False)
+        release(f"plank{k}")
+        prog.MoveL(target(f"plank{k} push approach", at_z(push, push[2, 3] + 20)))
+        gripper(True, 300)                                        # closed fingers push the plank home
+        prog.MoveL(target(f"plank{k} push", push))
+        prog.MoveL(target(f"plank{k} push out", at_z(push, push[2, 3] + 20)))
+        gripper(False, 300)
+        prog.setSpeed(FAST, JOINT)
+        prog.MoveL(target(f"plank{k} place up", at_z(place, TRAVEL_Z)))
+    # 2  guide: base A -> base B (lifted straight off over the plank tops first)
+    move_guide("guide A-B", BASE_A * GUIDE_GRIP, BASE_B * GUIDE_ON_B * GUIDE_GRIP)
+    # 3  frame 1 + planks: foot grip from above, flipped, lowered through the guide into frame 2
+    pick, place = BASE_A * FOOT_GRIP, BASE_B * FLIP * FOOT_GRIP
+    prev = Mat(j)
+    grab = target("sub pick", pick, up=True)
+    near = target("sub pick approach", at_z(pick, pick[2, 3] + SUB_LIFT), seed=grab.Joints())
+    via = Mat(pick)                                                 # tilted grip taken over the middle first
+    via[0, 3], via[1, 3], via[2, 3] = MID[0], MID[1], FLIP_AT[2]
+    qv = follow(near.Joints(), via)                                 # the way down keeps the pick posture
+    if qv is None:                                                  # v7: no straight way: the IK solution nearest
+        qv = rc.ik(robot, gb.PoseAbs() * via, near.Joints(), tool.PoseTool())   # the approach's joints
+    to_via = target("sub via", via, joints=qv)
+    if prev[4, 0] * to_via.Joints()[4, 0] < 0:                     # other wrist: swapped over the middle first
+        centre = fk(prev)
+        centre[0, 3], centre[1, 3], centre[2, 3] = MID[0], MID[1], LIFT_Z
+        prog.MoveL(target("sub centre", centre, joints=follow(prev, centre)))
+        prev = swap_wrist("sub start", Mat(j))
+    link(prev, to_via)
+    prog.MoveL(near)
+    prog.setSpeed(SLOW, JOINT)
+    prog.MoveL(grab)
+    gripper(True)
+    attach([f1] + planks + pieces_a, "frame 1 with the planks")
+    prog.MoveL(near)                                                # lifted out of the pocket
+    prog.setSpeed(FAST, JOINT)
+    # Turned over in the middle: the pick posture has the wrist one way (J5 < 0), base B needs it the other
+    # way, so the wrist is swapped at the singularity, then one straight move turns and carries it over B.
+    mid = Mat(pick)
+    mid[0, 3], mid[1, 3], mid[2, 3] = FLIP_AT
+    prog.MoveJ(target("sub to middle", mid, fixed=True))           # elbow back up on the way to the middle
+    qm = Mat(j)
+    put = target("sub place", place, up=True)
+    # v7 (bases turned): swap the wrist only if base B needs the other branch - an unneeded swap leaves the
+    # straight move to B going through J5 = 0 (the singularity)
+    if qm[4, 0] * put.Joints()[4, 0] < 0:
+        j = qm
+        qb = swap_wrist("sub", Mat(qm))
+    else:
+        qb = qm
+    above = target("sub above guide", at_z(place, place[2, 3] + 75), seed=put.Joints())
+    # v7: turned over by a joint move up at the middle's height, then straight down over base B (one straight
+    # move for the whole 180 deg turn changed the arm's configuration on the way)
+    high = target("sub flipped high", at_z(place, FLIP_AT[2]), seed=above.Joints())
+    prog.MoveJ(high)
+    straight("sub flipped", high.Joints(), at_z(place, place[2, 3] + 120), above.Joints())   # planks clear the guide
+    prog.MoveL(above)
+    prog.setSpeed(SLOW, JOINT)
+    prog.MoveL(put)
+    gripper(False)
+    release("frame 1 with the planks")
+    out = place * transl(0, 0, -25)                                 # fingers off the foot, along the gripper
+    q = put.Joints()                                                # straight moves: joints followed along
+    for name, pose in (("sub place out", out), ("sub clear", transl(-150, 0, 0) * out)):  # back towards the robot
+        t = target(name, pose, joints=follow(q, pose))                  # along base B's outer side
+        prog.MoveL(t)
+        q = t.Joints()
+    back = Mat(out)                                                 # back over the middle, then home
+    back[0, 3], back[1, 3], back[2, 3] = MID[0], MID[1], FLIP_AT[2]
+    prog.MoveL(target("sub back to middle", back, joints=follow(q, back)))
+    prog.setSpeed(FAST, JOINT)
+    # base-B coordinates (as v6's ground) -> ground: the bases are turned 180 deg about z
+    turn = lambda d: tuple(u - w for u, w in zip((BASE_B * transl(*d)).Pos(), BASE_B.Pos()))   # base-B axes -> ground
+    # 4  outer half: down the bench off the seat planks (v6), lifted, on down the bench until clear of frame 1 -
+    #    towards base A, empty by then - then up, flipped, down on base A
+    half_to_a("outer", BASE_B * GUIDE_ON_B * OUTER_GRIP, outer,
+              [turn(d) for d in ((0, SLIDE, 0), (0, 0, LIFT), (0, OUTER_OUT, 0))], BASE_A * GUIDE_ON_A * OUTER_GRIP)
+    # 5  inner half: forward off the back planks, lifted, up the bench until clear of frame 1 (v6's way out; here
+    #    +y, away from base A), then up, across, flipped, down on base A next to the outer half
+    fwd = (-T_B[0] * SLIDE, -T_B[1] * SLIDE, 0)
+    half_to_a("inner", BASE_B * GUIDE_ON_B * INNER_GRIP, inner,
+              [turn(d) for d in (fwd, (0, 0, LIFT), INNER_WAY)], BASE_A * GUIDE_ON_A * INNER_GRIP)
+    # 6  bench: re-gripped at frame 1's foot from above, lifted out of base B, set down on the AMR plate
+    grip = BASE_B * FLIP * HAND_GRIP
+    take("bench", grip, [f1, f2] + planks + pieces_a + pieces_b, inside=False, high=grip[2, 3] + 60)
+    dx, dy, dz = AMR_SHIFT
+    prog.MoveL(target("bench lift", transl(0, 0, BENCH_LIFT) * grip))
+    prog.setSpeed(FAST, JOINT)
+    prog.MoveL(target("bench over AMR", transl(dx, dy, BENCH_LIFT) * grip))
+    prog.setSpeed(SLOW, JOINT)
+    prog.MoveL(target("bench down", transl(dx, dy, dz) * grip))
+    let_go("bench", transl(dx, dy, dz) * grip, back=40, inside=False, frame=amr)   # the bench rides with the AMR
+    back = fk(j)                                                    # back over the middle, then home
+    back[0, 3], back[1, 3], back[2, 3] = MID[0], MID[1], LIFT_Z
+    b0 = target("back to middle", back, joints=follow(Mat(j), back))
+    prog.MoveL(b0)
+    if b0.Joints()[4, 0] * home.Joints()[4, 0] < 0:
+        straight("back home", swap_wrist("back", b0.Joints()), home.Pose(), home.Joints())
+    else:
+        link(b0.Joints(), home)
+
+    RDK.AddFile(str(HERE / "amr_drive.py"), RDK.ActiveStation()).setName("Deliver (AMR)")
+    RDK.AddFile(str(HERE / "assemble_and_deliver.py"), RDK.ActiveStation()).setName("Assemble and deliver")
+    style(RDK, robot, prog, (cell, work, gb, amr, robot.Parent()))
+    cell.setParam("Tree", "Collapse")
+    RDK.Render(True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    RDK.Save(str(HERE / f"{STATION}.rdk"))
+    # for check_parts: the parts' poses in stages 4-6 (frame 1 + planks + pieces A as flipped into base B)
+    to_b = BASE_B * FLIP * BASE_A.inv()
+    bench = {f1: to_b * f1.Pose(), f2: f2.Pose()}
+    bench.update({o: to_b * o.Pose() for o in pieces_a})
+    bench.update({planks[k - 1]: to_b * final[k][1] for k in range(1, 7)})     # planks: in frame 1, not the jig
+    bench.update({o: o.Pose() for o in pieces_b})
+    on_b, on_a = BASE_B * GUIDE_ON_B, BASE_A * GUIDE_ON_A
+    stages = [("outer", {**bench, inner: on_b, outer: on_b}),
+              ("inner", {**bench, inner: on_b, outer: on_a}),
+              ("bench", {**bench, inner: on_a, outer: on_a})]
+    carried = {"inner": [inner], "outer": [outer], "bench": list(bench)}
+    return RDK, robot, tool, gb, prog, parts, fixtures, bad, (stages, carried)
+
+
+def axis_rot(k, a):
+    """Rotation by a about the unit axis k (Rodrigues)."""
+    x, y, z = k
+    c, s, v = math.cos(a), math.sin(a), 1 - math.cos(a)
+    return Mat([[x * x * v + c, x * y * v - z * s, x * z * v + y * s, 0],
+                [y * x * v + z * s, y * y * v + c, y * z * v - x * s, 0],
+                [z * x * v - y * s, z * y * v + x * s, z * z * v + c, 0], [0, 0, 0, 1]])
+
+
+def style(RDK, robot, prog, frames):
+    """No axis arrows, no path, no trace (call again after the station is reopened)."""
+    for f in frames:
+        f.setVisible(False)
+    robot.setVisible(True, 0x2AAAAAAA)
+    prog.setVisible(False)
+    RDK.Command("Trace", "Off")
+
+
+def check(RDK, robot, tool, prog, parts, fixtures):
+    """Robot and gripper against the fixtures (parts are left out: they touch on purpose)."""
+    RDK.COM.settimeout(1200)
+    RDK.setCollisionActive(robolink.COLLISION_ON)
+    every = parts + fixtures
+    for i, a in enumerate(every):
+        for b in every[i + 1:]:
+            RDK.setCollisionActivePair(robolink.COLLISION_OFF, a, b)
+    for p in parts:
+        RDK.setCollisionActivePair(robolink.COLLISION_OFF, tool, p)
+        for link in range(7):
+            RDK.setCollisionActivePair(robolink.COLLISION_OFF, robot, p, link, 0)
+    for link in range(7):
+        RDK.setCollisionActivePair(robolink.COLLISION_OFF, robot, tool, link, 0)
+    ld = RDK.Item("AMR LD-250", robolink.ITEM_TYPE_ROBOT)
+    if ld.Valid():
+        for other in every:
+            for link in range(5):
+                RDK.setCollisionActivePair(robolink.COLLISION_OFF, ld, other, link, 0)
+    res = prog.Update(robolink.COLLISION_ON)
+    RDK.setCollisionActive(robolink.COLLISION_OFF)
+    return res
+
+
+def check_start(RDK, robot, tool, prog, parts, fixtures):
+    """v5's new way in: Home -> the first plank's travel point and approach, robot and gripper against
+    everything - the parts too (the guide now starts on base A, frame 1 under it, the planks in their jig).
+    Returns [(move, collision pairs)]: 0 = free."""
+    names = [(n, i) for i, (n, kind, *_) in enumerate(prog.Instruction(i) for i in range(prog.InstructionCount()))
+             if kind == robolink.INS_TYPE_MOVE]
+    first = [n for n, _ in names[:3]]                       # Home, plank3 pick travel, plank3 pick approach
+    tgt = {t.Name(): t for t in RDK.ItemList(robolink.ITEM_TYPE_TARGET)}
+    joints = [tgt[re.match(r"Move[JL] \((.*)\)", n).group(1)].Joints() for n in first]
+    RDK.setCollisionActive(robolink.COLLISION_ON)
+    every = parts + fixtures
+    for i, a in enumerate(every):
+        for b in every[i + 1:]:
+            RDK.setCollisionActivePair(robolink.COLLISION_OFF, a, b)
+    for link in range(7):
+        RDK.setCollisionActivePair(robolink.COLLISION_OFF, robot, tool, link, 0)
+    for o in every:
+        RDK.setCollisionActivePair(robolink.COLLISION_ON, tool, o)
+        for link in range(7):
+            RDK.setCollisionActivePair(robolink.COLLISION_ON, robot, o, link, 0)
+    out = []
+    for (n, _), q0, q1 in zip(names[1:3], joints, joints[1:]):
+        t = tgt[re.match(r"Move[JL] \((.*)\)", n).group(1)]
+        hit = robot.MoveJ_Test(q0, q1, 1) if n.startswith("MoveJ") else robot.MoveL_Test(q0, t.Pose(), 1)
+        out.append((n, hit))
+    robot.setJoints(joints[0])
+    RDK.setCollisionActive(robolink.COLLISION_OFF)
+    return out
+
+
+def check_parts(RDK, robot, tool, gb, prog, parts, fixtures, plan, step=2.0):
+    """Stages 4-6 (new or changed in v6), sampled every `step` mm / deg: the robot and the gripper against every
+    part they don't hold, and the held part(s) against every other part and the fixtures. The fixture check
+    (check()) leaves parts out. Skipped: each half's first two moves out (v5's, the half still touching frame 2
+    and in among the planks, checked in 3D by jig_parts_v4.py) and the bench's first lift out of base B (it
+    sits in it). Returns [(move, pair names)] of the samples that collide. The parts are put back after."""
+    stages, carried = plan
+    msg, path, status = prog.InstructionListJoints(step, step)
+    names = [n for n, kind, *_ in (prog.Instruction(i) for i in range(prog.InstructionCount()))
+             if kind == robolink.INS_TYPE_MOVE]
+    label = lambda n: re.match(r"Move[JL] \((.*)\)", n).group(1)
+    tgt = {t.Name(): t for t in RDK.ItemList(robolink.ITEM_TYPE_TARGET)}
+    start = {p: p.Pose() for p in parts}
+    q0 = robot.Joints()
+    held_moves = lambda who: [f"{who} out {i}" for i in range(3, 6)] + [
+        f"{who} {w}" for w in ("up", "across", "over place", "place approach", "place")]
+    hits = []
+    RDK.Render(False)
+    for who, poses in stages:
+        held = carried[who]
+        moving = held_moves(who) if who != "bench" else ["bench over AMR", "bench down"]
+        first = next(i for i, n in enumerate(names) if label(n).startswith(f"{who} ") or label(n) == f"{who} via")
+        last = max(i for i, n in enumerate(names) if label(n).startswith(f"{who} "))
+        for o, pose in poses.items():
+            o.setPose(pose)
+        grip = tgt[f"{who} pick"].Pose()
+        rel = {o: grip.inv() * poses[o] for o in held}
+        static = [o for o in poses if o not in held]
+        RDK.setCollisionActive(robolink.COLLISION_ON)
+        every = parts + fixtures + [tool, robot]
+        for i, a in enumerate(every):
+            for b in every[i + 1:]:
+                RDK.setCollisionActivePair(robolink.COLLISION_OFF, a, b)
+        for link in range(7):
+            for o in parts + fixtures:
+                RDK.setCollisionActivePair(robolink.COLLISION_OFF, robot, o, link, 0)
+        for o in static:
+            RDK.setCollisionActivePair(robolink.COLLISION_ON, tool, o)
+            for link in range(7):
+                RDK.setCollisionActivePair(robolink.COLLISION_ON, robot, o, link, 0)
+        for h in held:
+            for o in static + fixtures:
+                RDK.setCollisionActivePair(robolink.COLLISION_ON, h, o)
+        mv = [i for i, n in enumerate(names) if label(n) in moving]
+        for col in range(path.size(1)):
+            k = int(path[9, col]) - 1
+            if not first <= k <= last:
+                continue
+            q = [path[i, col] for i in range(6)]
+            robot.setJoints(q)
+            name = label(names[k])
+            if mv[0] <= k <= mv[-1]:                                # held: rides with the gripper
+                T = gb.PoseAbs().inv() * robot.SolveFK(q) * tool.PoseTool()
+                for o in held:
+                    o.setPose(T * rel[o])
+            else:                                                   # before / after: resting where it touches
+                for o in held:                                      # its jig or the AMR on purpose: out of
+                    o.setPose(transl(0, 0, -5000))                  # the way (the gripper holds it there)
+                if who != "bench" and any(name == f"{who} out {i}" for i in (1, 2)):
+                    continue                                        # v5's moves out, the half touching on purpose
+            if RDK.Collisions() > 0:
+                its = sorted({i.Name() for i in RDK.CollisionItems()})
+                if name == f"{who} place" and set(its) <= {"Guide inner", "Guide outer", "Base A"}:
+                    continue                                        # set down: on base A, cut face to cut face
+                movers = {robot.Name(), tool.Name()} | ({o.Name() for o in held} if mv[0] <= k <= mv[-1] else set())
+                if movers & set(its):                               # else: parts resting in their jigs (RoboDK
+                    hits.append((name, its))                        # reports them once the pairs were touched)
+        for o in held:
+            o.setPose(poses[o])
+    RDK.setCollisionActive(robolink.COLLISION_OFF)
+    for p, pose in start.items():
+        p.setPose(pose)
+    robot.setJoints(q0)
+    RDK.Render(True)
+    return hits
+
+
+def stays_inside(robot, gb, prog):
+    """Largest distance (x/y) the fingertips get outside the ground base (not counting the bench's
+    hand-over to the AMR: the finished bench may leave)."""
+    msg, path, status = prog.InstructionListJoints(5, 2)
+    inv, worst = gb.PoseAbs().inv(), 0.0
+    cell = robot.Parent().PoseAbs()
+    names = [n for n, kind, *_ in (prog.Instruction(i) for i in range(prog.InstructionCount()))
+             if kind == robolink.INS_TYPE_MOVE]
+    for col in range(path.size(1)):
+        name = names[int(path[9, col]) - 1]
+        if any(f"(bench {w}" in name for w in ("lift", "over", "down", "place")) or "(back to middle" in name:
+            continue                                                # hand-over, and back from it
+        x, y, _ = (inv * cell * robot.SolveFK([path[i, col] for i in range(6)]) * transl(0, 0, TIP)).Pos()
+        worst = max(worst, -x, x - GROUND_SIZE[0], -y, y - GROUND_SIZE[1])
+    return worst
+
+
+def main(collisions=True):
+    RDK, robot, tool, gb, prog, parts, fixtures, bad, plan = build()
+    n, t, d, ok, msg = prog.Update()
+    print(f"{PROGRAM}: {n:.0f} instructions, {t:.0f} s, {d / 1000:.1f} m, {'OK' if ok == 1 else 'NOT OK: ' + msg}")
+    print("unreachable targets:", bad or "none")
+    if ok != 1:
+        return
+    if collisions:
+        msg = check(RDK, robot, tool, prog, parts, fixtures)[-1]
+        collisions = "none" if not msg or "No collisions" in msg else re.sub(r"<[^>]+>", " ", msg).strip()
+        print("collision check:", collisions)
+        for name, hit in check_start(RDK, robot, tool, prog, parts, fixtures):
+            print(f"new start, {name}, against fixtures and parts: {'free' if hit == 0 else f'COLLISION ({hit})'}")
+    else:
+        collisions = "not checked (--no-check)"
+    hits = check_parts(RDK, robot, tool, gb, prog, parts, fixtures, plan)
+    print("stages 4-6, robot/gripper/held part against the parts:", "free" if not hits else f"{len(hits)} samples collide")
+    for name, pair in hits[:40]:
+        print(f"    {name}: {', '.join(pair)}")
+    out = stays_inside(robot, gb, prog)
+    print(f"fingertips outside the ground base: {out:.1f} mm")
+    post = HERE / f"{POST}.py"
+    if POSTS_DIR.exists() and (not (POSTS_DIR / post.name).exists()
+                               or (POSTS_DIR / post.name).read_bytes() != post.read_bytes()):
+        shutil.copy(post, POSTS_DIR / post.name)
+    robot.setParam("PostProcessor", POST)
+    print("TMflow export:", prog.MakeProgram(str(OUT))[0])
+    rc.close_stations(RDK, lambda name: name == STATION)   # this station only (v4's stays open), then reopen the
+    st = RDK.AddFile(str(HERE / f"{STATION}.rdk"))          # saved file: only then the window title shows its name
+    RDK.setActiveStation(st)
+    r = RDK.Item(rc.ROBOT, robolink.ITEM_TYPE_ROBOT)
+    prog = RDK.Item(PROGRAM, robolink.ITEM_TYPE_PROGRAM)
+    row = cycle_times.log(VERSION, prog, "build", collisions=collisions, fingertips=f"{out:.1f}")
+    print(f"cycle time {row['cycle_s']:.0f} s per bench at the programmed speeds, logged in {cycle_times.LOG.name}")
+    style(RDK, r, prog,
+          [RDK.Item(n, robolink.ITEM_TYPE_FRAME) for n in ("Cell", "Work plate", "Ground base", "AMR")] + [r.Parent()])
+
+
+if __name__ == "__main__":
+    import sys
+    main(collisions="--no-check" not in sys.argv[1:])
