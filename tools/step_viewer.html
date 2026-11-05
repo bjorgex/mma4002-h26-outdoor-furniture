@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STEP viewer</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1e2430; color: #e6ecff; font: 14px system-ui, sans-serif; }
+  #bar { position: absolute; top: 0; left: 0; right: 0; padding: 8px 12px; background: #141a24cc; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 2; }
+  select, button { background: #26304a; color: #e6ecff; border: 1px solid #3a4766; border-radius: 4px; padding: 4px 8px; font: inherit; }
+  #info { color: #9fb0d6; }
+  #parts { position: absolute; top: 48px; right: 8px; max-height: 60%; overflow: auto; background: #141a24cc; padding: 6px 10px; border-radius: 4px; z-index: 2; }
+  #parts label { display: block; white-space: nowrap; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <select id="file"></select>
+  <button id="fit">Fit</button>
+  <label><input type="checkbox" id="edges" checked> edges</label>
+  <span id="info">loading…</span>
+</div>
+<div id="parts"></div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// STEP files in this repo, listed by tools/step_viewer.ps1 into step_files.json (paths relative to the repo root).
+const FILES = await fetch("step_files.json").then(r => r.json());
+const PALETTE = [0x9fa6ad, 0xb8854a, 0x6f9fd8, 0xd8a76f, 0x7fbf8f, 0xc77fbf, 0xd8d26f];
+
+const sel = document.getElementById("file"), info = document.getElementById("info"), partsBox = document.getElementById("parts");
+const params = new URLSearchParams(location.search);
+FILES.forEach(f => sel.add(new Option(f.replace("3d-modeling-and-simulation/", ""), f)));
+sel.value = FILES.find(f => f.endsWith(params.get("f") || "JigV3.STEP")) || FILES[0];
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e2430);
+const camera = new THREE.PerspectiveCamera(40, 1, 1, 1e6);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444455, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(1, -1.5, 2); scene.add(sun);
+let model = null;
+
+function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+(function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+
+function fit() {
+  if (!model) return;
+  const box = new THREE.Box3().setFromObject(model), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+  const r = s.length() / 2;
+  controls.target.copy(c);
+  camera.position.copy(c).add(new THREE.Vector3(1, -1.4, 0.9).normalize().multiplyScalar(r * 2.6));
+  camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
+  return s;
+}
+
+const occtReady = occtimportjs();
+async function load(path) {
+  info.textContent = "loading " + path.split("/").pop() + " …";
+  partsBox.innerHTML = "";
+  if (model) { scene.remove(model); model = null; }
+  const [occt, buf] = await Promise.all([occtReady, fetch("../" + path).then(r => { if (!r.ok) throw new Error(r.status + " " + path); return r.arrayBuffer(); })]);
+  const res = occt.ReadStepFile(new Uint8Array(buf), null);
+  if (!res.success) { info.textContent = "could not read " + path; return; }
+  model = new THREE.Group();
+  const showEdges = document.getElementById("edges").checked;
+  res.meshes.forEach((m, i) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+    if (m.attributes.normal) g.setAttribute("normal", new THREE.Float32BufferAttribute(m.attributes.normal.array, 3)); else g.computeVertexNormals();
+    g.setIndex(new THREE.BufferAttribute(Uint32Array.from(m.index.array), 1));
+    const col = m.color ? new THREE.Color(m.color[0], m.color[1], m.color[2]) : new THREE.Color(PALETTE[i % PALETTE.length]);
+    const part = new THREE.Group();
+    part.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: col, metalness: 0.1, roughness: 0.7, side: THREE.DoubleSide })));
+    const e = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), new THREE.LineBasicMaterial({ color: 0x10141c }));
+    e.visible = showEdges; e.userData.edge = true; part.add(e);
+    model.add(part);
+    const lab = document.createElement("label");
+    lab.innerHTML = `<input type="checkbox" checked> <span style="color:#${col.getHexString()}">■</span> ${m.name || "part " + (i + 1)}`;
+    lab.querySelector("input").onchange = ev => part.visible = ev.target.checked;
+    partsBox.appendChild(lab);
+  });
+  scene.add(model);
+  const s = fit();
+  info.textContent = `${path.split("/").pop()} · ${res.meshes.length} bodies · ${s.x.toFixed(0)} × ${s.y.toFixed(0)} × ${s.z.toFixed(0)} (file units, usually mm) · drag = rotate, right-drag = pan, wheel = zoom`;
+}
+sel.onchange = () => load(sel.value).catch(e => info.textContent = e.message);
+document.getElementById("fit").onclick = fit;
+document.getElementById("edges").onchange = ev => model && model.traverse(o => { if (o.userData.edge) o.visible = ev.target.checked; });
+load(sel.value).catch(e => info.textContent = e.message);
+</script>
+</body>
+</html>
