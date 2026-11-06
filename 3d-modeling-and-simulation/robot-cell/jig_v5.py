@@ -3,13 +3,14 @@
 Plate coordinates (as robot_base.py): x away from the robot 0..300, y to the left 0..300, top of the plate z = 0.
 T-slot lines along y at x = 45, 75, ... 255 (robot_base.FIRST + i * PITCH).
 
-    bases A + B   JigV3 base (jig_v3.py), both turned -90 deg (legs along +x, towards the rack), side by side across
-                  the slots, centred: A at (90, 60), B at (90, 240) -> each overhangs the plate by 30 mm in y.
+    layout        plank rack nearest the robot, bases + guide farther out (Bjørge, 2026-11-06); 5 planks per bench
+    bases A + B   JigV3 base (jig_v3.py), both turned +90 deg (legs along -x, towards the rack), side by side across
+                  the slots, centred: A at (210, 60), B at (210, 240) -> each overhangs the plate by 30 mm in y.
                   NEW screw holes: M8 through + counterbore from the top, on T-slot lines, only where the base is
                   solid from bottom to top and (base A) clear of the guide. A and B are the same part: same holes.
     guide         JigV3's two halves, on base A (start/end of the cycle), as in jig_v3.py.
-    plank rack    PlankRack_V2's body, turned 90 deg (its 60 mm width along x) in the far strip x 210..270, centred
-                  in y; flanges widened for M8 and the holes moved onto the slot lines x = 225 and 255.
+    plank rack    PlankRack_V2's body, turned 90 deg (its 60 mm width along x) in the near strip x 30..90, centred
+                  in y; flanges widened for M8 and the holes moved onto the slot lines x = 45 and 75.
 Bolts: M8 into M8 T-nuts in the slots (robot_base.py: 9 mm opening, 15 x 6 head).
 
     python robot_cell/jig_v5.py
@@ -32,14 +33,14 @@ OUT = HERE.parent / "jig-cad" / "Jig V5"
 SIM = HERE / "jig_parts"
 
 SLOTS = [rbase.FIRST + i * rbase.PITCH for i in range(rbase.N_SLOTS)]       # 45 .. 255
-BASE_TURN = jig_v3.TURN                                                       # -90: legs towards +x
-BASES = {"A": (90.0, 60.0), "B": (90.0, 240.0)}                              # base centres on the plate
+BASE_TURN = 90                                                                # legs towards -x: the rack / robot
+BASES = {"A": (210.0, 60.0), "B": (210.0, 240.0)}                            # base centres on the plate (far side)
 BOLT_D, CB_D, CB_H = 9.0, 14.5, 9.0                                           # M8 clearance, counterbore for the head
 EDGE_MIN = 10.0                                                               # hole edge to base edge, at least
 SLAB, MIN_SOLID = 20.0, 18.0                                                  # JigV3 base floor thickness; min under a hole
 RACK_TURN = -90                                                               # rack-local y -> plate +x
-RACK_AT = (210.0, 195.0)                                                      # rack-local origin on the plate
-RACK_HOLES_Y = (15.0, 45.0)                                                   # rack-local y of the flange holes -> x 225, 255
+RACK_AT = (30.0, 195.0)                                                       # rack-local origin on the plate (near the robot)
+RACK_HOLES_Y = (15.0, 45.0)                                                   # rack-local y of the flange holes -> x 45, 75
 RACK_FLANGE = 22.0                                                            # flange length (was 16: room for M8)
 
 
