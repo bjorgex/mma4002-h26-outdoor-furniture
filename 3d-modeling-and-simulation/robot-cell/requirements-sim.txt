@@ -1,0 +1,8 @@
+# The group's own robot-cell simulator (tests/tmflow_mock.py --sim, tests/robot_sim/), no RoboDK app needed.
+# Setup: see SIM_README.md.
+numpy
+scipy
+trimesh
+python-fcl      # collision checks (trimesh.collision); the sim also runs without it, without collisions
+matplotlib
+robodk          # only the API's maths helpers (robomath); no RoboDK install or licence
