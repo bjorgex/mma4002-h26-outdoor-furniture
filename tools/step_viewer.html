@@ -34,7 +34,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // STEP files in this repo, listed by tools/step_viewer.ps1 into step_files.json (paths relative to the repo root).
-const FILES = await fetch("step_files.json").then(r => r.json());
+const FILES = await fetch("step_files.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json());
 const PALETTE = [0x9fa6ad, 0xb8854a, 0x6f9fd8, 0xd8a76f, 0x7fbf8f, 0xc77fbf, 0xd8d26f];
 
 const sel = document.getElementById("file"), info = document.getElementById("info"), partsBox = document.getElementById("parts");
