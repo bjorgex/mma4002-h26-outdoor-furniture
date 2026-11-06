@@ -6,6 +6,8 @@
 // GRAB_MM). RELEASE / SET puts down everything held, where it is.
 // The cell: cell.glb (v4 start), or the one a scenario reset names ("cell" in scenarios.json, e.g. cell_v5: the
 // guide starts on base A) - swapped in on that reset.
+// Collisions (collision_layer.js, data from collision.py via /sim/collisions.json): the objects of a colliding move
+// turn red while the 3D pane plays that move (the mock's numbered "move" events, applied at the pane's play time).
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -124,7 +126,7 @@ export function createSim(el, { log = () => {} } = {}) {
     simple.forEach(m => m.removeFromParent());
   }, undefined, e => log("err", "tm5_links.glb not loaded (simple shapes instead): " + e.message));
   // gripper: body 94 x 90 x 123 (Schunk EGP box, as in the RoboDK station: bench_cell_v4.EGP) + two fingers to TIP
-  boxAt(L6, [-47, -45, 0], [47, 45, 123], grey);
+  const egpBody = boxAt(L6, [-47, -45, 0], [47, 45, 123], grey);
   const fingers = [-1, 1].map(() => boxAt(L6, [-1.5, -4, 123], [1.5, 4, TIP], new THREE.MeshStandardMaterial({ color: 0xd0d3d8 })));
   let gap = GAP_OPEN, gapFrom = GAP_OPEN, gapTo = GAP_OPEN, gapT0 = 0, gapDur = 1;
   const setGap = g => { fingers[0].position.x = -g / 2 - 1.5; fingers[1].position.x = g / 2 + 1.5; };
@@ -233,14 +235,25 @@ export function createSim(el, { log = () => {} } = {}) {
         break;
       case "reset":                                  // a scenario reset the mock: parts back where they started
         held = []; carry = null; manip?.setCell(ev.cell);
+        movesAt = []; coll?.reset(); coll?.setCell(ev.cell || "cell");
         if ((ev.cell || "cell") !== cellName) { loadCell(ev.cell || "cell"); animateGrip(GAP_OPEN, .2); break; }
         start.forEach((s, o) => { s.parent.add(o); o.position.copy(s.pos); o.quaternion.copy(s.quat); o.scale.copy(s.scale); });
         animateGrip(GAP_OPEN, .2); moveLine.visible = false;
         break;
       case "move":
         moveLine.geometry.setFromPoints([new THREE.Vector3(...ev.frm), new THREE.Vector3(...ev.to)]);
-        moveLine.visible = true; break;
+        moveLine.visible = true;
+        movesAt.push([ev.at ?? -Infinity, ev.n || null]);   // n: the program's move number (Listen-node moves)
+        break;
     }
+  }
+  // the move the pane shows now: "move" events take effect at the play time (the joints run `delay` s behind)
+  let movesAt = [];
+  function playMoves() {
+    const tr = off === null ? Infinity : Math.max(floorAt, performance.now() / 1000 - off - delay);
+    let n;
+    while (movesAt.length && movesAt[0][0] <= tr) n = movesAt.shift()[1];
+    if (n !== undefined) coll?.setMove(n);
   }
 
   function resize() {
@@ -251,6 +264,7 @@ export function createSim(el, { log = () => {} } = {}) {
   new ResizeObserver(resize).observe(el); resize();
   renderer.setAnimationLoop(() => {
     shown = playback();
+    playMoves();
     shown.forEach((a, i) => joints[i].rotation.z = a * deg);
     const u = Math.min(1, (performance.now() - gapT0) / gapDur);
     gap = gapFrom + (gapTo - gapFrom) * u; setGap(gap);
@@ -260,6 +274,11 @@ export function createSim(el, { log = () => {} } = {}) {
   let manip = null;
   import(BASE + "manip_layers.js").then(m => m.addManipLayers({ THREE, scene, camera, joints, el, base: BASE, tip: TIP, log }))
     .then(m => { manip = m; manip.setCell(cellName); }).catch(e => log("err", "manipulability layers not loaded: " + e.message));
+  // collisions (collision_layer.js, collision.py's hits for the cell's moves file): own panel, top right; optional
+  let coll = null;
+  import(BASE + "collision_layer.js").then(m => m.addCollisionLayer({ THREE, scene, el, base: BASE, log,
+    extra: { EGP: [egpBody, ...fingers] } }))
+    .then(m => { coll = m; coll.setCell(cellName); }).catch(e => log("err", "collision layer not loaded: " + e.message));
   return { handle, setView, scene, joints, get held() { return heldName(); }, get delay() { return delay; },
-           get manip() { return manip; } };
+           get manip() { return manip; }, get collisions() { return coll; } };
 }

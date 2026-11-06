@@ -32,9 +32,11 @@ Checks, as bench_cell_v7.py does them in RoboDK:
     parts     = check_parts(), over the whole program: robot links + gripper against every part not held, carried
               parts against the other parts and the fixtures. Contact on purpose is allowed: gripper/robot with the
               parts of the next grip from the gripper event before it on (going in) and with the parts just released
-              until the next gripper event (backing out); carried parts against anything in the first two moves
-              after a grip (out of a slot / pocket) and the last two before the release (setting down) - v7 skips
-              the same moves.
+              until the next gripper event (backing out). Carried parts are also checked against the robot's
+              links (not the gripper, which holds them): a part turned into the arm is a hit. In the first two
+              moves after a grip and the last two before the release, carried parts may only touch what they
+              already touch at the grip / release pose (sliding out of a slot, setting down); anything new is a
+              hit (2026-11-06: the old blanket skip hid a bench lifted up through the guide).
 Exit code 1 if anything collides.
 """
 import argparse
@@ -271,6 +273,25 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
     last_released = set()
     hits = []
     gap_now = None
+    anchor_after = set()                                     # held-part contacts at the last grip pose
+    rel_cache = {}
+
+    def contacts(F):
+        """(held part, other) contact pairs with the held parts at gripper pose F."""
+        m = trimesh.collision.CollisionManager()
+        for n in held:
+            m.add_object(n, part_mesh[n], transform=F @ rel[n])
+        out = set()
+        for other in (world, fixtures):
+            hit, pairs = m.in_collision_other(other, return_names=True)
+            if hit:
+                out |= {tuple(sorted(p)) for p in pairs if not set(p) <= set(held)}
+        return out
+
+    def release_contacts(r):
+        if r not in rel_cache:
+            rel_cache[r] = contacts(robot_poses(per[r][-1])["EGP"])
+        return rel_cache[r]
     for mi, path in enumerate(per):
         if gaps[mi] is not None and gaps[mi] != gap_now:     # fingers at this move's gap (see egp_at_gap)
             gap_now = gaps[mi]
@@ -303,11 +324,21 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
                 hit, pairs = world.in_collision_other(rob, return_names=True)
                 if hit:
                     pt |= {tuple(sorted(p)) for p in pairs if not set(p) & ok}
-                if held and not quiet:
+                if held:
+                    allowed = set()
+                    if quiet:                                # only the contacts of the grip / release pose
+                        allowed = anchor_after if any(0 < mi - g <= 2 for g in grips) else set()
+                        r = next((r for r in releases if 0 <= r - mi < 2), None)
+                        if r is not None:
+                            allowed = allowed | release_contacts(r)
                     for other in (world, fixtures):
                         hit, pairs = held_mgr.in_collision_other(other, return_names=True)
                         if hit:
-                            pt |= {tuple(sorted(p)) for p in pairs if not set(p) <= set(held)}
+                            pt |= {tuple(sorted(p)) for p in pairs
+                                   if not set(p) <= set(held) and tuple(sorted(p)) not in allowed}
+                    hit, pairs = held_mgr.in_collision_other(rob, return_names=True)
+                    if hit:                                  # carried parts into the arm
+                        pt |= {tuple(sorted(p)) for p in pairs if "EGP" not in p}
         if fx:
             hits.append({"move": mi + 1, "name": names[mi], "check": "fixtures", "pairs": sorted(fx),
                          "context": _context(events, mi)})
@@ -325,6 +356,7 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
                     held_mgr = trimesh.collision.CollisionManager()
                     for n in held:
                         held_mgr.add_object(n, part_mesh[n], transform=pose[n])
+                    anchor_after = contacts(F)
                     last_released = set()
                 elif s["gripper"] == "release":
                     last_released = set(held)

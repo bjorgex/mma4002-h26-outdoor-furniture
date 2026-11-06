@@ -489,7 +489,7 @@ function seqMark(row, err) {
 
 function addLog(box, cls, text, at) {
   const d = document.createElement('div'); d.className = cls;
-  d.innerHTML = `<span class="t">${at !== undefined ? at.toFixed(1) : ''}</span>${esc(text)}`;
+  d.innerHTML = `<span class="t">${at != null ? at.toFixed(1) : ''}</span>${esc(text)}`;   // null: before the first state
   box.prepend(d);
   while (box.childElementCount > 300) box.lastChild.remove();
 }

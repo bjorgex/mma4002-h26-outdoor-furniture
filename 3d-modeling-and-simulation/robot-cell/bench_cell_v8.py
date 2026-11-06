@@ -17,11 +17,12 @@ Program "AssembleBench" (v7's stages, adapted; base roles START_BASE = B, FINISH
     2  small half, 3 big half: start -> finish base, NOT flipped (JigV3 is mirror symmetric about base-local x, so the
        guide works on the finish base as it is; frame 1 + planks are turned over about base-local y). Both lifted
        straight up off the planks; the big half turned 45 deg about z once clear of the plank tops
-    4  frame 1 + planks: foot grip, turned over, lowered through the guide into frame 2 on the finish base
-    5  finished bench: re-gripped at frame 1's foot, lifted straight up out of the finish base (out of the guide's
-       slots) and set down on the AMR plate (beside the finish base)
-    6  small half, 7 big half: lifted off the empty finish base, back onto the start base; home
-    (v7 took the guide out from under the turned-over bench: impossible with JigV3's halves, see the DECISION below)
+    4  frame 1 + planks: outer foot grip, lifted, turned over about an axis along plate x (the bench rolls over
+       away from the arm, foot over the top), lowered through the guide into frame 2
+    5  small half: lifted off the base's bosses, slid out from between the frames (base-local +y), up, onto the
+       start base; 6  big half: lifted, turned 45 deg, slid out, up, onto the start base
+    7  finished bench: re-gripped at frame 1's foot from above, lifted out of the finish base, onto the AMR; home
+    (2026-11-06, Bjørge: the guide must come out BEFORE the bench is lifted - frame 2 cannot pass the guide)
 Checks: tests/robot_sim/kin_check.py, collision.py (fixtures + --parts, per-move Hand-E finger gap "egp_gap"),
 manipulability.py targets; all with the "techman" link lengths (tm5_kin.py's default, the mock's IK).
 ASSUMPTION marks every guessed value.
@@ -36,6 +37,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
 sys.path.insert(0, str(HERE / "tests" / "robot_sim"))
 import tm5_kin as kin                                      # noqa: E402
+import teach_overrides                                     # noqa: E402  grip points taught on the robot (teach_v8.json)
 
 PARTS, JIG, TESTS = HERE / "benchV1_parts", HERE / "jig_parts", HERE / "tests"
 LAYOUT = json.loads((HERE / "bench_layout.json").read_text(encoding="utf-8"))
@@ -124,6 +126,9 @@ def rack_start(k):
 # grips (TCP poses, tool z = approach, fingers close along tool x)
 PLANK_GRIP = np.array([[0, -1, 0, 0], [0, 0, -1, 110], [1, 0, 0, 2.5], [0, 0, 0, 1.0]])   # v7 (plank coords)
 PLANK_PUSH = np.array([[0, -1, 0, 0], [0, 0, -1, 125], [1, 0, 0, 2.5], [0, 0, 0, 1.0]])
+# 2026-11-06, bases turned: plank 2's place needed J6 = 270 (the limit); the Hand-E is symmetric, so both plank
+# grips are spun 180 deg about the tool axis (J6 ~180 deg lower)
+PLANK_GRIP, PLANK_PUSH = PLANK_GRIP @ rotz(pi), PLANK_PUSH @ rotz(pi)
 DOWN = rotx(pi)                                              # tool z down, tool x = local x
 ARM_Z = 48                                                   # fingertips 12 mm below the guide top (z 60)
 # DECISION 2026-11-06 (Claude, Bjørge asleep): the gripper is a Robotiq Hand-E (stroke 0-50 mm). Its fingers are
@@ -136,15 +141,24 @@ ARM_Y = 63          # ASSUMPTION: guide grips 25-27 mm in from the arm tips (at 
 # without back planks that slot is empty and takes the inner finger (24 mm open). (Measured in the z 50 section.)
 # Side: the arm away from the back planks (start base: -x, finish base: +x, the bench being turned over).
 ARM_X = {"small": 51.0, "big": 75.2}
+GUIDE_LIFT, GUIDE_OUT = 25, 130   # off the base's bosses (z 40), then out along base-local +y past frame 1
 # Grip orientation: tool down, spun 180 deg about the tool axis (fingers symmetric): upright and unspun the wrist
 # (link 6) hit seat plank 2 when picking the halves off the start base (collision search). ASSUMPTION
 SPIN = pi
 
 
-def grips():
-    """Guide grips in base-local coordinates: on the arm on base-local -x (away from the back planks on the start
-    base); the same grip takes the half off the finish base again (no planks there by then)."""
-    return {who: transl(-ARM_X[who], ARM_Y, ARM_Z) @ DOWN @ rotz(SPIN) for who in ("small", "big")}
+def grips(side=-1, tilt=None):
+    """Guide grips in base-local coordinates on the arm on base-local x = side * ARM_X: -1 on the start base (away
+    from its back planks), +1 on the finish base after the flip (its back planks are on -x)."""
+    tilt = GRIP_TILT if tilt is None else tilt
+    return {who: transl(side * ARM_X[who], ARM_Y, ARM_Z) @ DOWN @ rotz(SPIN) @ roty(side * deg(tilt[who]))
+            for who in ("small", "big")}
+
+
+# The big half's arm faces the other base where it is set down: upright, the Hand-E body (+-45 mm) hit the planks
+# standing on the other base (collision.py). Tilted 15 deg about the arm, the body leans in over its own guide.
+GRIP_TILT = {"small": 0, "big": -15}         # start -> finish (stage 3)
+GRIP_TILT_BACK = {"small": 0, "big": 0}      # finish -> start (stage 6): tilted, the arm hit frame 1 at the pick
 
 
 # DECISION 2026-11-06 (Claude, Bjørge asleep): the big half is lifted straight up until its bottom is >= 15 mm over
@@ -161,9 +175,13 @@ TURN_CLEAR = 15
 # on the AMR first; then both halves are lifted off the empty finish base and set back on the start base.
 # frame 1's rear foot (v7's FOOT_GRIP, + the 0.5 mm fit), tilted about the closing direction: v7's 60 deg left the
 # elbow stretched at the finish base's far corner (J3 -9..-27, mu1 up to 22); 30 deg keeps J3 near -50
-FOOT_LEAN = deg(30)
+# 2026-11-06: bases turned (feet towards the robot); the OUTER foot (base-local x -60.8: plate y 300 on B, 0 on A),
+# the inner one is beside the plank rack. Tilted about the closing direction so the gripper leans towards the robot.
+FOOT_LEAN = deg(45)
 C, S = math.cos(math.atan2(1.75, 10)), math.sin(math.atan2(1.75, 10))
-FOOT_GRIP = transl(0.5, 0, 0) @ np.array([[C, S, 0, 60.8], [S, -C, 0, -96.7], [0, 0, -1, 12], [0, 0, 0, 1.0]]) @ rotx(FOOT_LEAN)
+FOOT_GRIP = transl(0.5, 0, 0) @ np.array([[C, -S, 0, -60.8], [-S, -C, 0, -96.7], [0, 0, -1, 12], [0, 0, 0, 1.0]]) @ rotx(FOOT_LEAN)
+FLIP_SIGN = 1
+FLIP_H, FLIP_STEP = 160, 15        # the turn-over axis lifted 160 mm (bench clears base A + guide), 15 deg per line
 HAND_GRIP = transl(0, 0, 5) @ FOOT_GRIP @ rotx(-FOOT_LEAN) @ rotx(pi)
 # AMR beside the plate on base A's side (-y), plate top level with the jig plate. ASSUMPTION
 AMR_AT, AMR_PLATE = transl(100, -370, 0), (300, 320)
@@ -175,11 +193,11 @@ LIFT_Z = 450       # guide halves / frame 1 carried at this height
 FLIP_Z = 340       # foot grip on base B at z 380+ is out of reach (far corner); flipped planks still clear the guide
 SUB_LIFT = 40
 BACK_Z = 330       # up from the AMR (450 there: elbow nearly stretched, mu1 5)
-SUB_CLEAR = 15     # out past the foot; farther out (60) stretched the elbow (J3 -17, mu1 12)
+SUB_AWAY = 30      # after the release: fingers slid off the foot's end (plate -x), then straight up
 APPROACH, FAST, SLOW = 40, 100, 20
 
 STAGES = ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish", "frame1_into_frame2",
-          "bench_to_amr", "small_half_back", "big_half_back"]
+          "small_half_back", "big_half_back", "bench_to_amr"]
 
 
 # --- kinematics
@@ -241,6 +259,7 @@ class Program:
         self.gap = GAP["plank"][1]                           # Hand-E finger gap (mm) in force
 
     def move(self, name, T, kind="line"):
+        T_plan, T = T, teach_overrides.apply(name, T, VERSION)   # grip points taught on the robot (tests/robot_sim/teach.py)
         flange = tcp_to_flange_tm(T)
         q = solve(flange, self.q)
         if q is None:
@@ -251,7 +270,8 @@ class Program:
             self.lines_to_ptp.append(name)
         self.steps.append({"stage": self.stage, "name": name, "move": "ptp" if kind == "ptp" else "line",
                            "joints": [round(v, 4) for v in q], "flange": [round(v, 4) for v in flange],
-                           "speed": float(self.speed), "egp_gap": float(self.gap)})
+                           "speed": float(self.speed), "egp_gap": float(self.gap),
+                           **({"planned_flange": [round(v, 4) for v in tcp_to_flange_tm(T_plan)]} if T is not T_plan else {})})
         self.q, self.T = list(q), T.copy()
 
     def followable(self, T1, n=24):
@@ -328,9 +348,9 @@ def build():
         p.set_speed(SLOW)
         p.line(f"{label} place", place)
         p.gripper(False, "release", parts, gap=gap[1])
-        p.line(f"{label} place out", place @ transl(0, 0, -back))
+        p.line(f"{label} place out", at_z(place, place[2, 3] + back))      # straight up (the grip may be tilted)
         p.set_speed(FAST)
-        p.line(f"{label} place out up", at_z(place @ transl(0, 0, -back), LIFT_Z))
+        p.line(f"{label} place out up", at_z(place, LIFT_Z))
 
     # 2  guide halves A -> B, small first (straight up along the planks), then the big one (lifted clear, turned 45)
     p.stage = 2
@@ -352,33 +372,61 @@ def build():
     p.line("guide big up", at_z(turned, LIFT_Z))
     put_down("guide big", FINISH @ GUIDE_ON_B @ GRIP_["big"], ["Guide big"])
 
-    # 3  frame 1 + planks turned over into frame 2
+    # 4  frame 1 + planks turned over into frame 2: FINISH @ FLIP = a 180 deg turn about an axis along plate x
+    #    (checked below); done about that axis lifted FLIP_H, foot over the top (away from the arm), in lines
     p.stage = 4
     pick, place = START @ FOOT_GRIP, FINISH @ FLIP @ FOOT_GRIP
+    M = FINISH @ FLIP @ np.linalg.inv(START)
+    assert np.allclose(M[:3, :3], rotx(pi)[:3, :3], atol=1e-6), "flip is not a turn about plate x"
+    yc, zc = M[1, 3] / 2, M[2, 3] / 2                         # rotx(pi) about (yc, zc): y -> 2yc - y, z -> 2zc - z
+    about = lambda a: transl(0, yc, zc + FLIP_H) @ rotx(a) @ transl(0, -yc, -zc - FLIP_H)
     p.set_speed(FAST)
     p.gripper(False, gap=GAP["foot"][1])
-    p.ptp("sub over pick", at_z(pick, FLIP_Z))
+    p.ptp("sub over pick", at_z(pick, pick[2, 3] + 120))
     p.line("sub pick approach", at_z(pick, pick[2, 3] + SUB_LIFT))
     p.set_speed(SLOW)
     p.line("sub pick", pick)
     p.gripper(True, "grip", sub_parts, gap=GAP["foot"][0])
     p.line("sub pick out", at_z(pick, pick[2, 3] + SUB_LIFT))
     p.set_speed(FAST)
-    p.line("sub up", at_z(pick, FLIP_Z))
-    p.ptp("sub flipped high", at_z(place, FLIP_Z))
+    p.line("sub up", transl(0, 0, FLIP_H) @ pick)
+    for a in range(FLIP_STEP, 181, FLIP_STEP):
+        p.line(f"sub turn {a}", about(FLIP_SIGN * deg(a)) @ transl(0, 0, FLIP_H) @ pick)
     p.line("sub above guide", at_z(place, place[2, 3] + 75))
     p.set_speed(SLOW)
     p.line("sub place", place)
     p.gripper(False, "release", sub_parts, gap=GAP["foot"][1])
-    out = place @ transl(0, 0, -25)
+    out = transl(-SUB_AWAY, 0, 0) @ place                    # fingers slid off the end of the foot (towards the robot)
     p.line("sub place out", out)
-    clear = transl(SUB_CLEAR, 0, 0) @ out                    # out past the foot (plate +x, away from the bench),
-    p.line("sub clear", clear)                               # then up (towards the robot ran the wrist into the plate)
     p.set_speed(FAST)
-    p.line("sub back up", at_z(clear, FLIP_Z))                # not LIFT_Z: out of the good reach there
+    p.line("sub back up", at_z(out, LIFT_Z))                 # fingers clear of the foot: straight up
 
-    # 5  finished bench: lifted out of the finish base (out of the guide's slots) -> AMR
-    p.stage = 5
+    # 5, 6  guide halves out from between the frames (Bjørge: before the bench can be lifted), back to the start base
+    # DECISION 2026-11-06 (Bjørge: "the 45 degrees is meant for that, don't worry about that detail now"): the big
+    # half is lifted, turned 45 deg about its grip and slid out; in the model it still rubs planks in the turn
+    # (collision.py lists it as the one known hit) - to be checked on the real jig.
+    GF = grips(+1, GRIP_TILT_BACK)
+    out_dir = FINISH[:3, :3] @ np.array([0, 1.0, 0])         # base-local +y in plate coordinates
+    for stage, who in ((5, "small"), (6, "big")):
+        p.stage = stage
+        label = f"{who} half"
+        g = FINISH @ GUIDE_ON_B @ GF[who]
+        pick_from_above(label, g, [f"Guide {who}"])
+        up = transl(0, 0, GUIDE_LIFT) @ g
+        p.line(f"{label} lift off bosses", up)
+        if who == "big":
+            t = up.copy()
+            t[:3, :3] = rotz(BIG_TURN)[:3, :3] @ up[:3, :3]
+            p.line(f"{label} turn 45", t)
+            up = t
+        slid = transl(*(out_dir * GUIDE_OUT)) @ up
+        p.line(f"{label} slide out", slid)
+        p.set_speed(FAST)
+        p.line(f"{label} up", at_z(slid, LIFT_Z))
+        put_down(label, START @ GUIDE_ON_A @ GF[who], [f"Guide {who}"])
+
+    # 7  finished bench: re-gripped at frame 1's foot from above, lifted out of the finish base -> AMR
+    p.stage = 7
     grip = FINISH @ FLIP @ HAND_GRIP
     bench_parts = ["frame1", "frame2"] + [f"plank{k}" for k in PLANKS] + [f"piece A{k}" for k in PLANKS] + \
         [f"piece B{k}" for k in PLANKS]
@@ -397,16 +445,7 @@ def build():
     p.gripper(False, "release", bench_parts, gap=GAP["foot"][1])
     p.line("bench place out", transl(dx, dy, dz) @ grip @ transl(0, 0, -40))
     p.set_speed(FAST)
-    p.line("back to middle", at_z(transl(dx, dy, dz) @ grip @ transl(0, 0, -40), BACK_Z))
-    # 6, 7  guide halves: finish base (empty now) -> start base, the same arm grips as in stages 2, 3
-    for stage, who in ((6, "small"), (7, "big")):
-        p.stage = stage
-        label = f"{who} half"
-        g = FINISH @ GUIDE_ON_B @ GRIP_[who]
-        pick_from_above(label, g, [f"Guide {who}"])
-        p.set_speed(FAST)
-        p.line(f"{label} up", at_z(g, LIFT_Z))
-        put_down(label, START @ GUIDE_ON_A @ GRIP_[who], [f"Guide {who}"])
+    p.line("back up", at_z(transl(dx, dy, dz) @ grip @ transl(0, 0, -40), BACK_Z))
     p.ptp("Home", home)
     return p
 

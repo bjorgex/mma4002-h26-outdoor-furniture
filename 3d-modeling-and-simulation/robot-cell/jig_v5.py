@@ -4,7 +4,10 @@ Plate coordinates (as robot_base.py): x away from the robot 0..300, y to the lef
 T-slot lines along y at x = 45, 75, ... 255 (robot_base.FIRST + i * PITCH).
 
     layout        plank rack nearest the robot, bases + guide farther out (Bjørge, 2026-11-06); 5 planks per bench
-    bases A + B   JigV3 base (jig_v3.py), both turned +90 deg (legs along -x, towards the rack), side by side across
+    bases A + B   JigV3 base (jig_v3.py), both turned -90 deg: the frame's legs (feet) towards the robot (-x), the
+                  pocket's long closed arms (they hold the backrest, not the legs) away from it. 2026-11-06: turned
+                  180 deg from the first V5 - with the feet away from the robot the flipped bench is held from below
+                  at the far edge and the arm goes through it (collision.py). Side by side across
                   the slots, centred: A at (210, 60), B at (210, 240) -> each overhangs the plate by 30 mm in y.
                   NEW screw holes: M8 through + counterbore from the top, on T-slot lines, only where the base is
                   solid from bottom to top and (base A) clear of the guide. A and B are the same part: same holes.
@@ -33,7 +36,7 @@ OUT = HERE.parent / "jig-cad" / "Jig V5"
 SIM = HERE / "jig_parts"
 
 SLOTS = [rbase.FIRST + i * rbase.PITCH for i in range(rbase.N_SLOTS)]       # 45 .. 255
-BASE_TURN = 90                                                                # legs towards -x: the rack / robot
+BASE_TURN = -90                                                               # frame feet towards -x: the robot
 BASES = {"A": (210.0, 60.0), "B": (210.0, 240.0)}                            # base centres on the plate (far side)
 BOLT_D, CB_D, CB_H = 9.0, 14.5, 9.0                                           # M8 clearance, counterbore for the head
 EDGE_MIN = 10.0                                                               # hole edge to base edge, at least

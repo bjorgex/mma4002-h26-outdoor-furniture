@@ -13,6 +13,9 @@
   Techman's link meshes (tm5_links.glb, robot_meshes.py); simple cylinders if that file can't be loaded.
   Cell: cell.glb (cell_layout.py: the "Bench V1 cell v4" objects at bench_cell_v4.py's poses).
   Both GLBs are fetched next to this page (/sim/...). Without the mock it plays a short demo.
+  Collisions (collision_layer.js): collision.py's hits for the cell's moves file (?cell=cell_v8 -> tests/v8_moves.json),
+  objects tinted red during a colliding move. This page doesn't carry parts (sim_scene.js in /all does), so a carried
+  part is tinted where it started.
 -->
 <style>
   :root { --bg:#f4f2ee; --panel:#ffffffe8; --ink:#222; --muted:#666; --line:#d8d4cc; --rx:#1b6ec2; --tx:#1e8a4c; --err:#c0392b; }
@@ -194,7 +197,7 @@ loader.load(base + "tm5_links.glb", g => {           // link_0 on the base, link
   simple.forEach(m => m.removeFromParent());
 }, undefined, e => logLine("bad", "tm5_links.glb not loaded (simple shapes instead): " + e.message));
 // gripper: body 94 x 90 x 123 (Schunk EGP box, as in the RoboDK station: bench_cell_v4.EGP) + two fingers to TIP
-boxAt(L6, [-47, -45, 0], [47, 45, 123], grey);
+const egpBody = boxAt(L6, [-47, -45, 0], [47, 45, 123], grey);
 const fingers = [-1, 1].map(s => boxAt(L6, [-1.5, -4, 123], [1.5, 4, TIP], new THREE.MeshStandardMaterial({ color: 0xd0d3d8 })));
 const GAP_OPEN = 50, GAP_CLOSED = 12;               // finger gap [mm] (illustrative)
 let gap = GAP_OPEN, gapFrom = GAP_OPEN, gapTo = GAP_OPEN, gapT0 = 0, gapDur = 1;
@@ -258,7 +261,9 @@ function handle(ev) {
     case "move":
       moveLine.geometry.setFromPoints([new THREE.Vector3(...ev.frm), new THREE.Vector3(...ev.to)]);
       moveLine.visible = true;
+      coll?.setMove(ev.n || null);                   // n: the program's move number (Listen-node moves)
       logLine("", `${ev.kind} -> (${fmt(ev.to)})  ${ev.secs} s`); break;
+    case "reset": coll?.reset(); coll?.refresh(); break;
     case "grip": logLine("", `${ev.node}: ${ev.result.toUpperCase()} -> ${ev.next}`); break;
     case "rx": logLine("rx", `<- $${ev.header}  [${explain(ev.header, ev.data)}]  ${short(ev.data.replace(/\r\n/g, " | "))}`); break;
     case "tx": {
@@ -312,6 +317,13 @@ import((base || "./") + "manip_layers.js")
   .then(m => m.addManipLayers({ THREE, scene, camera, joints, el, base: base || "./", tip: TIP, log: logLine }))
   .then(m => { window.__sim.manip = m; m.setCell(cellFile.replace(".glb", "")); })
   .catch(e => logLine("bad", "manipulability layers not loaded: " + e.message));
+// collisions (collision_layer.js, collision.py's hits for this cell's moves file): own panel, right of the status
+let coll = null;
+import((base || "./") + "collision_layer.js")
+  .then(m => m.addCollisionLayer({ THREE, scene, el, base: base || "./", log: (c, t) => logLine(c === "err" ? "bad" : "", t),
+    extra: { EGP: [egpBody, ...fingers] }, pos: "left:330px;top:12px" }))
+  .then(m => { coll = m; window.__sim.collisions = m; m.setCell(cellFile.replace(".glb", "")); })
+  .catch(e => logLine("bad", "collision layer not loaded: " + e.message));
 </script>
 </body>
 </html>

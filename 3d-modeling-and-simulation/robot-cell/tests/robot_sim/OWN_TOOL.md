@@ -57,3 +57,48 @@ a layout json, or a dict `{name: (kind, trimesh)}`.
   not RoboDK's exact pair lists.
 - Phases in `cycle_time.py` for a TMflow export are cut at the gripper events (no move names in the zip):
   totals exact, phase split a few seconds off.
+
+## Teaching the grip points on the real robot (`teach.py`)
+
+The program's grip points come from CAD; on the real cell a part is a few mm off. `teach.py` lets you put
+the gripper where a grip really is and stores the difference; the next build uses it.
+
+**How it reads the robot:** the Ethernet Slave stream (port 5891, `Coord_Robot_Flange` + `Joint_Angle`), the
+same read-only stream `log_points.py` used on 2026-10-16. It never moves the arm. The **Point button on the
+end module can't be "heard"**: it makes a Point node inside TMflow, and that doesn't go out on any port we use.
+**Enter on the laptop** does the same job.
+
+**Once, in TMflow:** the Ethernet Slave is on (Setting → Connection → Ethernet Slave, data table with
+`Joint_Angle` and `Coord_Robot_Flange`, enabled). The laptop is on the robot's network (10.0.12.x).
+`python log_points.py --show` should print a pose.
+
+**At the robot** (from `robot-cell/`):
+1. `python tests/robot_sim/teach.py v8 --list`: every grip event as *approach → GRIP* (taught ones marked `*`).
+2. Put the part where it really sits. Jog (manual mode, slow) or hand-guide until the fingertips are where
+   they should be when the gripper closes on it. The gripper should be open at the program's gap, not pressing
+   on the part.
+3. `python tests/robot_sim/teach.py v8 "plank2 pick" --real`. The line updates live with how far you are from
+   the plan (plate dx dy dz). When it looks right, keep still and press **Enter** (`q` = cancel).
+   - It refuses if the arm is still moving, or if it's more than 30 mm from the plan (`--max-mm`).
+   - Only the position is stored. Add `--with-rotation` if you deliberately corrected the angle (after
+     hand-guiding the angle drifts, so the default is safer).
+   - A taught grip moves its approach (the moves straight above it) and its follow moves (pick out / lift /
+     push / place out) by the same amount, so "straight down" stays straight. To teach an approach
+     separately: `teach.py v8 "plank2 pick approach" --real`.
+4. Repeat for the other grips. `teach.py v8 --show` lists them; `--clear "<name>"` (or `all`) forgets them.
+5. `python tests/robot_sim/teach.py v8 --rebuild` rewrites `tests/v8_moves.json` and
+   `bench_tmflow/v8/AssembleBench.zip` with the corrections (`--out x.zip` to write somewhere else).
+   Then re-run `collision.py` (step 3 in Next steps).
+
+**Where it's stored:** `robot-cell/teach_v8.json`. Each correction is in the grip's own TCP frame, and that frame is
+fixed to the part, so it still applies after a base is moved or turned on the plate. If the plate/work frame
+in `bench_layout.json` is re-logged, check the taught points again: they also absorbed the old frame's error.
+
+**Safety:** the first run after a rebuild goes in manual mode at low project speed (10-20 %), step by step,
+with a hand on the stop. Watch every corrected approach go down. Check that the correction is the size you
+expect (`--show`). A wrong move name taught at the wrong spot is the typical mistake. Nobody near the arm
+while it runs.
+
+Test without the robot: `python tests/tmflow_mock.py serve --sim --listen 7990 --slave 7991 --view 0`, move the
+mock's arm through its Listen port, then `teach.py v8 "plank2 pick" --port 7991 --now` (`--now` = no Enter).
+Set `TEACH_FILE` to write a scratch file instead of `teach_v8.json`.
