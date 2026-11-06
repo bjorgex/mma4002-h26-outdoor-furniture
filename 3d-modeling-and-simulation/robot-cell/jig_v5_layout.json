@@ -1,0 +1,90 @@
+{
+ "_doc": "jig_v5.py: plate coords (x away from robot, y left, plate top z=0); turn = deg about z",
+ "plate": {
+  "stl": "tslot_plate_v5.stl",
+  "size": [
+   300.0,
+   300.0,
+   20.0
+  ]
+ },
+ "base_A": {
+  "stl": "base_v5.stl",
+  "at": [
+   90.0,
+   60.0
+  ],
+  "turn": -90
+ },
+ "base_B": {
+  "stl": "base_v5.stl",
+  "at": [
+   90.0,
+   240.0
+  ],
+  "turn": -90
+ },
+ "guide": {
+  "stl": [
+   "guide_1_v5.stl",
+   "guide_2_v5.stl"
+  ],
+  "on": "base_A",
+  "note": "base-local, z 20..60"
+ },
+ "plank_rack": {
+  "stl": "plank_rack_v5.stl",
+  "at": [
+   210.0,
+   195.0
+  ],
+  "turn": -90,
+  "note": "rack-local = PlankRack_V2 coords (slot-grid corner at origin)"
+ },
+ "tslots_x": [
+  45.0,
+  75.0,
+  105.0,
+  135.0,
+  165.0,
+  195.0,
+  225.0,
+  255.0
+ ],
+ "base_holes_plate_A": [
+  [
+   105.0,
+   43.25
+  ],
+  [
+   105.0,
+   77.25
+  ],
+  [
+   135.0,
+   39.25
+  ],
+  [
+   135.0,
+   81.25
+  ]
+ ],
+ "rack_holes_plate": [
+  [
+   225.0,
+   211.0
+  ],
+  [
+   255.0,
+   211.0
+  ],
+  [
+   225.0,
+   89.0
+  ],
+  [
+   255.0,
+   89.0
+  ]
+ ]
+}

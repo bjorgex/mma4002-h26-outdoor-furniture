@@ -43,8 +43,12 @@ def jig_v3_parts():
     return base, guide
 
 
+def place_at(shape, at, turn=None):
+    return shape.rotate(bd.Axis.Z, TURN if turn is None else turn).translate((*at, 0))
+
+
 def place(shape, where):
-    return shape.rotate(bd.Axis.Z, TURN).translate((*LAYOUT[where], 0))
+    return place_at(shape, LAYOUT[where])
 
 
 def assembly():
