@@ -37,7 +37,35 @@ def to_np(m):
     return np.array([[m[i, j] for j in range(4)] for i in range(4)])
 
 
+def main_v8():
+    """v8 (Jig V5 on the T-slot plate): objects and poses from bench_cell_v8.cell_objects() (no robodk)."""
+    import bench_cell_v8 as v8
+    scene, info = trimesh.Scene(), []
+    for name, kind, src, pose, colour in v8.cell_objects():
+        if isinstance(src, tuple):
+            lo, hi = src
+            mesh = trimesh.creation.box(extents=[h - l for l, h in zip(lo, hi)])
+            mesh.apply_translation([(l + h) / 2 for l, h in zip(lo, hi)])
+        else:
+            mesh = trimesh.load_mesh(src)
+        m = v8.PLATE @ pose
+        mesh.apply_transform(m)
+        mesh.visual = trimesh.visual.TextureVisuals(material=trimesh.visual.material.PBRMaterial(
+            baseColorFactor=colour, metallicFactor=0.0, roughnessFactor=0.8))
+        scene.add_geometry(mesh, node_name=name, geom_name=name)
+        info.append({"name": name, "kind": kind, "colour": colour, "pose": np.round(m, 4).tolist()})
+    (HERE / "cell_v8.glb").write_bytes(scene.export(file_type="glb"))
+    (HERE / "cell_layout_v8.json").write_text(json.dumps(
+        {"source": "bench_cell_v8.cell_objects() poses + bench_layout.json work frame; meshes jig_parts/*_v5, benchV1_parts/",
+         "station": v8.STATION, "units": "mm, robot base frame (z up)", "tip_mm": v8.TIP,
+         "egp": [((-47, -45, 0), (47, 45, 123)), ((-9, -4, 123), (-6, 4, v8.TIP)), ((6, -4, 123), (9, 4, v8.TIP))],
+         "table_h": v8.TABLE_H, "objects": info}, indent=1))
+    print(f"{len(info)} objects -> cell_v8.glb ({(HERE / 'cell_v8.glb').stat().st_size / 1e3:.0f} kB), cell_layout_v8.json")
+
+
 def main(cell="v4"):
+    if cell == "v8":
+        return main_v8()
     v = {"v4": v4, "v5": v5, "v6": v6}[cell]
     guide = v4.BASE_A * v5.GUIDE_ON_A if cell in ("v5", "v6") else v4.BASE_B * v4.GUIDE_ON_B
     glb, layout = (f"cell_{cell}.glb", f"cell_layout_{cell}.json") if cell != "v4" else ("cell.glb", "cell_layout.json")
@@ -105,6 +133,7 @@ def main(cell="v4"):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--cell", choices=["v4", "v5", "v6"], default="v4",
-                    help="v4 (default): guide on base B; v5: on base A; v6: on base A, no parking pad")
+    ap.add_argument("--cell", choices=["v4", "v5", "v6", "v8"], default="v4",
+                    help="v4 (default): guide on base B; v5: on base A; v6: on base A, no parking pad; "
+                         "v8: Jig V5 on the T-slot plate (bench_cell_v8.py)")
     main(ap.parse_args().cell)

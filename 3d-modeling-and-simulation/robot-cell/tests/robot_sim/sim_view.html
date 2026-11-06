@@ -307,6 +307,11 @@ renderer.setAnimationLoop(() => {
   controls.update(); renderer.render(scene, camera);
 });
 window.__sim = { joints, handle, scene };            // for checks from the console
+// manipulability layers (manip_layers.js, data from manipulability.py): own panel, bottom left; optional
+import((base || "./") + "manip_layers.js")
+  .then(m => m.addManipLayers({ THREE, scene, camera, joints, el, base: base || "./", tip: TIP, log: logLine }))
+  .then(m => { window.__sim.manip = m; m.setCell(cellFile.replace(".glb", "")); })
+  .catch(e => logLine("bad", "manipulability layers not loaded: " + e.message));
 </script>
 </body>
 </html>

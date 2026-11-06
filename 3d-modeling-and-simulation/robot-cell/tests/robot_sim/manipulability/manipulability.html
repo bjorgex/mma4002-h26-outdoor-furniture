@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TM5 manipulability</title>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+  :root { --bg:#f6f6f4; --panel:#fff; --ink:#1d1d1f; --muted:#666; --line:#ddd; --accent:#2f6fde; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#17181a; --panel:#222326; --ink:#e8e8e8; --muted:#9a9a9a; --line:#3a3a3e; --accent:#7aa7ff; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:13px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  #wrap { display:flex; min-height:100vh; }
+  #side { width:300px; flex:none; padding:12px 14px; border-right:1px solid var(--line); background:var(--panel);
+          overflow-y:auto; max-height:100vh; position:sticky; top:0; }
+  #main { flex:1; min-width:0; padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  #p3d { grid-column:1 / span 2; height:62vh; }
+  #ptop, #pslice { height:52vh; }
+  .plot { background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+  h1 { font-size:15px; margin:0 0 4px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:14px 0 4px; }
+  label { display:block; margin:2px 0; cursor:pointer; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .row label { display:inline-block; }
+  .note { color:var(--muted); font-size:12px; }
+  input[type=text] { width:100%; font:inherit; padding:3px 5px; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:4px; }
+  input[type=range] { width:100%; }
+  #info { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:11px; color:var(--muted); }
+  @media (max-width: 900px) { #wrap { flex-direction:column; } #side { width:auto; max-height:none; position:static; }
+    #main { grid-template-columns:1fr; } #p3d { grid-column:auto; } }
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="side">
+  <h1>TM5-900 manipulability</h1>
+  <div class="note" id="cellnote">loading manip_data.json ...</div>
+
+  <h2>Tool orientation</h2>
+  <div id="variants"></div>
+
+  <h2>Jacobian</h2>
+  <label><input type="radio" name="jac" value="vfix" checked> J<sub>v</sub>, orientation held (straight tool-down moves)</label>
+  <label><input type="radio" name="jac" value="v"> J<sub>v</sub> (MR 5.4: bottom rows of J<sub>b</sub>)</label>
+  <label><input type="radio" name="jac" value="full"> full 6&times;6 J<sub>b</sub> (v / L)</label>
+
+  <h2>Measure</h2>
+  <div class="row">
+    <label><input type="radio" name="meas" value="mu1" checked> &mu;<sub>1</sub> isotropy</label>
+    <label><input type="radio" name="meas" value="mu3"> &mu;<sub>3</sub> volume</label>
+  </div>
+  <div class="note">&mu;<sub>1</sub> = &radic;(&lambda;max/&lambda;min) of A = J J<sup>T</sup> (1 = round, &rarr;&infin; singular);
+    &mu;<sub>3</sub> = &radic;det A (&rarr;0 singular). Log colour scale.</div>
+
+  <h2>&mu;<sub>1</sub> threshold <span id="thrv"></span></h2>
+  <input type="range" id="thr" min="0.1" max="1.6" step="0.01" value="0.477">
+  <label><input type="checkbox" data-l="above" checked> mark cells above the threshold (red)</label>
+  <div class="note">Also the top of the colour scale for &mu;<sub>1</sub>.</div>
+
+  <h2>Heights (TCP z above the plate)</h2>
+  <input type="text" id="heights" value="0,50,100,150">
+  <div id="hboxes"></div>
+  <label>2D top view at <select id="htop"></select></label>
+
+  <h2>Vertical slices through the base</h2>
+  <label><input type="checkbox" data-l="slice0" checked> slice towards the cell (robot &minus;x)</label>
+  <label><input type="checkbox" data-l="slice90"> slice turned 90&deg;</label>
+
+  <h2>Layers</h2>
+  <label><input type="checkbox" data-l="unreach" checked> unreachable (dark grey)</label>
+  <label><input type="checkbox" data-l="other" checked> reachable only on another IK branch (light grey)</label>
+  <label><input type="checkbox" data-l="fixtures" checked> cell fixtures</label>
+  <label><input type="checkbox" data-l="base" checked> robot base</label>
+  <label><input type="checkbox" data-l="iso"> 3D iso-surface (tool down)</label>
+  <h2>Singularity families</h2>
+  <label><input type="checkbox" data-l="shoulder" checked> <span style="color:#0bb">shoulder</span> (wrist point on the J1&ndash;J2 plane)</label>
+  <label><input type="checkbox" data-l="elbow" checked> <span style="color:#d22">elbow</span> (arm stretched, &theta;<sub>3</sub>&rarr;0)</label>
+  <label><input type="checkbox" data-l="wrist" checked> <span style="color:#c2c">wrist</span> (&theta;<sub>5</sub>&rarr;0, orientation dependent)</label>
+  <label><input type="checkbox" data-l="labels" checked> labels</label>
+  <div class="note">Lines = where the factor of det J = a2&middot;a3&middot;sin&theta;3&middot;sin&theta;5&middot;d<sub>sh</sub> gets small:
+    elbow |sin&theta;3| &lt; sin 8&deg;, wrist |sin&theta;5| &lt; sin 30&deg;, shoulder |d<sub>sh</sub>| &lt; 100 mm.
+    With the tool pointing down &theta;5 stays near &plusmn;90&deg;, so the wrist family never shows there; the shoulder family
+    is the unreachable column around and above the base (its rim). The arm is symmetric about J1, so one slice holds every direction;
+    the top view is read off it.</div>
+
+  <h2>Program targets</h2>
+  <div id="progs"></div>
+  <div class="row">
+    <label><input type="radio" name="ell" value="v" checked> J<sub>v</sub> ellipsoid</label>
+    <label><input type="radio" name="ell" value="fix"> orientation held</label>
+  </div>
+  <label><input type="checkbox" data-l="onlyflag"> only flagged targets</label>
+  <label>ellipsoid scale <input type="range" id="esc" min="20" max="300" step="5" value="100"></label>
+  <div class="note">mm drawn per 1 m/s of TCP speed at |q&#775;| = 1 rad/s. Red = flagged.</div>
+
+  <h2>Info</h2>
+  <div id="info"></div>
+</div>
+<div id="main">
+  <div id="p3d" class="plot"></div>
+  <div id="ptop" class="plot"></div>
+  <div id="pslice" class="plot"></div>
+</div>
+</div>
+<script>
+window.addEventListener('error', e => { document.getElementById('info').textContent = 'JS error: ' + e.message + ' @' + e.lineno; });
+window.addEventListener('unhandledrejection', e => { document.getElementById('info').textContent = 'JS error: ' + e.reason; });
+(async function () {
+  const D = await (await fetch('manip_data.json', {cache: 'no-cache'})).json();
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const INK = dark ? '#ddd' : '#222', GRID = dark ? '#333' : '#e5e5e5', PANEL = dark ? '#222326' : '#fff';
+  const SC = {shoulder: '#0bb', elbow: '#d22', wrist: '#c2c'};
+  const S = D.slice.s, Z = D.slice.z, NS = S.length, NZ = Z.length, STEP = D.step;
+  const G = D.G, B = D.base;
+  const Gi = inv4(G);
+  $('#cellnote').innerHTML = `cell ${D.cell}: ${D.note}. TCP = flange + ${D.tip_mm} mm. Grid ${STEP} mm. ` +
+    `Frame: the cell's plate/ground frame (x away from the robot, z up, plate top z = 0).`;
+
+  // ---- state
+  const st = {variant: 'down', jac: 'vfix', meas: 'mu1', thr: Math.pow(10, +$('#thr').value), layers: {}, heights: [],
+              progs: {}, ell: 'v', esc: 100, htop: null};
+  const names = {down: 'tool down (picks)', best: 'best of 8 tool directions', down45out: 'tilted 45° out',
+                 out: 'horizontal, pointing out', up: 'pointing up', side: 'horizontal, sideways'};
+  $('#variants').innerHTML = D.orient.map((o, k) =>
+    `<label><input type="radio" name="var" value="${o}" ${k ? '' : 'checked'}> ${names[o] || o}</label>`).join('');
+  $('#progs').innerHTML = Object.keys(D.programs).map((p, k) =>
+    `<label><input type="checkbox" data-p="${p}" ${k === Object.keys(D.programs).length - 1 ? 'checked' : ''}> ${p}
+     (${D.programs[p].filter(t => t.flag).length}/${D.programs[p].length} flagged)</label>`).join('');
+
+  function readHeights() {
+    const hs = $('#heights').value.split(',').map(Number).filter(v => isFinite(v));
+    const old = st.heights.reduce((o, h) => (o[h] = st.layers['h' + h], o), {});
+    st.heights = hs;
+    $('#hboxes').innerHTML = hs.map(h => `<label><input type="checkbox" data-h="${h}" ${old[h] === false ? '' : 'checked'}> z = ${h} mm</label>`).join('');
+    $('#htop').innerHTML = hs.map(h => `<option ${h === st.htop ? 'selected' : ''}>${h}</option>`).join('');
+    if (!hs.includes(st.htop)) st.htop = hs[0];
+    $$('#hboxes input').forEach(el => { st.layers['h' + el.dataset.h] = el.checked; el.onchange = () => { st.layers['h' + el.dataset.h] = el.checked; render(); }; });
+  }
+  function readAll() {
+    st.variant = $('input[name=var]:checked').value; st.jac = $('input[name=jac]:checked').value;
+    st.meas = $('input[name=meas]:checked').value; st.ell = $('input[name=ell]:checked').value;
+    st.thr = Math.pow(10, +$('#thr').value); st.esc = +$('#esc').value; st.htop = +$('#htop').value;
+    $$('input[data-l]').forEach(el => st.layers[el.dataset.l] = el.checked);
+    $$('input[data-p]').forEach(el => st.progs[el.dataset.p] = el.checked);
+    $('#thrv').textContent = '= ' + st.thr.toFixed(2);
+  }
+  $$('input[name], input[data-l], input[data-p], #esc, #htop').forEach(el => el.addEventListener('input', () => { readAll(); render(); }));
+  $('#thr').addEventListener('input', () => { readAll(); render(); });
+  $('#heights').addEventListener('change', () => { readHeights(); readAll(); render(); });
+
+  // ---- maths
+  function inv4(m) {   // rigid transform inverse
+    const R = [[m[0][0], m[1][0], m[2][0]], [m[0][1], m[1][1], m[2][1]], [m[0][2], m[1][2], m[2][2]]];
+    const t = [0, 1, 2].map(i => -(R[i][0] * m[0][3] + R[i][1] * m[1][3] + R[i][2] * m[2][3]));
+    return [[...R[0], t[0]], [...R[1], t[1]], [...R[2], t[2]], [0, 0, 0, 1]];
+  }
+  const mul = (m, p) => [0, 1, 2].map(i => m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3]);
+  const key = () => `${st.meas === 'mu1' ? 'mu1' : 'mu3'}_${st.jac}`;
+  function cellOf(sl, rho, z) {   // nearest slice cell at s = +rho (J1 symmetry)
+    const j = Math.round((rho - S[0]) / STEP), i = Math.round((z - Z[0]) / STEP);
+    if (j < 0 || j >= NS || i < 0 || i >= NZ) return -1;
+    return i * NS + j;
+  }
+  // ground-frame grid around the base
+  const XS = [], YS = [];
+  for (let x = Math.floor(B[0] - 1000); x <= B[0] + 1000; x += STEP) XS.push(x);
+  for (let y = Math.floor(B[1] - 1000); y <= B[1] + 1000; y += STEP) YS.push(y);
+  function hmap(h) {
+    const sl = D.slice.data[st.variant], k = key(), mu1k = 'mu1_' + st.jac;
+    const val = [], un = [], ot = [], ab = [];
+    for (const y of YS) {
+      const rv = [], ru = [], ro = [], ra = [];
+      for (const x of XS) {
+        const p = mul(G, [x, y, h]); const c = cellOf(sl, Math.hypot(p[0], p[1]), p[2]);
+        const s = c < 0 ? 0 : sl.status[c];
+        rv.push(s === 1 ? sl[k][c] : null); ru.push(s === 0 ? 1 : null); ro.push(s === 2 ? 1 : null);
+        ra.push(s === 1 && sl[mu1k][c] !== null && Math.pow(10, sl[mu1k][c]) > st.thr ? 1 : null);
+      }
+      val.push(rv); un.push(ru); ot.push(ro); ab.push(ra);
+    }
+    return {val, un, ot, ab};
+  }
+  function sliceArrays() {
+    const sl = D.slice.data[st.variant], k = key(), mu1k = 'mu1_' + st.jac;
+    const val = [], un = [], ot = [], ab = [];
+    for (let i = 0; i < NZ; i++) {
+      const rv = [], ru = [], ro = [], ra = [];
+      for (let j = 0; j < NS; j++) {
+        const c = i * NS + j, s = sl.status[c];
+        rv.push(s === 1 ? sl[k][c] : null); ru.push(s === 0 ? 1 : null); ro.push(s === 2 ? 1 : null);
+        ra.push(s === 1 && sl[mu1k][c] !== null && Math.pow(10, sl[mu1k][c]) > st.thr ? 1 : null);
+      }
+      val.push(rv); un.push(ru); ot.push(ro); ab.push(ra);
+    }
+    return {val, un, ot, ab};
+  }
+  // colour scale (values are log10)
+  function cs() {
+    if (st.meas === 'mu1') return {colorscale: 'Viridis', reversescale: true, cmin: 0, cmax: Math.log10(Math.max(st.thr, 1.05)) + 0.35,
+      zmin: 0, zmax: Math.log10(Math.max(st.thr, 1.05)) + 0.35};
+    const sl = D.slice.data[st.variant][key()].filter(v => v !== null);
+    const lo = Math.min(...sl.slice(0, 50000)), hi = Math.max(...sl.slice(0, 50000));
+    return {colorscale: 'Viridis', reversescale: false, cmin: lo, cmax: hi, zmin: lo, zmax: hi};
+  }
+  function cbar() {
+    const c = cs(), ticks = [];
+    for (let e = Math.floor(c.cmin); e <= Math.ceil(c.cmax); e++) for (const m of [1, 2, 5]) {
+      const v = Math.log10(m) + e; if (v >= c.cmin - 1e-9 && v <= c.cmax + 1e-9) ticks.push(v); }
+    return {title: {text: (st.meas === 'mu1' ? 'μ1' : 'μ3') + ' (' + st.jac + ')'}, tickvals: ticks,
+            ticktext: ticks.map(v => +Math.pow(10, v).toPrecision(2)), len: 0.8};
+  }
+  const GREY = [[0, '#8f8f8f'], [1, '#8f8f8f']], LGREY = [[0, '#d0d0d0'], [1, '#d0d0d0']], RED = [[0, '#ff2020'], [1, '#ff2020']];
+  // singular lines from the slice contours: [s, z] polylines (robot base frame, slice plane)
+  function sing(fam) { return st.layers[fam] ? (D.slice.data[st.variant].sing[fam] || []) : []; }
+  function crossings(seg, h) {  // rho values where a slice polyline crosses robot-frame z = h
+    const out = [];
+    for (let k = 0; k + 1 < seg.length; k++) {
+      const [s0, z0] = seg[k], [s1, z1] = seg[k + 1];
+      if ((z0 - h) * (z1 - h) <= 0 && z0 !== z1) { const s = s0 + (h - z0) / (z1 - z0) * (s1 - s0); if (s >= 0) out.push(s); }
+    }
+    return out;
+  }
+  const planeZ = h => mul(G, [B[0], B[1], h])[2];          // robot-frame z of the plate height h at the base
+  function slicePts(az) {  // ground-frame coords of the slice plane grid
+    const a = (D.slice_az + az) * Math.PI / 180, X = [], Y = [], ZZ = [];
+    for (let i = 0; i < NZ; i++) { const rx = [], ry = [], rz = [];
+      for (let j = 0; j < NS; j++) { const p = mul(Gi, [S[j] * Math.cos(a), S[j] * Math.sin(a), Z[i]]); rx.push(p[0]); ry.push(p[1]); rz.push(p[2]); }
+      X.push(rx); Y.push(ry); ZZ.push(rz); }
+    return {X, Y, ZZ};
+  }
+  function ellipse2(A, i, j, n = 36) {   // shadow of {A^1/2 u} on axes (i, j)
+    const a = A[i][i], b = A[i][j], c = A[j][j], tr = (a + c) / 2, d = Math.sqrt(Math.max(0, (a - c) * (a - c) / 4 + b * b));
+    const l1 = tr + d, l2 = Math.max(0, tr - d), th = 0.5 * Math.atan2(2 * b, a - c), out = [];
+    for (let k = 0; k <= n; k++) { const t = 2 * Math.PI * k / n, u = Math.sqrt(l1) * Math.cos(t), v = Math.sqrt(l2) * Math.sin(t);
+      out.push([u * Math.cos(th) - v * Math.sin(th), u * Math.sin(th) + v * Math.cos(th)]); }
+    return out;
+  }
+  function targets() {
+    const out = [];
+    for (const [p, on] of Object.entries(st.progs)) if (on)
+      for (const t of D.programs[p]) if (!st.layers.onlyflag || t.flag) out.push({...t, prog: p});
+    return out;
+  }
+  const tipText = t => `${t.prog} #${t.i} ${t.name}<br>μ1 J_v ${t.mu1_v}, held ${t.mu1_vfix}, 6x6 ${t.mu1_full}` +
+    `<br>μ3 J_v ${t.mu3_v} (m/s)³, joint margin ${t.margin}°`;
+
+  // ---- render
+  function render() {
+    const c = cs(), k3 = [], kt = [], ks = [];
+    const showScale = {...c, colorbar: cbar()};
+    // 3D: height planes
+    st.heights.forEach((h, n) => {
+      if (!st.layers['h' + h]) return;
+      const m = hmap(h), zc = m.val.map(r => r.map(v => v === null ? null : h));
+      k3.push({type: 'surface', x: XS, y: YS, z: zc, surfacecolor: m.val, ...c, showscale: !kt.length && n === 0, colorbar: cbar(),
+               name: 'z ' + h, hovertemplate: `z=${h}<br>x %{x}<br>y %{y}<br>log10 %{surfacecolor:.2f}<extra></extra>`});
+      if (st.layers.unreach) k3.push({type: 'surface', x: XS, y: YS, z: m.un.map(r => r.map(v => v ? h : null)), surfacecolor: m.un,
+               colorscale: GREY, showscale: false, opacity: 0.35, hoverinfo: 'skip'});
+      if (st.layers.above) k3.push({type: 'surface', x: XS, y: YS, z: m.ab.map(r => r.map(v => v ? h + 1 : null)), surfacecolor: m.ab,
+               colorscale: RED, showscale: false, opacity: 0.7, hoverinfo: 'skip'});
+      if (h === st.htop) {
+        kt.push({type: 'heatmap', x: XS, y: YS, z: m.val, ...showScale, hovertemplate: 'x %{x}<br>y %{y}<br>' +
+                 (st.meas === 'mu1' ? 'log10 μ1' : 'log10 μ3') + ' %{z:.2f}<extra></extra>'});
+        if (st.layers.unreach) kt.push({type: 'heatmap', x: XS, y: YS, z: m.un, colorscale: GREY, showscale: false, hoverinfo: 'skip'});
+        if (st.layers.other) kt.push({type: 'heatmap', x: XS, y: YS, z: m.ot, colorscale: LGREY, showscale: false, hoverinfo: 'skip'});
+        if (st.layers.above) kt.push({type: 'heatmap', x: XS, y: YS, z: m.ab, colorscale: RED, showscale: false, opacity: 0.45, hoverinfo: 'skip'});
+      }
+    });
+    if (!st.layers['h' + st.htop]) {   // top view still shows its height
+      const m = hmap(st.htop);
+      kt.push({type: 'heatmap', x: XS, y: YS, z: m.val, ...showScale});
+      if (st.layers.unreach) kt.push({type: 'heatmap', x: XS, y: YS, z: m.un, colorscale: GREY, showscale: false, hoverinfo: 'skip'});
+      if (st.layers.other) kt.push({type: 'heatmap', x: XS, y: YS, z: m.ot, colorscale: LGREY, showscale: false, hoverinfo: 'skip'});
+      if (st.layers.above) kt.push({type: 'heatmap', x: XS, y: YS, z: m.ab, colorscale: RED, showscale: false, opacity: 0.45, hoverinfo: 'skip'});
+    }
+    // vertical slices
+    const sa = sliceArrays();
+    for (const [lay, az] of [['slice0', 0], ['slice90', 90]]) {
+      if (!st.layers[lay]) continue;
+      const P = slicePts(az);
+      k3.push({type: 'surface', x: P.X, y: P.Y, z: P.ZZ.map((r, i) => r.map((v, j) => sa.val[i][j] === null ? null : v)), surfacecolor: sa.val, ...c, showscale: false, opacity: 0.95,
+               hovertemplate: 'slice<br>log10 %{surfacecolor:.2f}<extra></extra>'});
+      if (st.layers.unreach) k3.push({type: 'surface', x: P.X, y: P.Y, z: P.ZZ.map((r, i) => r.map((v, j) => sa.un[i][j] ? v : null)),
+               surfacecolor: sa.un, colorscale: GREY, showscale: false, opacity: 0.25, hoverinfo: 'skip'});
+      for (const fam of ['shoulder', 'elbow', 'wrist']) for (const seg of sing(fam)) {
+        const a = (D.slice_az + az) * Math.PI / 180, pts = seg.map(([s, z]) => mul(Gi, [s * Math.cos(a), s * Math.sin(a), z]));
+        k3.push({type: 'scatter3d', mode: 'lines', x: pts.map(p => p[0]), y: pts.map(p => p[1]), z: pts.map(p => p[2]),
+                 line: {color: SC[fam], width: 6}, name: fam, hoverinfo: 'name', showlegend: false});
+      }
+    }
+    ks.push({type: 'heatmap', x: S, y: Z, z: sa.val, ...showScale, hovertemplate: 's %{x}<br>z %{y}<br>log10 %{z:.2f}<extra></extra>'});
+    if (st.layers.unreach) ks.push({type: 'heatmap', x: S, y: Z, z: sa.un, colorscale: GREY, showscale: false, hoverinfo: 'skip'});
+    if (st.layers.other) ks.push({type: 'heatmap', x: S, y: Z, z: sa.ot, colorscale: LGREY, showscale: false, hoverinfo: 'skip'});
+    if (st.layers.above) ks.push({type: 'heatmap', x: S, y: Z, z: sa.ab, colorscale: RED, showscale: false, opacity: 0.45, hoverinfo: 'skip'});
+    const ann = [];
+    for (const fam of ['shoulder', 'elbow', 'wrist']) {
+      const segs = sing(fam);
+      for (const seg of segs) ks.push({type: 'scatter', mode: 'lines', x: seg.map(p => p[0]), y: seg.map(p => p[1]),
+        line: {color: SC[fam], width: 2.5}, name: fam, hoverinfo: 'name', showlegend: false});
+      if (st.layers.labels && segs.length) {
+        const seg = segs.reduce((a, b) => b.length > a.length ? b : a), p = seg[Math.floor(seg.length / 2)];
+        ann.push({x: p[0], y: p[1], text: fam, showarrow: true, arrowhead: 0, ax: 30, ay: -25, font: {color: SC[fam], size: 13}, bgcolor: PANEL});
+      }
+      // top view and height planes: the singular surfaces cut each plane in circles about the J1 axis
+      const hz = planeZ(st.htop), rr = [...new Set(segs.flatMap(sg => crossings(sg, hz)).map(r => Math.round(r)))];
+      const annT = [];
+      rr.forEach((r, n) => {
+        const th = [...Array(73).keys()].map(k => k * 5 * Math.PI / 180);
+        kt.push({type: 'scatter', mode: 'lines', x: th.map(t => B[0] + r * Math.cos(t)), y: th.map(t => B[1] + r * Math.sin(t)),
+                 line: {color: SC[fam], width: 2, dash: 'dot'}, name: fam + ' ρ=' + r, hoverinfo: 'name', showlegend: false});
+        if (st.layers.labels && n === 0) ann.push({xref: 'x2', yref: 'y2', x: B[0] - r * 0.7, y: B[1] + r * 0.7, text: fam, showarrow: false,
+                 font: {color: SC[fam], size: 12}, bgcolor: PANEL});
+      });
+      st.heights.forEach(h => { if (!st.layers['h' + h]) return;
+        segs.flatMap(sg => crossings(sg, planeZ(h))).forEach(r => {
+          const th = [...Array(73).keys()].map(k => k * 5 * Math.PI / 180);
+          k3.push({type: 'scatter3d', mode: 'lines', x: th.map(t => B[0] + r * Math.cos(t)), y: th.map(t => B[1] + r * Math.sin(t)),
+                   z: th.map(() => h + 2), line: {color: SC[fam], width: 4}, name: fam, hoverinfo: 'name', showlegend: false}); }); });
+      if (st.layers.labels && segs.length && (st.layers.slice0 || st.layers.slice90)) {
+        const seg = segs.reduce((a, b) => b.length > a.length ? b : a), q = seg[Math.floor(seg.length / 2)];
+        const a = D.slice_az * Math.PI / 180, p = mul(Gi, [q[0] * Math.cos(a), q[0] * Math.sin(a), q[1]]);
+        k3.push({type: 'scatter3d', mode: 'text', x: [p[0]], y: [p[1]], z: [p[2] + 30], text: [fam], textfont: {color: SC[fam], size: 14},
+                 hoverinfo: 'skip', showlegend: false});
+      }
+    }
+    // fixtures
+    if (st.layers.fixtures) for (const f of D.fixtures) {
+      const xy = [...f.xy, f.xy[0]];
+      kt.push({type: 'scatter', mode: 'lines', x: xy.map(p => p[0]), y: xy.map(p => p[1]), line: {color: INK, width: 1.3},
+               name: f.name, hoverinfo: 'name', showlegend: false});
+      const cx = f.xy.reduce((a, p) => a + p[0], 0) / f.xy.length, cy = f.xy.reduce((a, p) => a + p[1], 0) / f.xy.length;
+      if (st.layers.labels) ann.push({xref: 'x2', yref: 'y2', x: cx, y: cy, text: f.name, showarrow: false, font: {size: 10, color: INK}});
+      const X = [], Y = [], ZZ = [];
+      for (const zz of f.z) { xy.forEach(p => { X.push(p[0]); Y.push(p[1]); ZZ.push(zz); }); X.push(null); Y.push(null); ZZ.push(null); }
+      f.xy.forEach(p => { X.push(p[0], p[0], null); Y.push(p[1], p[1], null); ZZ.push(f.z[0], f.z[1], null); });
+      k3.push({type: 'scatter3d', mode: 'lines', x: X, y: Y, z: ZZ, line: {color: dark ? '#ccc' : '#333', width: 3}, name: f.name,
+               hoverinfo: 'name', showlegend: false});
+    }
+    // robot base
+    if (st.layers.base) {
+      const th = [...Array(37).keys()].map(k => k * 10 * Math.PI / 180), r = D.base_r;
+      kt.push({type: 'scatter', mode: 'lines', x: th.map(t => B[0] + r * Math.cos(t)), y: th.map(t => B[1] + r * Math.sin(t)),
+               fill: 'toself', fillcolor: 'rgba(80,80,80,0.5)', line: {color: INK}, name: 'robot base (J1 axis)', hoverinfo: 'name', showlegend: false});
+      ks.push({type: 'scatter', mode: 'lines', x: [-r, r, r, -r, -r], y: [-50, -50, D.base_h, D.base_h, -50], fill: 'toself',
+               fillcolor: 'rgba(80,80,80,0.6)', line: {color: INK}, name: 'robot base', hoverinfo: 'name', showlegend: false});
+      const X = [], Y = [], I = [], J = [], K = [], ZZ = [];
+      th.slice(0, 36).forEach(t => { X.push(B[0] + r * Math.cos(t), B[0] + r * Math.cos(t)); Y.push(B[1] + r * Math.sin(t), B[1] + r * Math.sin(t)); ZZ.push(B[2] - 50, B[2] + D.base_h); });
+      for (let k = 0; k < 36; k++) { const a = 2 * k, b = 2 * ((k + 1) % 36); I.push(a, a + 1); J.push(b, b); K.push(a + 1, b + 1); }
+      k3.push({type: 'mesh3d', x: X, y: Y, z: ZZ, i: I, j: J, k: K, color: '#666', opacity: 1, name: 'robot base', hoverinfo: 'name'});
+      if (st.layers.labels) ann.push({xref: 'x2', yref: 'y2', x: B[0], y: B[1] - 120, text: 'robot base', showarrow: false, font: {size: 11, color: INK}});
+    }
+    // iso surface
+    if (st.layers.iso && D.iso.v.length) {
+      const v = D.iso.v, f = D.iso.f;
+      k3.push({type: 'mesh3d', x: v.filter((_, i) => i % 3 === 0), y: v.filter((_, i) => i % 3 === 1), z: v.filter((_, i) => i % 3 === 2),
+               i: f.filter((_, i) => i % 3 === 0), j: f.filter((_, i) => i % 3 === 1), k: f.filter((_, i) => i % 3 === 2),
+               color: '#e05050', opacity: 0.25, name: `${D.iso_key} = ${D.thr} (tool down)`, hoverinfo: 'name'});
+    }
+    // targets
+    const T = targets(), sc = st.esc;
+    if (T.length) {
+      const groups = [[false, '#2f6fde'], [true, '#e02020']];
+      for (const [fl, col] of groups) {
+        const tt = T.filter(t => t.flag === fl); if (!tt.length) continue;
+        const ex = [], ey = [], ez = [], tx = [], ty = [], sx = [], sy = [];
+        for (const t of tt) {
+          const E = t.ell[st.ell];
+          for (const ax of [[0, 1], [1, 2], [0, 2]]) {   // 3 principal ellipses in 3D
+            const a1 = E.axes[ax[0]], a2 = E.axes[ax[1]];
+            for (let k = 0; k <= 24; k++) { const c_ = Math.cos(k * Math.PI / 12), s_ = Math.sin(k * Math.PI / 12);
+              ex.push(t.p[0] + sc * (a1[0] * c_ + a2[0] * s_)); ey.push(t.p[1] + sc * (a1[1] * c_ + a2[1] * s_)); ez.push(t.p[2] + sc * (a1[2] * c_ + a2[2] * s_)); }
+            ex.push(null); ey.push(null); ez.push(null);
+          }
+          ellipse2(E.A, 0, 1).forEach(q => { tx.push(t.p[0] + sc * q[0]); ty.push(t.p[1] + sc * q[1]); }); tx.push(null); ty.push(null);
+        }
+        k3.push({type: 'scatter3d', mode: 'lines', x: ex, y: ey, z: ez, line: {color: col, width: 2}, hoverinfo: 'skip', showlegend: false});
+        k3.push({type: 'scatter3d', mode: 'markers', x: tt.map(t => t.p[0]), y: tt.map(t => t.p[1]), z: tt.map(t => t.p[2]),
+                 marker: {size: 3, color: col}, text: tt.map(tipText), hovertemplate: '%{text}<extra></extra>', showlegend: false});
+        kt.push({type: 'scatter', mode: 'lines', x: tx, y: ty, line: {color: col, width: 1}, hoverinfo: 'skip', showlegend: false});
+        kt.push({type: 'scatter', mode: 'markers', x: tt.map(t => t.p[0]), y: tt.map(t => t.p[1]), marker: {size: 5, color: col},
+                 text: tt.map(tipText), hovertemplate: '%{text}<extra></extra>', showlegend: false});
+        // slice view: (rho, z) in the robot base frame
+        const rz = tt.map(t => { const p = mul(G, t.p); return [Math.hypot(p[0], p[1]), p[2]]; });
+        ks.push({type: 'scatter', mode: 'markers', x: rz.map(p => p[0]), y: rz.map(p => p[1]), marker: {size: 6, color: col, line: {color: '#fff', width: 1}},
+                 text: tt.map(tipText), hovertemplate: '%{text}<extra></extra>', showlegend: false});
+      }
+    }
+    const font = {color: INK, size: 12}, bg = {paper_bgcolor: PANEL, plot_bgcolor: PANEL, font};
+    const ax = {gridcolor: GRID, zerolinecolor: GRID};
+    Plotly.react('p3d', k3, {...bg, margin: {l: 0, r: 0, t: 30, b: 0}, title: {text: `3D: ${names[st.variant]} · ${key()}`, font: {size: 13}},
+      uirevision: 'keep', scene: {aspectmode: 'data', xaxis: {...ax, title: 'x'}, yaxis: {...ax, title: 'y'}, zaxis: {...ax, title: 'z'}}}, {responsive: true});
+    Plotly.react('ptop', kt, {...bg, margin: {l: 50, r: 10, t: 30, b: 40}, title: {text: `top view at z = ${st.htop} mm`, font: {size: 13}},
+      uirevision: 'keep', xaxis: {...ax, title: 'x [mm]', scaleanchor: 'y', domain: [0, 1], anchor: 'y'}, yaxis: {...ax, title: 'y [mm]'},
+      annotations: ann.filter(a => a.xref === 'x2').map(a => ({...a, xref: 'x', yref: 'y'}))}, {responsive: true});
+    Plotly.react('pslice', ks, {...bg, margin: {l: 50, r: 10, t: 30, b: 40}, title: {text: 'vertical slice through the J1 axis (ρ, z), robot base frame', font: {size: 13}},
+      uirevision: 'keep', xaxis: {...ax, title: 's = horizontal distance from J1 [mm] (− = mirror)', scaleanchor: 'y', range: [S[0], S[NS - 1]]}, yaxis: {...ax, title: 'z [mm]', range: [Z[0], Z[NZ - 1]]},
+      annotations: ann.filter(a => !a.xref)}, {responsive: true});
+    const fl = T.filter(t => t.flag);
+    $('#info').textContent = `threshold μ1 ${st.thr.toFixed(2)} | flag rule (python): μ1 held > ${D.thr} or μ1 6x6 > ${D.full_thr} ` +
+      `or < ${D.limit_warn}° from a joint limit\nshown targets ${T.length}, flagged ${fl.length}\n` +
+      fl.slice(0, 40).map(t => `${t.prog.replace('Bench V1 cell ', '')} #${t.i} ${t.name}: μ1 Jv ${t.mu1_v}, held ${t.mu1_vfix}, 6x6 ${t.mu1_full}, lim ${t.margin}°`).join('\n');
+  }
+  readHeights(); readAll(); render();
+})();
+</script>
+</body>
+</html>

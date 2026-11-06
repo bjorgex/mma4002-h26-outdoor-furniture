@@ -45,13 +45,19 @@ JOINT_SPEED = 50                                        # bench_cell_v4/5.py JOI
 STEPS = {"guide_to_base_a": ("guide B-A",), "planks_into_frame1": ("plank",), "guide_back_to_base_b": ("guide A-B",),
          "frame1_into_frame2": ("sub",), "inner_half_to_pad": ("inner",), "outer_half_to_pad": ("outer",),
          "bench_to_amr": ("bench", "back to middle"),    # "Home" stays in the stage it's in
-         "inner_half_to_base_a": ("inner",), "outer_half_to_base_a": ("outer",)}          # v6
+         "inner_half_to_base_a": ("inner",), "outer_half_to_base_a": ("outer",),          # v6
+         "small_half_to_finish": ("guide small",), "big_half_to_finish": ("guide big",),   # v8 (JigV3 halves)
+         "small_half_back": ("small half",), "big_half_back": ("big half",)}
 CELLS = {"v4": ("Bench V1 cell v4", ["guide_to_base_a", "planks_into_frame1", "guide_back_to_base_b",
                                      "frame1_into_frame2", "inner_half_to_pad", "outer_half_to_pad", "bench_to_amr"]),
          "v5": ("Bench V1 cell v5", ["planks_into_frame1", "guide_back_to_base_b", "frame1_into_frame2",
                                      "inner_half_to_pad", "outer_half_to_pad", "bench_to_amr"]),   # guide starts on A
          "v6": ("Bench V1 cell v6", ["planks_into_frame1", "guide_back_to_base_b", "frame1_into_frame2",
-                                     "inner_half_to_base_a", "outer_half_to_base_a", "bench_to_amr"])}  # no pad
+                                     "inner_half_to_base_a", "outer_half_to_base_a", "bench_to_amr"]),  # no pad
+         # v8: Jig V5; v8_moves.json written by bench_cell_v8.py (tm5_kin IK, no RoboDK; not "cache")
+         "v8": ("Bench V1 cell v8", ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish",
+                                     "frame1_into_frame2", "bench_to_amr", "small_half_back",
+                                     "big_half_back"])}     # bench off before the guide goes back
 CELL = MOVES = STATION = None                           # set by use(): --cell
 STAGE = []                                              # (stage, move name prefix)
 
@@ -239,6 +245,26 @@ def outer_half_to_base_a():
     play(stage_of("outer_half_to_base_a"))
 
 
+def small_half_to_finish():
+    """small guide half (JigV3 inner U): gripped on its arm, lifted straight up off the planks -> finish base (A)  (v8)"""
+    play(stage_of("small_half_to_finish"))
+
+
+def big_half_to_finish():
+    """big guide half: gripped on its arm, lifted clear of the seat, turned 45 deg, lifted off -> finish base (A)  (v8)"""
+    play(stage_of("big_half_to_finish"))
+
+
+def small_half_back():
+    """small guide half: lifted off the empty finish base (A), back onto the start base (B)  (v8)"""
+    play(stage_of("small_half_back"))
+
+
+def big_half_back():
+    """big guide half: lifted off the empty finish base (A), back onto the start base (B), then home  (v8)"""
+    play(stage_of("big_half_back"))
+
+
 def bench_to_amr():
     """finished bench: re-gripped at frame 1's foot, lifted out of base B onto the AMR plate, back home"""
     play(stage_of("bench_to_amr"))
@@ -266,7 +292,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cache", nargs="?", choices=["cache", "derive"],
                     help=f"cache: read {PROGRAM} from RoboDK into <cell>_moves.json; derive: v5 from v4, no RoboDK")
-    ap.add_argument("--cell", choices=list(CELLS), default="v4", help="v4 (default), v5 (guide starts on base A) or v6 (v5, halves back onto A)")
+    ap.add_argument("--cell", choices=list(CELLS), default="v4", help="v4 (default), v5 (guide starts on base A), v6 (v5, halves back onto A) or v8 (Jig V5)")
     ap.add_argument("--speed", type=float, default=1, help="programmed speeds times this (default 1)")
     ap.add_argument("--list", action="store_true", help="print the stages and exit")
     a = ap.parse_args()

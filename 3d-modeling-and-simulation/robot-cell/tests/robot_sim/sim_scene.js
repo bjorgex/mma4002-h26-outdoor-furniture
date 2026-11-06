@@ -232,7 +232,7 @@ export function createSim(el, { log = () => {} } = {}) {
         if (ev.action === "grip") carry = (ev.parts || []).slice();
         break;
       case "reset":                                  // a scenario reset the mock: parts back where they started
-        held = []; carry = null;
+        held = []; carry = null; manip?.setCell(ev.cell);
         if ((ev.cell || "cell") !== cellName) { loadCell(ev.cell || "cell"); animateGrip(GAP_OPEN, .2); break; }
         start.forEach((s, o) => { s.parent.add(o); o.position.copy(s.pos); o.quaternion.copy(s.quat); o.scale.copy(s.scale); });
         animateGrip(GAP_OPEN, .2); moveLine.visible = false;
@@ -256,5 +256,10 @@ export function createSim(el, { log = () => {} } = {}) {
     gap = gapFrom + (gapTo - gapFrom) * u; setGap(gap);
     controls.update(); renderer.render(scene, camera);
   });
-  return { handle, setView, scene, joints, get held() { return heldName(); }, get delay() { return delay; } };
+  // manipulability layers (manip_layers.js, data from manipulability.py): own panel, bottom left; optional
+  let manip = null;
+  import(BASE + "manip_layers.js").then(m => m.addManipLayers({ THREE, scene, camera, joints, el, base: BASE, tip: TIP, log }))
+    .then(m => { manip = m; manip.setCell(cellName); }).catch(e => log("err", "manipulability layers not loaded: " + e.message));
+  return { handle, setView, scene, joints, get held() { return heldName(); }, get delay() { return delay; },
+           get manip() { return manip; } };
 }
