@@ -185,7 +185,15 @@ FLIP_H, FLIP_STEP = 160, 15        # the turn-over axis lifted 160 mm (bench cle
 HAND_GRIP = transl(0, 0, 5) @ FOOT_GRIP @ rotx(-FOOT_LEAN) @ rotx(pi)
 # AMR beside the plate on base A's side (-y), plate top level with the jig plate. ASSUMPTION
 AMR_AT, AMR_PLATE = transl(100, -370, 0), (300, 320)
-AMR_SHIFT, BENCH_LIFT = ((0, -400, -19) if FINISH_BASE == "B" else (0, -270, -19)), 100   # finish base -> AMR plate (frame 2 0.5 mm above it)
+AMR_SHIFT, BENCH_LIFT = ((0, -400, -19) if FINISH_BASE == "B" else (0, -355, -19)), 100   # finish base -> AMR plate (frame 2 0.5 mm above it)
+# DECISION 2026-11-06 (Claude, Bjørge away, he flagged the big half's way back): set straight onto base B with its
+# finish-side grip (the arm facing base A) the Hand-E body hit the finished bench still on A (collision.py). So the
+# big half is parked on the AMR plate (its near half; the bench goes on the far half, AMR_SHIFT), the bench is set on
+# the AMR, then the big half is re-gripped on its other arm and put on B (A empty by then). ASSUMPTION: AMR plate
+# 300 x 320 as before, both fit (gap ~10 mm); the guide overhangs the AMR plate's edge by ~4 mm.
+GUIDE_PARK = (0, -190, -19.5)      # finish-base guide pose -> AMR plate (guide bottom on the plate top)
+BIG_LIFT = 90                     # the big half turns above the plank rack (100) and the small half on B (60)
+BACK_TURN = deg(45)               # the big half's turn on the way out (away from base B, where the small half is)
 
 PICK_Z = 420       # over the rack, empty: gripper body (TCP + 37) over the plank tops (253)
 TRAVEL_Z = 520     # planks carried with their lower end (235 mm under the TCP) over standing planks (top 260)
@@ -197,7 +205,7 @@ SUB_AWAY = 30      # after the release: fingers slid off the foot's end (plate -
 APPROACH, FAST, SLOW = 40, 100, 20
 
 STAGES = ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish", "frame1_into_frame2",
-          "small_half_back", "big_half_back", "bench_to_amr"]
+          "small_half_back", "big_half_out_to_amr", "bench_to_amr", "big_half_amr_to_start"]
 
 
 # --- kinematics
@@ -412,18 +420,21 @@ def build():
         label = f"{who} half"
         g = FINISH @ GUIDE_ON_B @ GF[who]
         pick_from_above(label, g, [f"Guide {who}"])
-        up = transl(0, 0, GUIDE_LIFT) @ g
+        up = transl(0, 0, GUIDE_LIFT if who == "small" else BIG_LIFT) @ g
         p.line(f"{label} lift off bosses", up)
         if who == "big":
             t = up.copy()
-            t[:3, :3] = rotz(BIG_TURN)[:3, :3] @ up[:3, :3]
+            t[:3, :3] = rotz(BACK_TURN)[:3, :3] @ up[:3, :3]
             p.line(f"{label} turn 45", t)
             up = t
         slid = transl(*(out_dir * GUIDE_OUT)) @ up
         p.line(f"{label} slide out", slid)
         p.set_speed(FAST)
         p.line(f"{label} up", at_z(slid, LIFT_Z))
-        put_down(label, START @ GUIDE_ON_A @ GF[who], [f"Guide {who}"])
+        if who == "small":
+            put_down(label, START @ GUIDE_ON_A @ GF[who], [f"Guide {who}"])
+        else:                                                # parked on the AMR plate (see GUIDE_PARK)
+            put_down(f"{label} park", transl(*GUIDE_PARK) @ FINISH @ GUIDE_ON_B @ GF[who], [f"Guide {who}"])
 
     # 7  finished bench: re-gripped at frame 1's foot from above, lifted out of the finish base -> AMR
     p.stage = 7
@@ -446,6 +457,15 @@ def build():
     p.line("bench place out", transl(dx, dy, dz) @ grip @ transl(0, 0, -40))
     p.set_speed(FAST)
     p.line("back up", at_z(transl(dx, dy, dz) @ grip @ transl(0, 0, -40), BACK_Z))
+
+    # 8  big half: off the AMR plate on its other arm (the one that faces outwards on B), onto the start base
+    p.stage = 8
+    GO = grips(-1, GRIP_TILT_BACK)
+    g = transl(*GUIDE_PARK) @ FINISH @ GUIDE_ON_B @ GO["big"]
+    pick_from_above("big half from AMR", g, ["Guide big"])
+    p.set_speed(FAST)
+    p.line("big half from AMR up", at_z(g, LIFT_Z))
+    put_down("big half", START @ GUIDE_ON_A @ GO["big"], ["Guide big"])
     p.ptp("Home", home)
     return p
 
