@@ -20,7 +20,7 @@ Program "AssembleBench" (v7's stages, adapted; base roles START_BASE = B, FINISH
     4  frame 1 + planks: outer foot grip, lifted, turned over about an axis along plate x (the bench rolls over
        away from the arm, foot over the top), lowered through the guide into frame 2
     5  small half: lifted off the base's bosses, slid out from between the frames (base-local +y), up, onto the
-       start base; 6  big half: lifted, turned 45 deg, slid out, up, onto the start base
+       start base; 6  big half: lifted, turned 45 deg, slid out, up, straight onto the start base (never the AMR)
     7  finished bench: re-gripped at frame 1's foot from above, lifted out of the finish base, onto the AMR; home
     (2026-11-06, Bjørge: the guide must come out BEFORE the bench is lifted - frame 2 cannot pass the guide)
 Checks: tests/robot_sim/kin_check.py, collision.py (fixtures + --parts, per-move Hand-E finger gap "egp_gap"),
@@ -158,7 +158,11 @@ def grips(side=-1, tilt=None):
 # The big half's arm faces the other base where it is set down: upright, the Hand-E body (+-45 mm) hit the planks
 # standing on the other base (collision.py). Tilted 15 deg about the arm, the body leans in over its own guide.
 GRIP_TILT = {"small": 0, "big": -15}         # start -> finish (stage 3)
-GRIP_TILT_BACK = {"small": 0, "big": 0}      # finish -> start (stage 6): tilted, the arm hit frame 1 at the pick
+# finish -> start (stage 6), straight onto the start base: -10 deg leans the body away from the bench still on the
+# finish base (2026-11-06 scan, collision.py --parts: 0/+-8/+-15/+-25 and -11..-13 worse; from -11 link 4 hits frame 1
+# at the pick). Left: the EGP box model (94 x 90) grazes plank 6 at the place; an 82 x 78 body clears it - check the
+# Hand-E's real body on the robot.
+GRIP_TILT_BACK = {"small": 0, "big": -10}
 
 
 # DECISION 2026-11-06 (Claude, Bjørge asleep): the big half is lifted straight up until its bottom is >= 15 mm over
@@ -186,12 +190,8 @@ HAND_GRIP = transl(0, 0, 5) @ FOOT_GRIP @ rotx(-FOOT_LEAN) @ rotx(pi)
 # AMR beside the plate on base A's side (-y), plate top level with the jig plate. ASSUMPTION
 AMR_AT, AMR_PLATE = transl(100, -370, 0), (300, 320)
 AMR_SHIFT, BENCH_LIFT = ((0, -400, -19) if FINISH_BASE == "B" else (0, -355, -19)), 100   # finish base -> AMR plate (frame 2 0.5 mm above it)
-# DECISION 2026-11-06 (Claude, Bjørge away, he flagged the big half's way back): set straight onto base B with its
-# finish-side grip (the arm facing base A) the Hand-E body hit the finished bench still on A (collision.py). So the
-# big half is parked on the AMR plate (its near half; the bench goes on the far half, AMR_SHIFT), the bench is set on
-# the AMR, then the big half is re-gripped on its other arm and put on B (A empty by then). ASSUMPTION: AMR plate
-# 300 x 320 as before, both fit (gap ~10 mm); the guide overhangs the AMR plate's edge by ~4 mm.
-GUIDE_PARK = (0, -190, -19.5)      # finish-base guide pose -> AMR plate (guide bottom on the plate top)
+# (Bjørge 2026-11-06: nothing but the finished bench goes on the AMR; the big half is NOT parked there - it goes
+# straight from the finish base onto the start base, see GRIP_TILT_BACK.)
 BIG_LIFT = 90                     # the big half turns above the plank rack (100) and the small half on B (60)
 BACK_TURN = deg(45)               # the big half's turn on the way out (away from base B, where the small half is)
 
@@ -205,7 +205,7 @@ SUB_AWAY = 30      # after the release: fingers slid off the foot's end (plate -
 APPROACH, FAST, SLOW = 40, 100, 20
 
 STAGES = ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish", "frame1_into_frame2",
-          "small_half_back", "big_half_out_to_amr", "bench_to_amr", "big_half_amr_to_start"]
+          "small_half_back", "big_half_back", "bench_to_amr"]
 
 
 # --- kinematics
@@ -431,10 +431,8 @@ def build():
         p.line(f"{label} slide out", slid)
         p.set_speed(FAST)
         p.line(f"{label} up", at_z(slid, LIFT_Z))
-        if who == "small":
-            put_down(label, START @ GUIDE_ON_A @ GF[who], [f"Guide {who}"])
-        else:                                                # parked on the AMR plate (see GUIDE_PARK)
-            put_down(f"{label} park", transl(*GUIDE_PARK) @ FINISH @ GUIDE_ON_B @ GF[who], [f"Guide {who}"])
+        # Bjørge 2026-11-06: both halves go from the finish base straight onto the start base - never onto the AMR
+        put_down(label, START @ GUIDE_ON_A @ GF[who], [f"Guide {who}"])
 
     # 7  finished bench: re-gripped at frame 1's foot from above, lifted out of the finish base -> AMR
     p.stage = 7
@@ -457,15 +455,6 @@ def build():
     p.line("bench place out", transl(dx, dy, dz) @ grip @ transl(0, 0, -40))
     p.set_speed(FAST)
     p.line("back up", at_z(transl(dx, dy, dz) @ grip @ transl(0, 0, -40), BACK_Z))
-
-    # 8  big half: off the AMR plate on its other arm (the one that faces outwards on B), onto the start base
-    p.stage = 8
-    GO = grips(-1, GRIP_TILT_BACK)
-    g = transl(*GUIDE_PARK) @ FINISH @ GUIDE_ON_B @ GO["big"]
-    pick_from_above("big half from AMR", g, ["Guide big"])
-    p.set_speed(FAST)
-    p.line("big half from AMR up", at_z(g, LIFT_Z))
-    put_down("big half", START @ GUIDE_ON_A @ GO["big"], ["Guide big"])
     p.ptp("Home", home)
     return p
 

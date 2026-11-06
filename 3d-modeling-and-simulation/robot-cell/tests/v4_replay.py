@@ -47,8 +47,7 @@ STEPS = {"guide_to_base_a": ("guide B-A",), "planks_into_frame1": ("plank",), "g
          "bench_to_amr": ("bench", "back to middle"),    # "Home" stays in the stage it's in
          "inner_half_to_base_a": ("inner",), "outer_half_to_base_a": ("outer",),          # v6
          "small_half_to_finish": ("guide small",), "big_half_to_finish": ("guide big",),   # v8 (JigV3 halves)
-         "small_half_back": ("small half",), "big_half_back": ("big half",),
-         "big_half_out_to_amr": ("big half",), "big_half_amr_to_start": ("big half from AMR", "big half")}   # v8 (8 stages)
+         "small_half_back": ("small half",), "big_half_back": ("big half",)}
 CELLS = {"v4": ("Bench V1 cell v4", ["guide_to_base_a", "planks_into_frame1", "guide_back_to_base_b",
                                      "frame1_into_frame2", "inner_half_to_pad", "outer_half_to_pad", "bench_to_amr"]),
          "v5": ("Bench V1 cell v5", ["planks_into_frame1", "guide_back_to_base_b", "frame1_into_frame2",
@@ -58,8 +57,8 @@ CELLS = {"v4": ("Bench V1 cell v4", ["guide_to_base_a", "planks_into_frame1", "g
          # v8: Jig V5; v8_moves.json written by bench_cell_v8.py (tm5_kin IK, no RoboDK; not "cache")
          # same order as bench_cell_v8.STAGES: the guide out before the bench, the big half parked on the AMR
          "v8": ("Bench V1 cell v8", ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish",
-                                     "frame1_into_frame2", "small_half_back", "big_half_out_to_amr",
-                                     "bench_to_amr", "big_half_amr_to_start"])}
+                                     "frame1_into_frame2", "small_half_back", "big_half_back",
+                                     "bench_to_amr"])}      # the halves straight back onto the start base
 CELL = MOVES = STATION = None                           # set by use(): --cell
 STAGE = []                                              # (stage, move name prefix)
 
@@ -263,18 +262,8 @@ def small_half_back():
 
 
 def big_half_back():
-    """big guide half: lifted off the empty finish base (A), back onto the start base (B), then home  (v8)"""
+    """big guide half: lifted, turned 45 deg, slid out from between the frames, straight onto the start base (B)  (v8)"""
     play(stage_of("big_half_back"))
-
-
-def big_half_out_to_amr():
-    """big guide half: lifted, turned 45 deg, slid out from between the frames, parked on the AMR plate  (v8)"""
-    play(stage_of("big_half_out_to_amr"))
-
-
-def big_half_amr_to_start():
-    """big guide half: off the AMR plate on its other arm, back onto the start base (B), then home  (v8)"""
-    play(stage_of("big_half_amr_to_start"))
 
 
 def bench_to_amr():

@@ -37,9 +37,8 @@ v8 runs. One hit is left: the big half's slide out (#120). In the CAD the big ha
 | 3 | big guide half B → A (lifted above the planks, turned −45°; grip tilted 15°) | 0 |
 | 4 | frame 1 + planks turned over into frame 2 on A | 0 |
 | 5 | small half out of the bench (lift, slide) → B | 0 |
-| 6 | big half out (lift 90, turn 45°, slide) → parked on the AMR plate | 1 (#120, §5) |
-| 7 | finished bench A → AMR (far half of the AMR plate) | 0 |
-| 8 | big half AMR → B (other arm), home | 0 |
+| 6 | big half out (lift 90, turn 45°, slide) → straight onto B (grip tilted −10°); never onto the AMR | 1 (#120, §5); the EGP box model grazes plank 6 at the place (an 82 × 78 mm body clears it: check the real Hand-E) |
+| 7 | finished bench A → AMR, home | 0 |
 
 ## 5. Open questions / known limits
 - **Big half locked in the CAD:** with the small half out, no slide or turn frees it. Checked as a 2D search with 1 mm and 1° steps, with the guide either way up, even with 1.8 mm extra clearance:
