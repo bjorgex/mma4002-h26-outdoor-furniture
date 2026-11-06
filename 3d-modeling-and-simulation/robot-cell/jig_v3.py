@@ -5,10 +5,10 @@ JigV3 replaces bases A + B and the guide of Jig V2:
                    (base z -40..0, guide z -60..-20) -> turned over about x: base z 0..40, guide z 20..60
     base A         the whole JigV3 (base + guide: the guide starts and ends the cycle on A, as in v7)
     base B         JigV3's base only
-    layout         v7 (jig_v2.LAYOUT7): A at (135, 122), B at (135, 322), both turned 180 deg about z;
+    layout         v7 positions (jig_v2.LAYOUT7): A at (135, 122), B at (135, 322), both turned -90 deg about z
+                   (legs pointing at the plank rack, both the same way);
                    plank rack PlankRack_V2 at (420, 192); plate JigBase_V2 600 x 500 x 6, top at z = 0
-ASSUMPTIONS to check: B uses the same base as A (JigV3 has one base, V2 had mirrored A/B); the 180 deg turn keeps
-v7's orientation, but which side of JigV3 is the guide's grip pocket is not checked yet.
+ASSUMPTION to check: B uses the same base as A (JigV3 has one base, V2 had mirrored A/B).
 
     python robot_cell/jig_v3.py          -> jig-cad/Jig V3/JigAssembly_V3.STEP (+ .stl)   (repo .venv / build123d)
 """
@@ -20,7 +20,9 @@ HERE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd(
 JIG = HERE.parent / "jig-cad"
 OUT = JIG / "Jig V3"
 LAYOUT = {"A": (135.0, 122.0), "B": (135.0, 322.0), "rack": (420.0, 192.0)}   # = jig_v2.LAYOUT7
-TURN = 180                                                                    # bases turned about z, as in v7
+# Both bases turned the same way: the frame's legs (JigV3 local y, long ends at +y) along the plate's x axis,
+# pointing at the plank rack (+x). (v7's 180 deg had the legs across the plate, A and B facing each other.)
+TURN = -90
 
 COLORS = {"plate": (0.80, 0.64, 0.42), "base": (0.35, 0.55, 0.85), "guide": (0.95, 0.65, 0.15),
           "rack": (0.45, 0.47, 0.50)}
