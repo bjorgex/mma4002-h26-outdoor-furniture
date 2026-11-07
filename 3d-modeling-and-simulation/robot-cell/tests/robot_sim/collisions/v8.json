@@ -2,11 +2,11 @@
  "cell": "v8",
  "moves_file": "tests/v8_moves.json",
  "cell_file": "tests/robot_sim/cell_v8.glb",
- "n_moves": 119,
+ "n_moves": 114,
  "free": false,
  "hits": [
   {
-   "move": 64,
+   "move": 59,
    "name": "guide big place approach",
    "check": "parts",
    "pairs": [
@@ -23,7 +23,7 @@
    ]
   },
   {
-   "move": 65,
+   "move": 60,
    "name": "guide big place",
    "check": "parts",
    "pairs": [
@@ -40,7 +40,7 @@
    ]
   },
   {
-   "move": 105,
+   "move": 100,
    "name": "big half slide out",
    "check": "parts",
    "pairs": [
@@ -67,7 +67,7 @@
    ]
   },
   {
-   "move": 108,
+   "move": 103,
    "name": "big half place approach",
    "check": "parts",
    "pairs": [
@@ -104,7 +104,7 @@
    ]
   },
   {
-   "move": 109,
+   "move": 104,
    "name": "big half place",
    "check": "parts",
    "pairs": [
@@ -128,12 +128,12 @@
  ],
  "step": 2.0,
  "geometry": "techman",
- "generated": "2026-11-07 02:37:56",
- "seconds": 15.2,
+ "generated": "2026-11-07 03:01:29",
+ "seconds": 24.0,
  "inputs": {
   "v8_moves.json": [
-   1794014896.978,
-   50127
+   1794016046.006,
+   47833
   ],
   "cell_v8.glb": [
    1794014932.746,
