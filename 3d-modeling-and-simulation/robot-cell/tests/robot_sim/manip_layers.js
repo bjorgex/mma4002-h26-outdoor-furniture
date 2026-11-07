@@ -14,7 +14,7 @@
 // "Held" = linear TCP velocity with the orientation held: v^T (C^T C) v <= 1, C = the v-columns of J^-1.
 
 const KEY = "manipLayers.v2";
-const DEF = { open: true, planes: true, heights: "50", slice: false, sliceFollow: true, unreach: false,
+const DEF = { open: true, more: false, planes: true, heights: "50", slice: false, sliceFollow: true, unreach: false,
               iso: false, gauge: true, tcp: true, ell: false, ellKind: "fix", path: true, labels: true, prog: "auto",
               variant: "down", thr: 3, ellScale: 150 };
 const LIMITS = [[-270, 270], [-180, 180], [-155, 155], [-180, 180], [-180, 180], [-270, 270]];
@@ -218,7 +218,7 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
   };
   function buildPath() {
     pathG.children.slice().forEach(o => { o.removeFromParent(); o.traverse(c => { c.geometry?.dispose(); c.material?.map?.dispose(); c.material?.dispose(); }); });
-    pickables.length = 0;
+    pickables.length = 0; pathP = []; pathItems = [];
     curProg = st.prog === "auto" ? progFor(cellName) : st.prog;
     const P = D.programs[curProg];
     if (!st.path || !P || !P.length) return;
@@ -227,19 +227,50 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-    pathG.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, depthTest: false, transparent: true })));
+    pathLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, depthTest: false, transparent: true }));
+    pathG.add(pathLine);
     const dotGeo = new THREE.SphereGeometry(7, 10, 8), seen = new Set();
-    P.forEach(t => {
+    const gripGeo = new THREE.SphereGeometry(11, 14, 10), ringGeo = new THREE.TorusGeometry(12, 3.5, 8, 24);
+    pathItems = P.map(() => []);                  // per point: its meshes/labels, for the step slider
+    P.forEach((t, n) => {
       const bad = t.mu1_vfix > st.thr || t.mu1_full > D.full_thr || t.margin < D.limit_warn;
       const m = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: bad ? 0xff2020 : 0x2f6fde, depthTest: false, transparent: true }));
       m.position.set(...t.p); m.scale.setScalar(bad ? 1.6 : 0.8); m.renderOrder = 9; m.userData.t = t; pathG.add(m); pickables.push(m);
+      pathItems[n].push(m);
+      if (t.grip) {                               // where the gripper closes (solid) / opens (ring)
+        const g = new THREE.Mesh(t.grip === "grip" ? gripGeo : ringGeo,
+          new THREE.MeshBasicMaterial({ color: t.grip === "grip" ? 0x0f9d3a : 0x5fd67a, depthTest: false, transparent: true }));
+        g.position.set(t.p[0], t.p[1], t.p[2] + 16); g.renderOrder = 10; g.userData.t = t; pathG.add(g); pickables.push(g);
+        pathItems[n].push(g);
+      }
       const key = t.p.map(v => Math.round(v / 40)).join(",");           // one label per ~40 mm spot
       if (bad && st.labels && !seen.has(key)) {
         seen.add(key);
         const s = label(`#${t.i} ${t.name}  μ1 ${t.mu1_vfix}`, "#c01010");
         s.position.set(t.p[0], t.p[1], t.p[2] + 25); s.center.set(0, 0); pathG.add(s);
+        pathItems[n].push(s);
       }
     });
+    curMark = new THREE.Mesh(new THREE.TorusGeometry(18, 3, 8, 32),
+      new THREE.MeshBasicMaterial({ color: 0x111111, depthTest: false, transparent: true }));
+    curMark.renderOrder = 11; pathG.add(curMark);
+    pathP = P;
+    const r = q("stepR");
+    r.max = P.length - 1;
+    if (stepAt === null || stepAt > P.length - 1) stepAt = P.length - 1;
+    r.value = stepAt; showUpTo(stepAt);
+  }
+  let pathLine = null, pathItems = [], pathP = [], curMark = null, stepAt = null;
+  function showUpTo(k) {                          // the step slider: path, points and labels up to point k
+    if (!pathP.length) return;
+    stepAt = k;
+    pathLine.geometry.setDrawRange(0, k + 1);
+    pathItems.forEach((items, n) => items.forEach(o => { o.visible = n <= k; }));
+    const t = pathP[k], all = k === pathP.length - 1;
+    curMark.visible = !all; curMark.position.set(...t.p);
+    const gr = t.grip ? ` - ${t.grip === "grip" ? "GRIP" : "RELEASE"} ${(t.grip_parts || []).join(", ")}` : "";
+    q("stepv").textContent = all ? `all ${pathP.length}` : `${k + 1} / ${pathP.length}`;
+    q("stepName").textContent = `#${t.i} ${t.name}${gr} (stage ${t.stage})`;
   }
 
   // ---- panel ---------------------------------------------------------------------------------------------
@@ -249,34 +280,65 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
     "background:#ffffffeb;color:#222;border:1px solid #ccc;border-radius:8px;padding:8px 10px;font:12px/1.35 system-ui,sans-serif;";
   const progOpts = ["auto", ...Object.keys(D.programs)].map(k => `<option value="${k}">${k === "auto" ? "auto (the cell shown)" : k}</option>`).join("");
   box.className = "manip-panel";
-  box.innerHTML = `<style>.manip-panel label{display:block;margin:1px 0}.manip-panel input{vertical-align:middle}</style>
-    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" data-k="toggle">
-      <b>Manipulability</b><span data-k="arrow">▾</span></div>
+  box.innerHTML = `<style>.manip-panel label{display:block;margin:1px 0}.manip-panel input{vertical-align:middle}
+      .manip-panel .mi{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+        border:1.5px solid #3a6fd8;color:#3a6fd8;font:700 11px/1 Georgia,serif;font-style:italic;cursor:pointer;margin-left:6px;user-select:none}
+      .manip-panel .mi:hover{background:#3a6fd8;color:#fff}
+      .manip-panel .mhelp{display:none;margin:6px 0;padding:7px 8px;background:#f3f6fc;border:1px solid #d5dff2;border-radius:6px;font-size:11.5px;line-height:1.4}
+      .manip-panel .mhelp p{margin:0 0 5px}.manip-panel .mhelp p:last-child{margin:0}
+      .manip-panel .mmore{cursor:pointer;color:#3a6fd8;margin:6px 0 2px;user-select:none}</style>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span><b style="cursor:pointer" data-k="toggle">Manipulability</b><span class="mi" data-k="info" title="What is this?">i</span></span>
+      <span data-k="arrow" style="cursor:pointer">▾</span></div>
+    <div class="mhelp" data-k="help">
+      <p><b>What it shows:</b> how freely the arm can move the gripper in every direction from where it is.</p>
+      <p><b>Arm freedom</b> (μ1): <b>1</b> = it moves equally easily in all directions. The bigger the number, the more one
+        direction is hard or slow; near a <b>singular pose</b> (∞) the arm cannot move that way at all and joints spin fast.</p>
+      <p><b>Colours:</b> green/yellow = good, orange = getting stiff, <b style="color:#d01010">red</b> = above the
+        threshold (<span data-k="thrHelp"></span>) - avoid that spot or approach it differently.</p>
+      <p><b>Joint limits:</b> degrees left before the closest joint hits its stop.</p>
+      <p><b>Layers:</b> <i>Program path</i> = the robot's route coloured by arm freedom (red dots = flagged, hover for
+        details); <i>Colour map</i> = arm freedom on a horizontal plane above the plate; <i>Danger zone</i> = the red volume
+        where it gets too stiff with the tool pointing down. More settings: the velocity ellipsoid (how fast the
+        gripper can move in each direction), a vertical slice, tool direction, threshold.</p>
+      <p style="color:#666">μ1 = √(λmax/λmin) of A = J J<sup>T</sup> with the tool's orientation held; grid ${STEP} mm,
+        cell ${D.cell} frame (Modern Robotics 5.4).</p></div>
     <div data-k="gaugebox" style="margin:6px 0 2px">
       <div style="position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#3cc846,#ffd23a 45%,#ff3232 66.7%,#900000)">
         <div data-k="needle" style="position:absolute;top:-3px;width:3px;height:18px;background:#111;left:0"></div></div>
-      <div data-k="readout" style="font:11px ui-monospace,Consolas,monospace;margin-top:3px">–</div></div>
+      <div data-k="readout" style="margin-top:4px">–</div></div>
     <div data-k="body">
-      <label><input type="checkbox" data-s="gauge"> live gauge (current joints)</label>
-      <label><input type="checkbox" data-s="tcp"> colour the TCP marker</label>
-      <label><input type="checkbox" data-s="ell"> live velocity ellipsoid</label>
-      <div style="margin-left:18px"><label><input type="radio" name="mlEll" value="fix"> orientation held</label>
-        <label><input type="radio" name="mlEll" value="v"> J<sub>v</sub></label>
-        <label>scale <input type="range" data-s="ellScale" min="40" max="400" step="10" style="width:90px"></label></div>
-      <hr style="border:0;border-top:1px solid #ddd">
-      <label><input type="checkbox" data-s="planes"> heat planes at z (plate) <input type="text" data-s="heights" style="width:95px;font:inherit"></label>
-      <label><input type="checkbox" data-s="slice"> vertical slice through the base</label>
-      <label style="margin-left:18px"><input type="checkbox" data-s="sliceFollow"> turns with J1</label>
-      <label><input type="checkbox" data-s="unreach"> show unreachable (grey)</label>
-      <label>tool <select data-s="variant"><option value="down">pointing down</option><option value="best">best of 8 directions</option></select></label>
-      <label><input type="checkbox" data-s="iso"> danger volume (μ1 = ${D.thr}, tool down)</label>
-      <hr style="border:0;border-top:1px solid #ddd">
-      <label><input type="checkbox" data-s="path"> program path, coloured by μ1</label>
-      <label style="margin-left:18px"><input type="checkbox" data-s="labels"> labels on flagged targets</label>
-      <select data-s="prog" style="width:100%;font:inherit">${progOpts}</select>
-      <label>μ1 threshold <b data-k="thrv"></b><input type="range" data-s="thr" min="1.5" max="10" step="0.1" style="width:100%"></label>
-      <div style="color:#666;font-size:11px">μ1 = √(λmax/λmin) of A = J J<sup>T</sup> with the tool's orientation held (1 = round, ∞ = singular);
-        colours: yellow good → purple poor, red above the threshold. Planes and slice: grid ${STEP} mm, cell ${D.cell} frame.</div>
+      <label><input type="checkbox" data-s="path"> Program path</label>
+      <div data-k="legend" style="margin:2px 0 4px 18px;font-size:11px;line-height:1.5;color:#333">
+        <div><span style="display:inline-block;width:34px;height:6px;border-radius:3px;vertical-align:middle;
+          background:linear-gradient(90deg,#fde725,#35b779,#31688e,#440154)"></span> line: arm freedom, good → stiff</div>
+        <div><span style="color:#2f6fde">●</span> a target the robot moves to</div>
+        <div><span style="color:#ff2020;font-size:13px">●</span> flagged: stiff or near a joint limit</div>
+        <div><span style="color:#0f9d3a;font-size:13px">●</span> gripper closes (GRIP)
+          &nbsp;<span style="color:#5fd67a;font-size:13px">○</span> opens (RELEASE)</div>
+        <div style="color:#777">hover a point for details</div>
+        <div style="margin-top:4px">step through the path: <b data-k="stepv"></b>
+          <input type="range" data-k="stepR" min="0" max="0" step="1" style="width:100%">
+          <div data-k="stepName" style="font-size:11px;color:#222;min-height:14px"></div></div></div>
+      <label><input type="checkbox" data-s="planes"> Colour map on the floor</label>
+      <label><input type="checkbox" data-s="iso"> Danger zone</label>
+      <div class="mmore" data-k="moreT">More settings ▸</div>
+      <div data-k="more" style="display:none">
+        <label><input type="checkbox" data-s="gauge"> live bar (current joints)</label>
+        <label><input type="checkbox" data-s="tcp"> colour the gripper marker</label>
+        <label><input type="checkbox" data-s="ell"> velocity ellipsoid</label>
+        <div style="margin-left:18px"><label><input type="radio" name="mlEll" value="fix"> orientation held</label>
+          <label><input type="radio" name="mlEll" value="v"> J<sub>v</sub></label>
+          <label>scale <input type="range" data-s="ellScale" min="40" max="400" step="10" style="width:90px"></label></div>
+        <label>colour map heights z (plate) <input type="text" data-s="heights" style="width:80px;font:inherit"></label>
+        <label><input type="checkbox" data-s="slice"> vertical slice through the base</label>
+        <label style="margin-left:18px"><input type="checkbox" data-s="sliceFollow"> turns with J1</label>
+        <label><input type="checkbox" data-s="unreach"> show unreachable (grey)</label>
+        <label>tool <select data-s="variant"><option value="down">pointing down</option><option value="best">best of 8 directions</option></select></label>
+        <label><input type="checkbox" data-s="labels"> labels on flagged path points</label>
+        <select data-s="prog" style="width:100%;font:inherit">${progOpts}</select>
+        <label>threshold μ1 <b data-k="thrv"></b><input type="range" data-s="thr" min="1.5" max="10" step="0.1" style="width:100%"></label>
+      </div>
     </div>
     <div data-k="tip" style="display:none;position:fixed;z-index:20;background:#fff;border:1px solid #999;border-radius:5px;padding:4px 6px;font:11px ui-monospace,Consolas,monospace;pointer-events:none;white-space:pre"></div>`;
   el.appendChild(box);
@@ -290,13 +352,18 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
   });
   box.querySelectorAll('input[name="mlEll"]').forEach(r => { r.checked = r.value === st.ellKind;
     r.onchange = () => { st.ellKind = r.value; save(st); }; });
-  q("toggle").onclick = () => { st.open = !st.open; save(st); apply("open"); };
+  q("toggle").onclick = q("arrow").onclick = () => { st.open = !st.open; save(st); apply("open"); };
+  q("info").onclick = () => { const h = q("help"); h.style.display = h.style.display === "block" ? "none" : "block"; };
+  q("moreT").onclick = () => { st.more = !st.more; save(st); apply("more"); };
+  q("stepR").addEventListener("input", e => showUpTo(+e.target.value));
+  q("stepR").addEventListener("keydown", e => e.stopPropagation());   // arrow keys step the slider, not the camera
   // stop orbit controls from reacting to the panel
   ["pointerdown", "wheel"].forEach(t => box.addEventListener(t, e => e.stopPropagation()));
 
   function apply(k) {
     q("body").style.display = st.open ? "" : "none"; q("arrow").textContent = st.open ? "▾" : "▸";
-    q("thrv").textContent = st.thr.toFixed(1);
+    q("thrv").textContent = st.thr.toFixed(1); q("thrHelp").textContent = "μ1 " + st.thr.toFixed(1);
+    q("more").style.display = st.more ? "" : "none"; q("legend").style.display = st.path ? "" : "none"; q("moreT").textContent = st.more ? "More settings ▾" : "More settings ▸";
     if (["planes", "heights", "variant", "thr", "unreach", undefined].includes(k)) buildPlanes();
     if (["slice", "variant", "thr", "unreach", undefined].includes(k)) buildSlice();
     if (["path", "labels", "prog", "thr", undefined].includes(k)) buildPath();
@@ -316,8 +383,11 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
     const hit = ray.intersectObjects(pickables, false)[0];
     if (!hit) { if (!sticky) tipEl.style.display = "none"; return; }
     const t = hit.object.userData.t;
-    tipEl.textContent = `${curProg}  #${t.i} ${t.name} (stage ${t.stage})\nμ1 held ${t.mu1_vfix}   μ1 J_v ${t.mu1_v}   μ1 6x6 ${t.mu1_full}\n` +
-      `μ3 J_v ${t.mu3_v} (m/s)³   joint margin ${t.margin}°${t.flag ? "   FLAGGED" : ""}`;
+    const w = t.mu1_vfix < Math.sqrt(st.thr) ? "Good" : t.mu1_vfix < st.thr ? "OK" : "Poor";
+    const gr = t.grip ? `\n${t.grip === "grip" ? "GRIP: gripper closes on" : "RELEASE: gripper opens, puts down"} ${(t.grip_parts || []).join(", ")}` : "";
+    tipEl.textContent = `#${t.i} ${t.name} (stage ${t.stage})${t.flag ? "   FLAGGED" : ""}${gr}\n` +
+      `arm freedom ${w} (μ1 ${t.mu1_vfix}), joint limits ${t.margin}° to spare\n` +
+      `details: μ1 J_v ${t.mu1_v}, μ1 6x6 ${t.mu1_full}, μ3 J_v ${t.mu3_v} (m/s)³ - ${curProg}`;
     tipEl.style.left = ev.clientX + 14 + "px"; tipEl.style.top = ev.clientY + 10 + "px"; tipEl.style.display = "block";
   }
   el.addEventListener("pointermove", e => pick(e, false));
@@ -334,10 +404,11 @@ export async function addManipLayers({ THREE, scene, camera = null, joints, el, 
     if (st.gauge) {
       const t = Math.min(1, Math.max(0, Math.log(Math.max(m.mu1, 1)) / (1.5 * Math.log(Math.max(st.thr, 1.05)))));   // thr at 2/3
       q("needle").style.left = `calc(${(t * 100).toFixed(1)}% - 1px)`;
-      const warn = m.margin < D.limit_warn ? "  ⚠" : "";
-      q("readout").innerHTML = `μ1 held <b style="color:${css(traffic(m.mu1, st.thr))};text-shadow:0 0 1px #000">${isFinite(m.mu1) ? m.mu1.toFixed(2) : "∞"}</b>` +
-        `  μ1 J<sub>v</sub> ${m.mu1_v.toFixed(2)}<br>μ3 held ${m.mu3.toFixed(4)} (m/s)³<br>` +
-        `limit margin ${m.margin.toFixed(1)}° (J${m.marginJ})${warn}`;
+      const word = !isFinite(m.mu1) ? "Stuck (singular)" : m.mu1 < Math.sqrt(st.thr) ? "Good" : m.mu1 < st.thr ? "OK" : "Poor";
+      const lim = m.margin < D.limit_warn ? `<span style="color:#c01010">joint J${m.marginJ} only ${m.margin.toFixed(0)}° from its limit ⚠</span>`
+        : `joint limits: ${m.margin.toFixed(0)}° to spare`;
+      q("readout").innerHTML = `Arm freedom: <b style="color:${css(traffic(m.mu1, st.thr))};text-shadow:0 0 1px #000">${word}</b>` +
+        ` <span style="color:#666">(μ1 ${isFinite(m.mu1) ? m.mu1.toFixed(1) : "∞"})</span><br>${lim}`;
     }
     if (st.ell) {
       const E = st.ellKind === "fix" && m.efix ? m.efix : m.ev, sc = st.ellScale;   // mm drawn per 1 m/s

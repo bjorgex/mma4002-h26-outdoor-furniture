@@ -282,6 +282,8 @@ def run():
           " Enter to start ")
     announce()
     b = hb.Bridge()
+    print("gripper home: open (RELEASE)")                # every run starts with the Hand-E open, whatever the last run left
+    b.release()
     for k, (do, args) in enumerate(seq, 1):
         print(f"{k}/{len(seq)} {do.__name__}: {do.__doc__}")
         do(*args)

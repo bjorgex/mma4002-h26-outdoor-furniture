@@ -1,0 +1,185 @@
+{
+ "cell": "v4",
+ "moves_file": "tests/v4_moves.json",
+ "cell_file": "tests/robot_sim/cell.glb",
+ "n_moves": 152,
+ "free": false,
+ "hits": [
+  {
+   "move": 7,
+   "name": "guide B-A pick out low",
+   "check": "parts",
+   "pairs": [
+    [
+     "link_3",
+     "plank4"
+    ]
+   ],
+   "context": "after 'start', before 'attach Guide inner, Guide outer'",
+   "stage": 1,
+   "objects": [
+    "link_3",
+    "plank4"
+   ]
+  },
+  {
+   "move": 8,
+   "name": "guide B-A pick",
+   "check": "parts",
+   "pairs": [
+    [
+     "link_3",
+     "plank4"
+    ],
+    [
+     "link_3",
+     "plank5"
+    ]
+   ],
+   "context": "after 'start', before 'attach Guide inner, Guide outer'",
+   "stage": 1,
+   "objects": [
+    "link_3",
+    "plank4",
+    "plank5"
+   ]
+  },
+  {
+   "move": 9,
+   "name": "guide B-A lift",
+   "check": "parts",
+   "pairs": [
+    [
+     "link_3",
+     "plank4"
+    ],
+    [
+     "link_3",
+     "plank5"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide B-A'",
+   "stage": 1,
+   "objects": [
+    "link_3",
+    "plank4",
+    "plank5"
+   ]
+  },
+  {
+   "move": 10,
+   "name": "guide B-A up",
+   "check": "parts",
+   "pairs": [
+    [
+     "link_3",
+     "plank4"
+    ],
+    [
+     "link_3",
+     "plank5"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide B-A'",
+   "stage": 1,
+   "objects": [
+    "link_3",
+    "plank4",
+    "plank5"
+   ]
+  },
+  {
+   "move": 70,
+   "name": "plank1 place travel",
+   "check": "parts",
+   "pairs": [
+    [
+     "plank1",
+     "plank2"
+    ]
+   ],
+   "context": "after 'attach plank1', before 'release plank1'",
+   "stage": 2,
+   "objects": [
+    "plank1",
+    "plank2"
+   ]
+  },
+  {
+   "move": 124,
+   "name": "inner out 1",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "plank4"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'",
+   "stage": 5,
+   "objects": [
+    "Guide inner",
+    "plank4"
+   ]
+  },
+  {
+   "move": 127,
+   "name": "inner out 4",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "Parking pad"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'",
+   "stage": 5,
+   "objects": [
+    "Guide inner",
+    "Parking pad"
+   ]
+  }
+ ],
+ "step": 2.0,
+ "geometry": "techman",
+ "generated": "2026-11-06 13:59:21",
+ "seconds": 82.0,
+ "inputs": {
+  "v4_moves.json": [
+   1793449279.201,
+   53672
+  ],
+  "cell.glb": [
+   1793454153.407,
+   103416
+  ],
+  "cell_layout.json": [
+   1793454153.41,
+   15235
+  ],
+  "collision.py": [
+   1793966843.021,
+   21335
+  ],
+  "tm5_links.glb": [
+   1793406923.457,
+   3778684
+  ],
+  "tm5_kin.py": [
+   1793406923.464,
+   13724
+  ],
+  "kin_check.py": [
+   1793966843.028,
+   12403
+  ],
+  "tmflow_export.py": [
+   1793966843.242,
+   33976
+  ],
+  "collision_view.py": [
+   1793966843.025,
+   8270
+  ]
+ }
+}

@@ -661,7 +661,12 @@
 0.6765003179169997
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"Guide inner",
+"Guide outer"
+]
 },
 {
 "i": 10,
@@ -1159,7 +1164,11 @@
 0.4823843644606696
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"guide B-A"
+]
 },
 {
 "i": 17,
@@ -1574,7 +1583,11 @@
 0.44832808440351846
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank3"
+]
 },
 {
 "i": 23,
@@ -1989,7 +2002,11 @@
 0.7885994675964454
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "release",
+"grip_parts": [
+"plank3"
+]
 },
 {
 "i": 29,
@@ -2570,7 +2587,11 @@
 0.44833143426944394
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank6"
+]
 },
 {
 "i": 39,
@@ -2985,7 +3006,11 @@
 0.8253219310742296
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "release",
+"grip_parts": [
+"plank6"
+]
 },
 {
 "i": 45,
@@ -3566,7 +3591,11 @@
 0.4242336322197163
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank2"
+]
 },
 {
 "i": 55,
@@ -3981,7 +4010,11 @@
 0.7066511264951629
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"plank2"
+]
 },
 {
 "i": 61,
@@ -4562,7 +4595,11 @@
 0.42423959053485955
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank5"
+]
 },
 {
 "i": 71,
@@ -4977,7 +5014,11 @@
 0.8211954701057426
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "release",
+"grip_parts": [
+"plank5"
+]
 },
 {
 "i": 77,
@@ -5558,7 +5599,11 @@
 0.4018897551824873
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank1"
+]
 },
 {
 "i": 87,
@@ -5973,7 +6018,11 @@
 0.7469268180277049
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"plank1"
+]
 },
 {
 "i": 93,
@@ -6554,7 +6603,11 @@
 0.40189633020639337
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"plank4"
+]
 },
 {
 "i": 103,
@@ -6969,7 +7022,11 @@
 0.8188087228330491
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "release",
+"grip_parts": [
+"plank4"
+]
 },
 {
 "i": 109,
@@ -7882,7 +7939,12 @@
 0.4823843644606696
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"Guide inner",
+"Guide outer"
+]
 },
 {
 "i": 124,
@@ -8380,7 +8442,11 @@
 0.6765003179169997
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"guide A-B"
+]
 },
 {
 "i": 131,
@@ -9044,7 +9110,23 @@
 0.6315122328298306
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "grip",
+"grip_parts": [
+"frame1",
+"plank1",
+"plank2",
+"plank3",
+"plank4",
+"plank5",
+"plank6",
+"piece A1",
+"piece A2",
+"piece A3",
+"piece A4",
+"piece A5",
+"piece A6"
+]
 },
 {
 "i": 140,
@@ -9625,7 +9707,11 @@
 0.7343377618913094
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "release",
+"grip_parts": [
+"frame 1 with the planks"
+]
 },
 {
 "i": 148,
@@ -10206,7 +10292,11 @@
 0.6738623050140256
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"Guide inner"
+]
 },
 {
 "i": 157,
@@ -10538,7 +10628,11 @@
 0.9716432932370838
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"inner"
+]
 },
 {
 "i": 162,
@@ -11036,7 +11130,11 @@
 0.6791147422473793
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "grip",
+"grip_parts": [
+"Guide outer"
+]
 },
 {
 "i": 170,
@@ -11285,7 +11383,11 @@
 1.0630088459976537
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"outer"
+]
 },
 {
 "i": 174,
@@ -12032,7 +12134,30 @@
 0.8576015219284674
 ]
 ],
-"flag": true
+"flag": true,
+"grip": "grip",
+"grip_parts": [
+"frame1",
+"frame2",
+"plank1",
+"plank2",
+"plank3",
+"plank4",
+"plank5",
+"plank6",
+"piece A1",
+"piece A2",
+"piece A3",
+"piece A4",
+"piece A5",
+"piece A6",
+"piece B1",
+"piece B2",
+"piece B3",
+"piece B4",
+"piece B5",
+"piece B6"
+]
 },
 {
 "i": 185,
@@ -12281,7 +12406,11 @@
 0.5805185325748888
 ]
 ],
-"flag": false
+"flag": false,
+"grip": "release",
+"grip_parts": [
+"bench"
+]
 },
 {
 "i": 189,

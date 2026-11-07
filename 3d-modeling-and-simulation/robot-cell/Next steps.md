@@ -2,6 +2,24 @@
 
 **Program:** [bench_cell_v8.py](bench_cell_v8.py) → [tests/v8_moves.json](tests/v8_moves.json) · **Jig:** [jig_v5.py](jig_v5.py), [Jig V5 assembly](<../jig-cad/Jig V5/JigAssembly_V5.STEP>) · **Own tools:** [tests/robot_sim/OWN_TOOL.md](tests/robot_sim/OWN_TOOL.md) · **TMflow:** [bench_tmflow/v8/AssembleBench.zip](bench_tmflow/v8/AssembleBench.zip)
 
+## 0b. As built (2026-11-07)
+- **Rack and base B are planned where they really sit** (`AS_BUILT_RACK` −2.1/−14.8 mm, `AS_BUILT_B` +8.5/−7.6 mm in [bench_cell_v8.py](bench_cell_v8.py)); program, 3D sim and collision check all use them. Jig design files unchanged.
+- Taught corrections rebased to small residuals; **stage 1 on the robot unchanged (0.00 mm)**, stages 2–6 moved ≤ 8.5 mm towards reality.
+- **Step tool:** [tests/step_run.py](tests/step_run.py) — Enter/s, `x|y|z`, `rx|ry|rz`, `b`, `step n`, `open`/`close`, `save`, `f`. Push moves after the plank release removed.
+- Collisions: 5 moves, all with the big guide half (#64/65 place by plank 6, #105 slide out, #108/109 place onto B by planks 5/6). Stages 2–7 not taught yet.
+- **OPEN:** base B fits better turned ~1.5° — check on the real cell; the flip (stage 4) assumes B ∥ A.
+- **Big guide half out with frame 2 on (stage 6, #105): accepted as forced** (Bjørge 2026-11-07) — it comes out by force, the planks flex. Proposed motion: lift straight up to the middle of the bench (where the planks flex most), turn 45° there, then out; in the sim mark that hit as expected. Waiting: "middle" = half the bench height? implement now or later?
+
+## 0. Real robot, 2026-11-06 evening
+- **Run on the real robot from the page:** `python tests/demo_viewer.py view --robot 10.0.12.101 --port 8092 --cell cell_v8`, then http://127.0.0.1:8092/all → preset → **Run** (same page as the sim; the 3D arm follows the real joints). Run answers every "Enter" prompt; Stop only kills the script (queued moves still run: E-stop). Use `v8-full`, not `-fast`, on the robot.
+- **Bridge check passed** (`hande_bridge.py check`): RELEASE, GRIP, Home2 all answer.
+- **GRIP1 target must be fully closed (255).** It was 80 (~34 mm gap) → every grip reported "object loss".
+- **After a GripLost:** clear the error in TMflow and restart HandE_Bridge_v1, else the Listen node answers status but not scripts (the run hangs at connect).
+- **Every run starts with RELEASE** (gripper open) — `v4_replay.py`.
+- **Plank picks taught** (`teach_v8.json`): plank 2 taught, copied to 1, 3, 5, 6 (one rack). Shift on the plate −2.1, −14.8, +3.7 mm, plus `PLANK_PICK_DZ = −10` in `bench_cell_v8.py`. Checked on the robot: goes to the taught pose to 0.01 mm, fingers straight.
+- **The Hand-E sits tilted on the flange (~2–3°): it is NOT symmetric about the tool axis.** The taught wrist half-turn must stay (J6 ≈ 238° at the picks). The places still use the old wrist side → the gripper is crooked there. Fix: teach plank 2's place, then model the mounting tilt once as a fixed tool rotation for all grips.
+- **Plank guide in the model ≠ the real one** (real: one M8 hole on each of 4 sides). Need its CAD or measurements to fix `jig_v5.py`; the −14.8 mm y shift is probably this.
+
 ## 1. Status (2026-11-06, afternoon; big-half ending reworked while Bjørge was away)
 - **Jig V5 bases turned 180°**: the frame's feet now face the robot. With the feet away from it, the flipped bench was held from below at the far edge and the arm went through the bench.
 - **Flip** = a turn about an axis along plate x, lifted 160 mm. The foot goes over the top, away from the arm, and the bench is held at its outer foot. Collision-free.
@@ -23,6 +41,7 @@
 v8 runs. One hit is left: the big half's slide out (#120). In the CAD the big half is locked between the planks (§5).
 
 ## 3. Next
+0. At the robot: teach **plank 2's place** (jog to the place in frame 1, fingers straight; `teach.py v8 "plank2 place" --real --with-rotation`). From pick + place, separate the gripper's mounting tilt from the rack offset and put the tilt in the program for all grips. Then a full `v8-full` run at 10–20 %.
 1. Start the mock if it isn't running: from `3d-modeling-and-simulation/robot-cell/`, run `python tests/tmflow_mock.py serve --sim`. Open http://127.0.0.1:8090/all and run the scenario **v8-full**. The Collisions panel is at the top right, the Manipulability panel at the bottom left.
 2. Big half: try the 45° turn on the real jig with the bench flipped into it. In the CAD it's locked (§5). If it is locked for real too, the big half needs more clearance or a tooth removed (ihammer18).
 3. Check on the real jig that the seat planks fit the big half's teeth after the flip. The model is 1.6 mm off.

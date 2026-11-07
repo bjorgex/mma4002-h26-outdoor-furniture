@@ -12,8 +12,12 @@ Against the mock instead of the robot: view --robot 127.0.0.1 --port 8092 while 
 and run --view 8092 ... (the mock's own run sends the steps to the mock's view).
 """
 import argparse
+import json
+import os
 import re
 import socket
+import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -30,6 +34,8 @@ class RobotView(tm.View):
         super().__init__(port, HERE / "listen_loop_flow.html")
         self.flow = SimpleNamespace(name="hande", title=f"HandE_Bridge_v1 on the real robot {ip} (view only)")
         self.ip, self.live = ip, {"joints": [0] * 6, "flange": [0] * 6, "running": False, "error": 0, "link": False}
+        # the page's "j" stream (3D pane) asks self.robot.sample() for (at, joints): the real joints, as of now
+        self.robot = SimpleNamespace(sample=lambda: (time.time() - tm.T0, list(self.live["joints"])))
         threading.Thread(target=self._slave, daemon=True).start()
 
     def _slave(self):
@@ -72,8 +78,80 @@ class RobotView(tm.View):
                 "gripper": "?", "link": v["link"], "real": True}
 
 
+class RealScenarios:
+    """The page's Run / Stop (/all) on the REAL robot: the chosen preset from scenarios.json runs as
+    "demo_viewer.py run <script> <args>", so it talks to the robot's Listen node (lt.IP) and its steps come to this
+    page. Only HandE_Bridge_v1 presets (flow "hande"); the mock's grip/fast settings mean nothing here. The script's
+    Enter prompts are answered (Run is the go-ahead). Stop kills the script: moves the robot already queued still
+    run, so the E-stop is the real stop."""
+
+    def __init__(self, a):
+        self.a, self.proc, self.name, self.state, self.code, self.stopped = a, None, None, "idle", None, False
+        self.lock = threading.Lock()
+
+    def list(self):
+        return [s for s in json.loads(tm.SCENARIOS.read_text(encoding="utf-8")) if s.get("flow", "hande") == "hande"]
+
+    def status(self):
+        return {"t": "scenario", "name": self.name, "state": self.state, "code": self.code, "fast": 1,
+                "fast_user": False, "robodk": False, "rdk_busy": False, "station": None}
+
+    def _set(self, state, code=None):
+        self.state, self.code = state, code
+        tm.emit(**self.status())
+
+    def run(self, name):
+        sc = {s["name"]: s for s in self.list()}.get(name)
+        if not sc:
+            return 404, f"no scenario {name!r}"
+        with self.lock:
+            if self.proc and self.proc.poll() is None:
+                return 409, f"{self.name} is still running: stop it first"
+            self.name, self.stopped = name, False
+            tm.VIEW.reset()                                 # pages opened from now on don't replay the run before
+            tm.emit("reset", flow="hande", title=tm.VIEW.flow.title, cell=sc.get("cell", "cell"))
+            cmd = [sys.executable, str(Path(__file__).resolve()), "run", "--view", str(self.a.port), sc["script"]] \
+                + [str(x) for x in sc.get("args", [])]
+            tm.log(f"REAL ROBOT {self.a.robot}: scenario {name}: {sc['script']} {' '.join(map(str, sc.get('args', [])))}")
+            self.proc = subprocess.Popen(cmd, cwd=HERE.parent, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                                         env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
+            self._set("running")
+            threading.Thread(target=self._watch, args=(self.proc,), daemon=True).start()
+        return 200, "started on the real robot"
+
+    def _watch(self, proc):
+        try:
+            proc.stdin.write("\n" * 200)
+            proc.stdin.close()
+        except OSError:
+            pass
+        for line in proc.stdout:
+            line = line.rstrip("\r\n")
+            tm.emit("out", line=line)
+            print(line, flush=True)
+        code = proc.wait()
+        if proc is self.proc:
+            self._set("stopped" if self.stopped else "finished" if code == 0 else "failed", code)
+
+    def stop(self):
+        with self.lock:
+            if not (self.proc and self.proc.poll() is None):
+                return 409, "nothing is running"
+            self.stopped = True
+            self.proc.kill()
+            self.proc.wait()
+        return 200, "script stopped (queued robot moves may still run: E-stop)"
+
+    def robodk_reset(self):
+        return 404, "no RoboDK on the real-robot viewer"
+
+
 def view(a):
     tm.VIEW = RobotView(a.port, a.robot)
+    tm.VIEW.scenarios = RealScenarios(a)
+    if a.cell != "cell":                                # the 3D pane's cell (robot_sim/<cell>.glb), e.g. cell_v8
+        tm.emit("reset", flow="hande", title=tm.VIEW.flow.title, cell=a.cell)   # in the backlog: every page gets it
     tm.log(f"view only, robot {a.robot}: http://{tm.HOST}:{a.port}/demo  (detailed: http://{tm.HOST}:{a.port}/)")
     try:
         while True:
@@ -95,6 +173,7 @@ if __name__ == "__main__":
     v = sub.add_parser("view", help="serve /demo and read the robot's state stream")
     v.add_argument("--robot", default=lt.IP, help=f"robot controller IP (default {lt.IP})")
     v.add_argument("--port", type=int, default=8090, help="page port (default 8090)")
+    v.add_argument("--cell", default="cell", help="3D cell: cell (v4, default), cell_v5, cell_v8")
     r = sub.add_parser("run", help="run a script against the real robot, its steps shown on the page")
     r.add_argument("--view", type=int, default=8090, help="the viewer's port (default 8090)")
     r.add_argument("script")

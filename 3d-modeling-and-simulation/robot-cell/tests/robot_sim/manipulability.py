@@ -505,6 +505,9 @@ def target_table(moves_path, thr=MU1_THR):
     rows = []
     for k, st in enumerate(d["steps"]):
         if "joints" not in st:
+            if st.get("gripper") in ("grip", "release") and rows:   # the gripper acts where the last move ended
+                rows[-1]["grip"] = st["gripper"]
+                rows[-1]["grip_parts"] = st.get("parts", [])
             continue
         q = st["joints"]
         a = analyse(q)
@@ -772,7 +775,8 @@ def write_json(data, lay, targets, iso, thr, iso_key):
             lst.append(dict(i=r["i"], name=r["name"], stage=r["stage"], p=pg.round(1).tolist(), ell=e,
                             mu1_v=round(r["v"][0], 2), mu2_v=round(r["v"][1], 2), mu3_v=round(r["v"][2], 4),
                             mu1_w=round(r["w"][0], 2), mu1_vfix=round(r["vfix"][0], 2),
-                            mu1_full=round(r["full"][0], 2), margin=round(r["margin"], 1), flag=r["flag"]))
+                            mu1_full=round(r["full"][0], 2), margin=round(r["margin"], 1), flag=r["flag"],
+                            **({"grip": r["grip"], "grip_parts": r.get("grip_parts", [])} if r.get("grip") else {})))
         progs[station] = lst
     iv, ifc = iso
     ivg = (np.c_[iv, np.ones(len(iv))] @ Gi.T)[:, :3] if len(iv) else np.zeros((0, 3))

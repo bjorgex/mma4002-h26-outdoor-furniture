@@ -1,0 +1,171 @@
+{
+ "cell": "v8",
+ "moves_file": "tests/v8_moves.json",
+ "cell_file": "tests/robot_sim/cell_v8.glb",
+ "n_moves": 119,
+ "free": false,
+ "hits": [
+  {
+   "move": 64,
+   "name": "guide big place approach",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 3,
+   "objects": [
+    "EGP",
+    "plank6"
+   ]
+  },
+  {
+   "move": 65,
+   "name": "guide big place",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 3,
+   "objects": [
+    "EGP",
+    "plank6"
+   ]
+  },
+  {
+   "move": 105,
+   "name": "big half slide out",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide big",
+     "plank1"
+    ],
+    [
+     "Guide big",
+     "plank2"
+    ],
+    [
+     "Guide big",
+     "plank3"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 6,
+   "objects": [
+    "Guide big",
+    "plank1",
+    "plank2",
+    "plank3"
+   ]
+  },
+  {
+   "move": 108,
+   "name": "big half place approach",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "frame1"
+    ],
+    [
+     "EGP",
+     "piece A5"
+    ],
+    [
+     "EGP",
+     "piece A6"
+    ],
+    [
+     "EGP",
+     "plank5"
+    ],
+    [
+     "EGP",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 6,
+   "objects": [
+    "EGP",
+    "frame1",
+    "piece A5",
+    "piece A6",
+    "plank5",
+    "plank6"
+   ]
+  },
+  {
+   "move": 109,
+   "name": "big half place",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "plank5"
+    ],
+    [
+     "EGP",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 6,
+   "objects": [
+    "EGP",
+    "plank5",
+    "plank6"
+   ]
+  }
+ ],
+ "step": 2.0,
+ "geometry": "techman",
+ "generated": "2026-11-07 02:37:56",
+ "seconds": 15.2,
+ "inputs": {
+  "v8_moves.json": [
+   1794014896.978,
+   50127
+  ],
+  "cell_v8.glb": [
+   1794014932.746,
+   3699560
+  ],
+  "cell_layout_v8.json": [
+   1794014932.752,
+   11091
+  ],
+  "collision.py": [
+   1793966843.021,
+   21335
+  ],
+  "tm5_links.glb": [
+   1793406923.457,
+   3778684
+  ],
+  "tm5_kin.py": [
+   1793406923.464,
+   13724
+  ],
+  "kin_check.py": [
+   1793966843.028,
+   12403
+  ],
+  "tmflow_export.py": [
+   1793966843.242,
+   33976
+  ],
+  "collision_view.py": [
+   1793966843.025,
+   8270
+  ]
+ }
+}

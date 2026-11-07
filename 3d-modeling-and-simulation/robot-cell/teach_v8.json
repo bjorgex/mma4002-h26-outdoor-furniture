@@ -1,0 +1,2130 @@
+{
+ "version": "v8",
+ "events": {
+  "plank2 pick": {
+   "grip": "plank2 pick",
+   "kind": "grip",
+   "approach": [
+    "plank2 pick travel",
+    "plank2 pick approach"
+   ],
+   "follow": [
+    "plank2 pick out",
+    "plank2 pick up"
+   ],
+   "rel": {
+    "plank2 pick travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 pick approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 pick out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 pick up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank2 pick": {
+     "time": "2026-11-06 17:59:23",
+     "correction": {
+      "xyz": [
+       -0.0041,
+       -0.0008,
+       -3.7376
+      ],
+      "rpy": [
+       2.3318,
+       0.3825,
+       178.5118
+      ]
+     },
+     "plate_delta_mm": [
+      -0.004,
+      0.001,
+      3.738
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      45.0001,
+      150.0002,
+      228.0002,
+      -180.0,
+      -0.0,
+      0.0
+     ],
+     "taught_tcp_plate": [
+      42.9361,
+      135.191,
+      231.7378,
+      -177.6682,
+      -0.3825,
+      -178.5117
+     ],
+     "robot_flange": [
+      -249.7558,
+      7.9868,
+      387.1239,
+      -177.6395,
+      -0.3167,
+      1.5122
+     ],
+     "robot_joints": [
+      -31.2997,
+      43.8209,
+      -127.4885,
+      -6.3756,
+      -89.6244,
+      -121.7917
+     ],
+     "note": "as taught, wrist half-turn kept: the Hand-E sits tilted on the flange, so it is NOT symmetric",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank2 place": {
+   "grip": "plank2 place",
+   "kind": "release",
+   "approach": [
+    "plank2 place travel",
+    "plank2 above guide"
+   ],
+   "follow": [
+    "plank2 push approach",
+    "plank2 push",
+    "plank2 push out",
+    "plank2 place up"
+   ],
+   "rel": {
+    "plank2 place travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 above guide": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 push approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 push": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 push out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank2 place up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank2 place": {
+     "time": "2026-11-06 19:22:19",
+     "correction": {
+      "xyz": [
+       -2.5755,
+       5.3441,
+       8.0522
+      ],
+      "rpy": [
+       2.326,
+       0.3824,
+       178.5115
+      ]
+     },
+     "plate_delta_mm": [
+      -2.576,
+      -5.344,
+      -8.052
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      185.6231,
+      272.199,
+      244.5002,
+      -180.0,
+      -0.0,
+      0.0
+     ],
+     "taught_tcp_plate": [
+      191.5476,
+      259.2548,
+      236.448,
+      -177.674,
+      -0.3824,
+      -178.5114
+     ],
+     "robot_flange": [
+      -398.3099,
+      -116.1253,
+      391.9489,
+      -177.6454,
+      -0.3166,
+      1.5125
+     ],
+     "robot_joints": [
+      -1.0354,
+      15.9965,
+      -113.3458,
+      7.37,
+      -89.5078,
+      -91.4922
+     ],
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    },
+    "plank2 above guide": {
+     "time": "2026-11-06 19:03:17",
+     "correction": {
+      "xyz": [
+       -2.5032,
+       5.3801,
+       0.0142
+      ],
+      "rpy": [
+       2.3273,
+       0.3824,
+       178.5118
+      ]
+     },
+     "plate_delta_mm": [
+      -2.503,
+      -5.38,
+      -0.014
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      185.6231,
+      272.199,
+      299.5002,
+      -180.0,
+      -0.0,
+      0.0
+     ],
+     "taught_tcp_plate": [
+      191.6199,
+      259.2189,
+      299.486,
+      -177.6727,
+      -0.3824,
+      -178.5118
+     ],
+     "robot_flange": [
+      -398.3091,
+      -116.1227,
+      454.9868,
+      -177.6441,
+      -0.3167,
+      1.5121
+     ],
+     "robot_joints": [
+      -1.0362,
+      16.4071,
+      -104.842,
+      -1.5444,
+      -89.5111,
+      -91.4961
+     ],
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank1 pick": {
+   "grip": "plank1 pick",
+   "kind": "grip",
+   "approach": [
+    "plank1 pick travel",
+    "plank1 pick approach"
+   ],
+   "follow": [
+    "plank1 pick out",
+    "plank1 pick up"
+   ],
+   "rel": {
+    "plank1 pick travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 pick approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 pick out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 pick up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank1 pick": {
+     "time": "2026-11-06 17:59:23",
+     "correction": {
+      "xyz": [
+       -0.0041,
+       -0.0008,
+       -3.7376
+      ],
+      "rpy": [
+       2.3318,
+       0.3825,
+       178.5118
+      ]
+     },
+     "with_rotation": true,
+     "copied_from": "plank2 pick",
+     "note": "as taught, wrist half-turn kept: the Hand-E sits tilted on the flange, so it is NOT symmetric",
+     "plate_delta_mm": [
+      -0.004,
+      0.001,
+      3.738
+     ],
+     "rot_change_deg": 178.504,
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank1 place": {
+   "grip": "plank1 place",
+   "kind": "release",
+   "approach": [
+    "plank1 place travel",
+    "plank1 above guide"
+   ],
+   "follow": [
+    "plank1 push approach",
+    "plank1 push",
+    "plank1 push out",
+    "plank1 place up"
+   ],
+   "rel": {
+    "plank1 place travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 above guide": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 push approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 push": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 push out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank1 place up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank1 place": {
+     "time": "2026-11-06 19:29:33",
+     "correction": {
+      "xyz": [
+       -2.5785,
+       5.3382,
+       8.0567
+      ],
+      "rpy": [
+       2.3256,
+       0.3819,
+       178.5115
+      ]
+     },
+     "plate_delta_mm": [
+      -2.578,
+      -5.338,
+      -8.057
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      185.6231,
+      242.2152,
+      244.5001,
+      -180.0,
+      -0.0,
+      0.0
+     ],
+     "taught_tcp_plate": [
+      191.5446,
+      229.2769,
+      236.4434,
+      -177.6744,
+      -0.3819,
+      -178.5115
+     ],
+     "robot_flange": [
+      -398.3181,
+      -86.1463,
+      391.9584,
+      -177.6458,
+      -0.3161,
+      1.5124
+     ],
+     "robot_joints": [
+      -5.4039,
+      17.1075,
+      -114.1204,
+      7.02,
+      -89.5233,
+      -95.8617
+     ],
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    },
+    "plank1 above guide": {
+     "time": "2026-11-06 19:03:17",
+     "correction": {
+      "xyz": [
+       -2.5032,
+       5.3801,
+       0.0142
+      ],
+      "rpy": [
+       2.3273,
+       0.3824,
+       178.5118
+      ]
+     },
+     "plate_delta_mm": [
+      -2.503,
+      -5.38,
+      -0.014
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "copied_from": "plank2 above guide",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank3 pick": {
+   "grip": "plank3 pick",
+   "kind": "grip",
+   "approach": [
+    "plank3 pick travel",
+    "plank3 pick approach"
+   ],
+   "follow": [
+    "plank3 pick out",
+    "plank3 pick up"
+   ],
+   "rel": {
+    "plank3 pick travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 pick approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 pick out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 pick up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank3 pick": {
+     "time": "2026-11-06 17:59:23",
+     "correction": {
+      "xyz": [
+       -0.0041,
+       -0.0008,
+       -3.7376
+      ],
+      "rpy": [
+       2.3318,
+       0.3825,
+       178.5118
+      ]
+     },
+     "with_rotation": true,
+     "copied_from": "plank2 pick",
+     "note": "as taught, wrist half-turn kept: the Hand-E sits tilted on the flange, so it is NOT symmetric",
+     "plate_delta_mm": [
+      -0.004,
+      0.001,
+      3.738
+     ],
+     "rot_change_deg": 178.504,
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank3 place": {
+   "grip": "plank3 place",
+   "kind": "release",
+   "approach": [
+    "plank3 place travel",
+    "plank3 above guide"
+   ],
+   "follow": [
+    "plank3 push approach",
+    "plank3 push",
+    "plank3 push out",
+    "plank3 place up"
+   ],
+   "rel": {
+    "plank3 place travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 above guide": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 push approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 push": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 push out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank3 place up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank3 place": {
+     "time": "2026-11-06 19:22:19",
+     "correction": {
+      "xyz": [
+       -2.5755,
+       5.3441,
+       8.0522
+      ],
+      "rpy": [
+       2.326,
+       0.3824,
+       178.5115
+      ]
+     },
+     "plate_delta_mm": [
+      -2.576,
+      -5.344,
+      -8.052
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "copied_from": "plank2 place",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    },
+    "plank3 above guide": {
+     "time": "2026-11-06 19:03:17",
+     "correction": {
+      "xyz": [
+       -2.5032,
+       5.3801,
+       0.0142
+      ],
+      "rpy": [
+       2.3273,
+       0.3824,
+       178.5118
+      ]
+     },
+     "plate_delta_mm": [
+      -2.503,
+      -5.38,
+      -0.014
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "copied_from": "plank2 above guide",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank5 pick": {
+   "grip": "plank5 pick",
+   "kind": "grip",
+   "approach": [
+    "plank5 pick travel",
+    "plank5 pick approach"
+   ],
+   "follow": [
+    "plank5 pick out",
+    "plank5 pick up"
+   ],
+   "rel": {
+    "plank5 pick travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank5 pick approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank5 pick out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank5 pick up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank5 pick": {
+     "time": "2026-11-06 17:59:23",
+     "correction": {
+      "xyz": [
+       -0.0041,
+       -0.0008,
+       -3.7376
+      ],
+      "rpy": [
+       2.3318,
+       0.3825,
+       178.5118
+      ]
+     },
+     "with_rotation": true,
+     "copied_from": "plank2 pick",
+     "note": "as taught, wrist half-turn kept: the Hand-E sits tilted on the flange, so it is NOT symmetric",
+     "plate_delta_mm": [
+      -0.004,
+      0.001,
+      3.738
+     ],
+     "rot_change_deg": 178.504,
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank5 place": {
+   "grip": "plank5 place",
+   "kind": "release",
+   "approach": [
+    "plank5 place travel",
+    "plank5 above guide"
+   ],
+   "follow": [
+    "plank5 push approach",
+    "plank5 push",
+    "plank5 push out",
+    "plank5 place up"
+   ],
+   "rel": {
+    "plank5 place travel": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank5 above guide": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank5 push approach": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank5 push": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank5 push out": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank5 place up": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank5 place": {
+     "time": "2026-11-06 19:22:19",
+     "correction": {
+      "xyz": [
+       1.3656,
+       0.5797,
+       8.07
+      ],
+      "rpy": [
+       2.327,
+       0.3812,
+       177.5264
+      ]
+     },
+     "plate_delta_mm": [
+      0.808,
+      1.244,
+      -8.07
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "copied_from": "plank2 place",
+     "note": "x/y + turn from the taught 'plank5 above guide', depth from plank 2's place",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    },
+    "plank5 above guide": {
+     "time": "2026-11-06 20:25:38",
+     "correction": {
+      "xyz": [
+       1.3627,
+       0.5815,
+       0.033
+      ],
+      "rpy": [
+       2.3262,
+       0.3804,
+       177.0349
+      ]
+     },
+     "plate_delta_mm": [
+      0.809,
+      1.241,
+      -0.033
+     ],
+     "rot_change_deg": 177.028,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      235.6556,
+      182.5885,
+      299.5001,
+      -180.0,
+      0.0,
+      80.0
+     ],
+     "taught_tcp_plate": [
+      244.9649,
+      176.2295,
+      299.4671,
+      -177.6739,
+      -0.3805,
+      -97.0348
+     ],
+     "robot_flange": [
+      -444.4779,
+      -28.4789,
+      455.0628,
+      -177.6046,
+      -0.399,
+      82.9888
+     ],
+     "robot_joints": [
+      -12.2981,
+      12.0119,
+      -101.5802,
+      -0.3244,
+      -90.0144,
+      -184.23
+     ],
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank6 pick": {
+   "grip": "plank6 pick",
+   "kind": "grip",
+   "approach": [
+    "plank6 pick travel",
+    "plank6 pick approach"
+   ],
+   "follow": [
+    "plank6 pick out",
+    "plank6 pick up"
+   ],
+   "rel": {
+    "plank6 pick travel": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank6 pick approach": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank6 pick out": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ],
+    "plank6 pick up": [
+     0.999998478,
+     -5.45e-07,
+     1.97e-07,
+     -5.45e-07,
+     0.999999603,
+     -4.87e-07,
+     1.97e-07,
+     -4.87e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank6 pick": {
+     "time": "2026-11-06 17:59:23",
+     "correction": {
+      "xyz": [
+       -0.0041,
+       -0.0008,
+       -3.7376
+      ],
+      "rpy": [
+       2.3318,
+       0.3825,
+       178.5118
+      ]
+     },
+     "with_rotation": true,
+     "copied_from": "plank2 pick",
+     "note": "as taught, wrist half-turn kept: the Hand-E sits tilted on the flange, so it is NOT symmetric",
+     "plate_delta_mm": [
+      -0.004,
+      0.001,
+      3.738
+     ],
+     "rot_change_deg": 178.504,
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "plank6 place": {
+   "grip": "plank6 place",
+   "kind": "release",
+   "approach": [
+    "plank6 place travel",
+    "plank6 above guide"
+   ],
+   "follow": [
+    "plank6 push approach",
+    "plank6 push",
+    "plank6 push out",
+    "plank6 place up"
+   ],
+   "rel": {
+    "plank6 place travel": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank6 above guide": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank6 push approach": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank6 push": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank6 push out": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ],
+    "plank6 place up": [
+     0.999999755,
+     3.2e-07,
+     5.14e-07,
+     3.2e-07,
+     0.999998325,
+     1.1e-07,
+     5.14e-07,
+     1.1e-07,
+     0.999998434
+    ]
+   },
+   "taught": {
+    "plank6 place": {
+     "time": "2026-11-06 19:22:19",
+     "correction": {
+      "xyz": [
+       1.3627,
+       0.5815,
+       8.07
+      ],
+      "rpy": [
+       2.3262,
+       0.3804,
+       177.0349
+      ]
+     },
+     "plate_delta_mm": [
+      0.809,
+      1.241,
+      -8.07
+     ],
+     "rot_change_deg": 178.504,
+     "with_rotation": true,
+     "copied_from": "plank5 place",
+     "note": "plank 5's adjustments (above guide 20:25), 2026-11-06",
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    },
+    "plank6 above guide": {
+     "time": "2026-11-06 20:35:56",
+     "correction": {
+      "xyz": [
+       4.4889,
+       1.0475,
+       0.0298
+      ],
+      "rpy": [
+       2.3267,
+       0.3811,
+       177.0428
+      ]
+     },
+     "plate_delta_mm": [
+      1.811,
+      4.239,
+      -0.03
+     ],
+     "rot_change_deg": 177.036,
+     "with_rotation": true,
+     "planned_tcp_plate": [
+      265.1839,
+      177.3818,
+      299.5001,
+      -180.0,
+      0.0,
+      80.0
+     ],
+     "taught_tcp_plate": [
+      275.495,
+      174.0206,
+      299.4703,
+      -177.6734,
+      -0.3811,
+      -97.0428
+     ],
+     "robot_flange": [
+      -475.008,
+      -26.2857,
+      455.1024,
+      -177.6041,
+      -0.3997,
+      82.9808
+     ],
+     "robot_joints": [
+      -11.757,
+      7.7478,
+      -98.0697,
+      0.4267,
+      -90.0195,
+      -183.6778
+     ],
+     "rebased": "2026-11-07: against the as-built plan (AS_BUILT_RACK / AS_BUILT_B in bench_cell_v8.py)"
+    }
+   }
+  },
+  "guide small pick": {
+   "grip": "guide small pick",
+   "kind": "grip",
+   "approach": [
+    "guide small over pick",
+    "guide small pick approach"
+   ],
+   "follow": [
+    "guide small lift off",
+    "guide small up"
+   ],
+   "rel": {
+    "guide small over pick": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small pick approach": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small lift off": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small up": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  },
+  "guide small place": {
+   "grip": "guide small place",
+   "kind": "release",
+   "approach": [
+    "guide small over place",
+    "guide small place approach"
+   ],
+   "follow": [
+    "guide small place out",
+    "guide small place out up"
+   ],
+   "rel": {
+    "guide small over place": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small place approach": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small place out": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "guide small place out up": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  },
+  "guide big pick": {
+   "grip": "guide big pick",
+   "kind": "grip",
+   "approach": [
+    "guide big over pick",
+    "guide big pick approach"
+   ],
+   "follow": [
+    "guide big lift off",
+    "guide big turn 45",
+    "guide big up"
+   ],
+   "rel": {
+    "guide big over pick": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big pick approach": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big lift off": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big turn 45": [
+     0.726726519,
+     -0.683012117,
+     -0.073222782,
+     0.683012076,
+     0.707104971,
+     0.183013716,
+     -0.073222974,
+     -0.183013654,
+     0.980378452
+    ],
+    "guide big up": [
+     0.726726519,
+     -0.683012117,
+     -0.073222782,
+     0.683012076,
+     0.707104971,
+     0.183013716,
+     -0.073222974,
+     -0.183013654,
+     0.980378452
+    ]
+   },
+   "taught": {}
+  },
+  "guide big place": {
+   "grip": "guide big place",
+   "kind": "release",
+   "approach": [
+    "guide big over place",
+    "guide big place approach"
+   ],
+   "follow": [
+    "guide big place out",
+    "guide big place out up"
+   ],
+   "rel": {
+    "guide big over place": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big place approach": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big place out": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ],
+    "guide big place out up": [
+     0.999999281,
+     4.76e-07,
+     7.14e-07,
+     4.76e-07,
+     0.999998478,
+     3.32e-07,
+     7.14e-07,
+     3.32e-07,
+     0.999998755
+    ]
+   },
+   "taught": {}
+  },
+  "sub pick": {
+   "grip": "sub pick",
+   "kind": "grip",
+   "approach": [
+    "sub over pick",
+    "sub pick approach"
+   ],
+   "follow": [
+    "sub pick out",
+    "sub up",
+    "sub turn 15",
+    "sub turn 30",
+    "sub turn 45",
+    "sub turn 60",
+    "sub turn 75",
+    "sub turn 90",
+    "sub turn 105",
+    "sub turn 120",
+    "sub turn 135",
+    "sub turn 150",
+    "sub turn 165"
+   ],
+   "rel": {
+    "sub over pick": [
+     0.999999754,
+     -1.36e-07,
+     -5.91e-07,
+     -1.36e-07,
+     0.999998269,
+     5.4e-08,
+     -5.91e-07,
+     5.4e-08,
+     0.99999849
+    ],
+    "sub pick approach": [
+     0.999999754,
+     -1.36e-07,
+     -5.91e-07,
+     -1.36e-07,
+     0.999998269,
+     5.4e-08,
+     -5.91e-07,
+     5.4e-08,
+     0.99999849
+    ],
+    "sub pick out": [
+     0.999999754,
+     -1.36e-07,
+     -5.91e-07,
+     -1.36e-07,
+     0.999998269,
+     5.4e-08,
+     -5.91e-07,
+     5.4e-08,
+     0.99999849
+    ],
+    "sub up": [
+     0.999999754,
+     -1.36e-07,
+     -5.91e-07,
+     -1.36e-07,
+     0.999998269,
+     5.4e-08,
+     -5.91e-07,
+     5.4e-08,
+     0.99999849
+    ],
+    "sub turn 15": [
+     0.966937591,
+     -0.176182547,
+     -0.184366251,
+     0.184364526,
+     0.982454839,
+     0.028084674,
+     0.176182445,
+     -0.061146439,
+     0.982455006
+    ],
+    "sub turn 30": [
+     0.870005569,
+     -0.332174898,
+     -0.364348262,
+     0.364346038,
+     0.931020598,
+     0.021193135,
+     0.332175075,
+     -0.151186569,
+     0.931020581
+    ],
+    "sub turn 45": [
+     0.715809069,
+     -0.457348636,
+     -0.527682775,
+     0.527681028,
+     0.849200247,
+     -0.020204255,
+     0.457348155,
+     -0.263985292,
+     0.849200454
+    ],
+    "sub turn 60": [
+     0.514856334,
+     -0.543171665,
+     -0.663239781,
+     0.663237747,
+     0.742569919,
+     -0.093285287,
+     0.543171551,
+     -0.391856599,
+     0.742569898
+    ],
+    "sub turn 75": [
+     0.280842759,
+     -0.583796248,
+     -0.761780017,
+     0.761778063,
+     0.618396617,
+     -0.19307083,
+     0.583796233,
+     -0.526084251,
+     0.618396555
+    ],
+    "sub turn 90": [
+     0.029714291,
+     -0.576453366,
+     -0.816589301,
+     0.816586661,
+     0.485142459,
+     -0.312761186,
+     0.576454701,
+     -0.657522027,
+     0.485140952
+    ],
+    "sub turn 105": [
+     -0.221412922,
+     -0.52164421,
+     -0.823931517,
+     0.823929069,
+     0.351888421,
+     -0.444198117,
+     0.52164593,
+     -0.777212039,
+     0.351886275
+    ],
+    "sub turn 120": [
+     -0.455427421,
+     -0.423104109,
+     -0.783305998,
+     0.783304303,
+     0.227714338,
+     -0.578426389,
+     0.423105408,
+     -0.876998082,
+     0.227712885
+    ],
+    "sub turn 135": [
+     -0.656379992,
+     -0.287546888,
+     -0.697482331,
+     0.697481197,
+     0.121083475,
+     -0.706296899,
+     0.287548044,
+     -0.950080055,
+     0.121082582
+    ],
+    "sub turn 150": [
+     -0.810576218,
+     -0.124211728,
+     -0.572308615,
+     0.572307834,
+     0.039263515,
+     -0.819096245,
+     0.124213285,
+     -0.991476951,
+     0.03926188
+    ],
+    "sub turn 165": [
+     -0.907507687,
+     0.055770048,
+     -0.416315997,
+     0.416315649,
+     -0.01217145,
+     -0.909136774,
+     -0.055768679,
+     -0.998368009,
+     -0.012171871
+    ]
+   },
+   "taught": {}
+  },
+  "sub place": {
+   "grip": "sub place",
+   "kind": "release",
+   "approach": [
+    "sub turn 180",
+    "sub above guide"
+   ],
+   "follow": [
+    "sub place out",
+    "sub back up"
+   ],
+   "rel": {
+    "sub turn 180": [
+     0.999999384,
+     -8.13e-07,
+     1.82e-07,
+     -8.13e-07,
+     0.999998843,
+     -1.32e-07,
+     1.82e-07,
+     -1.32e-07,
+     0.999998287
+    ],
+    "sub above guide": [
+     0.999999384,
+     -8.13e-07,
+     1.82e-07,
+     -8.13e-07,
+     0.999998843,
+     -1.32e-07,
+     1.82e-07,
+     -1.32e-07,
+     0.999998287
+    ],
+    "sub place out": [
+     0.999999384,
+     -8.13e-07,
+     1.82e-07,
+     -8.13e-07,
+     0.999998843,
+     -1.32e-07,
+     1.82e-07,
+     -1.32e-07,
+     0.999998287
+    ],
+    "sub back up": [
+     0.999999384,
+     -8.13e-07,
+     1.82e-07,
+     -8.13e-07,
+     0.999998843,
+     -1.32e-07,
+     1.82e-07,
+     -1.32e-07,
+     0.999998287
+    ]
+   },
+   "taught": {}
+  },
+  "small half pick": {
+   "grip": "small half pick",
+   "kind": "grip",
+   "approach": [
+    "small half over pick",
+    "small half pick approach"
+   ],
+   "follow": [
+    "small half lift off bosses",
+    "small half slide out",
+    "small half up"
+   ],
+   "rel": {
+    "small half over pick": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half pick approach": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half lift off bosses": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half slide out": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half up": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  },
+  "small half place": {
+   "grip": "small half place",
+   "kind": "release",
+   "approach": [
+    "small half over place",
+    "small half place approach"
+   ],
+   "follow": [
+    "small half place out",
+    "small half place out up"
+   ],
+   "rel": {
+    "small half over place": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half place approach": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half place out": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ],
+    "small half place out up": [
+     0.999999603,
+     5.45e-07,
+     4.87e-07,
+     5.45e-07,
+     0.999998478,
+     1.97e-07,
+     4.87e-07,
+     1.97e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  },
+  "big half pick": {
+   "grip": "big half pick",
+   "kind": "grip",
+   "approach": [
+    "big half over pick",
+    "big half pick approach"
+   ],
+   "follow": [
+    "big half lift off bosses",
+    "big half turn 45",
+    "big half slide out",
+    "big half up"
+   ],
+   "rel": {
+    "big half over pick": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half pick approach": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half lift off bosses": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half turn 45": [
+     0.71593784,
+     0.696364595,
+     0.050088202,
+     -0.696362978,
+     0.707105956,
+     0.122787314,
+     0.050087307,
+     -0.122787165,
+     0.991166574
+    ],
+    "big half slide out": [
+     0.71593784,
+     0.696364595,
+     0.050088202,
+     -0.696362978,
+     0.707105956,
+     0.122787314,
+     0.050087307,
+     -0.122787165,
+     0.991166574
+    ],
+    "big half up": [
+     0.71593784,
+     0.696364595,
+     0.050088202,
+     -0.696362978,
+     0.707105956,
+     0.122787314,
+     0.050087307,
+     -0.122787165,
+     0.991166574
+    ]
+   },
+   "taught": {}
+  },
+  "big half place": {
+   "grip": "big half place",
+   "kind": "release",
+   "approach": [
+    "big half over place",
+    "big half place approach"
+   ],
+   "follow": [
+    "big half place out",
+    "big half place out up"
+   ],
+   "rel": {
+    "big half over place": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half place approach": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half place out": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ],
+    "big half place out up": [
+     0.999999734,
+     5.71e-07,
+     2.58e-07,
+     5.71e-07,
+     0.999998478,
+     1e-07,
+     2.58e-07,
+     1e-07,
+     0.999998302
+    ]
+   },
+   "taught": {}
+  },
+  "bench pick": {
+   "grip": "bench pick",
+   "kind": "grip",
+   "approach": [
+    "bench over pick"
+   ],
+   "follow": [
+    "bench lift"
+   ],
+   "rel": {
+    "bench over pick": [
+     0.999999384,
+     7.04e-07,
+     4.46e-07,
+     7.04e-07,
+     0.999998697,
+     2.78e-07,
+     4.46e-07,
+     2.78e-07,
+     0.999998434
+    ],
+    "bench lift": [
+     0.999999384,
+     7.04e-07,
+     4.46e-07,
+     7.04e-07,
+     0.999998697,
+     2.78e-07,
+     4.46e-07,
+     2.78e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  },
+  "bench down": {
+   "grip": "bench down",
+   "kind": "release",
+   "approach": [
+    "bench over AMR"
+   ],
+   "follow": [
+    "bench place out",
+    "back up"
+   ],
+   "rel": {
+    "bench over AMR": [
+     0.999999384,
+     7.04e-07,
+     4.46e-07,
+     7.04e-07,
+     0.999998697,
+     2.78e-07,
+     4.46e-07,
+     2.78e-07,
+     0.999998434
+    ],
+    "bench place out": [
+     0.999999384,
+     7.04e-07,
+     4.46e-07,
+     7.04e-07,
+     0.999998697,
+     2.78e-07,
+     4.46e-07,
+     2.78e-07,
+     0.999998434
+    ],
+    "back up": [
+     0.999999384,
+     7.04e-07,
+     4.46e-07,
+     7.04e-07,
+     0.999998697,
+     2.78e-07,
+     4.46e-07,
+     2.78e-07,
+     0.999998434
+    ]
+   },
+   "taught": {}
+  }
+ }
+}

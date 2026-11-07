@@ -93,6 +93,18 @@ def placed(entry):
 
 
 BASE_A, BASE_B, RACK = placed("base_A"), placed("base_B"), placed("plank_rack")
+# AS BUILT (measured on the real robot, 2026-11-06/07): where the jig parts really sit on the plate, from the taught
+# grips (teach_v8.json). The program is planned from these, the 3D cell and the collision check show them; the jig
+# DESIGN (jig_v5.py, JigAssembly_V5.STEP, jig_v5_layout.json: holes on the T-slot lines) is unchanged.
+#   rack: all plank picks were taught at the same plate shift (plank 2) -> the rack sits there
+#   base B (+ frame 1, its pieces, the guide on it): SHIFTED by the mean of the taught plank places 2, 5, 6 (they
+#   scatter 1.4-6 mm around it; the taught corrections keep each one exact). Not turned: the flip (stage 4) needs base
+#   B parallel to base A. A turn of ~1.5 deg fits the places better (gripper turned +1-1.5 deg at planks 5/6) - OPEN:
+#   check on the real cell whether B is turned; then the flip must handle it.
+#   base A, AMR: not measured yet (CAD)
+AS_BUILT_RACK = transl(-2.06, -14.81, 0)                     # plate frame, mm
+AS_BUILT_B = transl(8.5, -7.6, 0)                            # plate frame, mm
+RACK, BASE_B = AS_BUILT_RACK @ RACK, AS_BUILT_B @ BASE_B
 # Base roles (Bjørge 2026-11-06: the guide starts on B, so the finished bench ends on A, beside the AMR).
 # START: guide + frame 1 at the start, planks go in here; FINISH: frame 2, the finished bench. Swap to "A"/"B" to undo.
 START_BASE, FINISH_BASE = "B", "A"
@@ -196,6 +208,7 @@ BIG_LIFT = 90                     # the big half turns above the plank rack (100
 BACK_TURN = deg(45)               # the big half's turn on the way out (away from base B, where the small half is)
 
 PICK_Z = 420       # over the rack, empty: gripper body (TCP + 37) over the plank tops (253)
+PLANK_PICK_DZ = -10  # 2026-11-06, real robot: GRIP at the plank rack closed on air -> pick 10 mm lower (world z, rack only)
 TRAVEL_Z = 520     # planks carried with their lower end (235 mm under the TCP) over standing planks (top 260)
 LIFT_Z = 450       # guide halves / frame 1 carried at this height
 FLIP_Z = 340       # foot grip on base B at z 380+ is out of reach (far corner); flipped planks still clear the guide
@@ -203,6 +216,7 @@ SUB_LIFT = 40
 BACK_Z = 330       # up from the AMR (450 there: elbow nearly stretched, mu1 5)
 SUB_AWAY = 30      # after the release: fingers slid off the foot's end (plate -x), then straight up
 APPROACH, FAST, SLOW = 40, 100, 20
+PLANK_APPROACH, PLANK_LIFT = 15, 50   # plank picks: last stop 15 mm above the grab; lift out of the rack at 50 mm/s
 
 STAGES = ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish", "frame1_into_frame2",
           "small_half_back", "big_half_back", "bench_to_amr"]
@@ -250,7 +264,9 @@ def solve(flange, near):
         q = kin.ik(flange, seed, seeds=False)
         if q is not None and abs(q[0]) <= J1_MAX:
             q = kin._wrap_near(q, near)
-            if kin.within_limits(q):
+            if q[5] > 180 and q[5] - 360 >= -265:       # 2026-11-06: J6 on the low turn. The taught plank grips
+                q[5] -= 360                             # (wrist side kept, Hand-E tilted on the flange) put the place
+            if kin.within_limits(q):                    # at J6 270.2 (past the limit) - at -89.8 it is 32 deg from the pick
                 cands.append(q)
     if not cands:
         return None
@@ -318,25 +334,25 @@ def build():
     # 1  planks
     for k in PLANK_ORDER:
         pick, place, push = rack_start(k) @ PLANK_GRIP, final[k] @ PLANK_GRIP, final[k] @ PLANK_PUSH
+        pick = transl(0, 0, PLANK_PICK_DZ) @ pick
         p.set_speed(FAST)
         p.ptp(f"plank{k} pick travel", at_z(pick, PICK_Z))   # empty gripper: lower (z 520 that close to J1: mu1 3.1)
-        p.line(f"plank{k} pick approach", at_z(pick, pick[2, 3] + APPROACH))
+        # 2026-11-07 (Bjørge): fewer stops at the rack - fast down to just above the grab, slow the last bit, grab,
+        # one straight lift to travel height ('pick out' at +60 removed)
+        p.line(f"plank{k} pick approach", at_z(pick, pick[2, 3] + PLANK_APPROACH))
         p.set_speed(SLOW)
         p.line(f"plank{k} pick", pick)
         p.gripper(True, "grip", [f"plank{k}"], gap=GAP["plank"][0])
-        p.line(f"plank{k} pick out", at_z(pick, pick[2, 3] + 60))
-        p.set_speed(FAST)
+        p.set_speed(PLANK_LIFT)
         p.line(f"plank{k} pick up", at_z(pick, TRAVEL_Z))
+        p.set_speed(FAST)
         p.ptp(f"plank{k} place travel", at_z(place, TRAVEL_Z))
-        p.line(f"plank{k} above guide", at_z(place, place[2, 3] + 75))
+        p.line(f"plank{k} above guide", at_z(place, place[2, 3] + 55))   # 2026-11-06: 55 (was 75), closer to watch
         p.set_speed(SLOW)
         p.line(f"plank{k} place", place)
         p.gripper(False, "release", [f"plank{k}"], gap=GAP["plank"][1])
-        p.line(f"plank{k} push approach", at_z(push, push[2, 3] + 20))
-        p.gripper(True, gap=0)                               # closed fingers push the plank home
-        p.line(f"plank{k} push", push)
-        p.line(f"plank{k} push out", at_z(push, push[2, 3] + 20))
-        p.gripper(False, gap=GAP["plank"][1])
+        # 2026-11-06: the push (push approach / push / push out, closed fingers on the plank) is gone - on the real
+        # robot the place itself presses the plank into the interface; after the release the push only moved in air
         p.set_speed(FAST)
         p.line(f"plank{k} place up", at_z(place, TRAVEL_Z))
 
@@ -460,7 +476,8 @@ def build():
 
 
 def cell_objects():
-    """(name, kind, mesh file or box (lo, hi), pose in the plate frame, colour) of every object at the start."""
+    """(name, kind, mesh file or box (lo, hi), pose in the plate frame, colour) of every object at the start
+    (rack and base B as built: AS_BUILT_RACK / AS_BUILT_B above)."""
     grey, wood, frame_c, red = [0.7, 0.72, 0.75, 1], [0.75, 0.55, 0.3, 1], [0.55, 0.62, 0.75, 1], [0.85, 0.1, 0.1, 1]
     jig_c, guide_c = [0.35, 0.55, 0.85, 1], [0.95, 0.75, 0.2, 1]
     ps, th = JL["plate"]["size"][0], JL["plate"]["size"][2]
