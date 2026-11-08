@@ -40,14 +40,16 @@ a { color: inherit; }
 
 /* ===================== hero ===================== */
 
+/* title, then the bench logo filling whatever height is left, then the button:
+   together they take the whole first screen, the configurator starts below it */
 .hero {
   position: relative;
   padding: clamp(28px, 6vh, 64px) var(--gut) clamp(28px, 5vh, 56px);
-  min-height: 78vh;
-  min-height: 78svh;
-  display: grid;
-  align-content: space-between;
-  gap: clamp(24px, 4vh, 48px);
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3.5vh, 40px);
   overflow: hidden;
 }
 
@@ -71,7 +73,7 @@ a { color: inherit; }
 .mark {
   font-family: var(--display);
   font-weight: 800;
-  font-size: clamp(64px, 17vw, 190px);
+  font-size: clamp(44px, 15vw, 190px);   /* "FURNITURE" is ~5.6em wide: 15vw still fits a 360px phone */
   line-height: .82;
   letter-spacing: -.06em;
   margin: 0;
@@ -86,26 +88,23 @@ a { color: inherit; }
   margin-top: clamp(16px, 2.6vh, 26px);
 }
 
-/* the side elevation, plotted from the traced profile coordinates, used as ground */
+/* the bench logo: the side elevation, plotted from the traced profile coordinates,
+   under the title. The cell takes the height left over in the hero; the drawing
+   fits inside it, left-aligned with the title. */
 .art-cell {
-  position: absolute;
-  right: -9%;
-  top: 50%;
-  translate: 0 -50%;
-  width: min(58%, 680px);
-  z-index: 0;
+  position: relative;
+  flex: 1 1 0;
+  min-height: 160px;
   pointer-events: none;
 }
-@media (max-width: 879px) { .art-cell { right: -34%; width: 100%; } }
-@media (max-width: 560px) { .art-cell { right: -46%; width: 108%; opacity: .6; } }
 
-.plate { display: block; width: 100%; height: auto; max-width: 100%; color: #d9dbd7; }
+.plate { position: absolute; inset: 0; display: block; width: 100%; height: 100%; color: var(--ink); }
 .plate .bars { stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ===================== down button ===================== */
 
 .down {
-  justify-self: start;
+  align-self: flex-start;
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -410,7 +409,7 @@ a { color: inherit; }
   </div>
 
   <div class="art-cell">
-    <svg class="plate" viewBox="-40 -40 760 960" role="img" aria-label="Profile of the Outdoor Furniture bent-bar frame">
+    <svg class="plate" viewBox="-30 96 514 648" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Profile of the Outdoor Furniture bent-bar frame">
       <g transform="translate(225,455) scale(3.6,3.6)">
         <g class="bars">
           <!-- V3 frame with backrest (BenchV3LongWBackrest.STEP), outer outline only -->
@@ -672,6 +671,10 @@ const key = new THREE.DirectionalLight(0xfff4e4, 1.0);
 key.position.set(1900*STAGE, 2800*STAGE, 2100*STAGE);
 key.castShadow = true;
 key.shadow.mapSize.set(2048,2048);
+/* the bench parts cast and receive shadows on themselves; without a bias that
+   self-shadowing shows as stripes (shadow acne) that crawl when the view moves */
+key.shadow.bias = -0.0001;
+key.shadow.normalBias = 0.05;
 Object.assign(key.shadow.camera, {left:-600*STAGE, right:600*STAGE, top:600*STAGE, bottom:-600*STAGE, near:1, far:16000*STAGE});
 scene.add(key);
 const rim = new THREE.DirectionalLight(0xd8e6ff, 0.4);
@@ -721,10 +724,14 @@ function applyLight(){
   if(lampHead) lampHead.material.emissiveIntensity = cfg.light === "evening" ? 1.6 : 0.15;
 }
 
-const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(26000*STAGE,26000*STAGE), new THREE.ShadowMaterial({opacity:.17}));
+const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(26000*STAGE,26000*STAGE),
+  new THREE.ShadowMaterial({opacity:.17, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1}));
 shadowCatcher.rotation.x = -Math.PI/2;
 shadowCatcher.position.y = 0.5*STAGE;
 shadowCatcher.receiveShadow = true;
+/* drawn first among the see-through things, so the ghosted frame and the laser
+   mark never swap order with it as the camera moves */
+shadowCatcher.renderOrder = -1;
 scene.add(shadowCatcher);
 
 const envGroup = new THREE.Group();
@@ -979,7 +986,8 @@ function laserMesh(){
   /* DoubleSide: the mark sits on whichever plank face is exposed, and for the
      back plank that face's own normal points opposite to the plane's default
      front — a single-sided plane would be invisible from the viewing side. */
-  const mat = new THREE.MeshStandardMaterial({map: laserTexture(), transparent:true, roughness:.9, metalness:0, depthWrite:false, side: THREE.DoubleSide});
+  const mat = new THREE.MeshStandardMaterial({map: laserTexture(), transparent:true, roughness:.9, metalness:0, depthWrite:false, side: THREE.DoubleSide,
+    polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4});   // a decal: always wins against the plank face under it
   geo.rotateX(-Math.PI/2);
   const centre = slotPlacement(markSlot());
   const [y, z] = alongTop(centre, PLANK_T/2 + 0.03);
@@ -1175,6 +1183,12 @@ function place(){
     target.z + dist*Math.sin(phi)*Math.cos(theta)
   );
   camera.lookAt(target);
+  /* depth precision goes as near/distance²: a fixed near of 0.05 at the usual
+     ~1000-unit view leaves ~1 unit of depth resolution, so the planks in their
+     pockets (0.075 clearance), the laser mark and the paving flicker. Scaling
+     near with the orbit distance keeps it ~0.01 at every zoom level. */
+  camera.near = Math.max(0.05, dist/200);
+  camera.updateProjectionMatrix();
 }
 let drag = null;
 const el = renderer.domElement;
