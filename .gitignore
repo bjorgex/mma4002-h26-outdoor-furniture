@@ -11,3 +11,6 @@ __pycache__/
 
 # Python virtual environments (e.g. the simulator's, see robot-cell/SIM_README.md)
 .venv/
+
+# npm installs (e.g. the IRB deck builder in assignment-5-.../deck/)
+node_modules/
