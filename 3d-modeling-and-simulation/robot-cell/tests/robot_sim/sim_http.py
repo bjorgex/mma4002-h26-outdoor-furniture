@@ -13,6 +13,9 @@ FILES = {"": "sim_view.html", "sim_view.html": "sim_view.html", "cell.glb": "cel
          "cell_v5.glb": "cell_v5.glb", "cell_layout_v5.json": "cell_layout_v5.json",   # v5: guide starts on base A
          "cell_v6.glb": "cell_v6.glb", "cell_layout_v6.json": "cell_layout_v6.json",   # v6: as v5, no parking pad
          "cell_v8.glb": "cell_v8.glb", "cell_layout_v8.json": "cell_layout_v8.json",   # v8: Jig V5, T-slot plate
+         "cell_v8x2.glb": "cell_v8x2.glb", "cell_layout_v8x2.json": "cell_layout_v8x2.json",   # v8x2: 2 benches
+         "cell_v9.glb": "cell_v9.glb", "cell_layout_v9.json": "cell_layout_v9.json",   # v9: Guide split V6
+         "cell_v9x2.glb": "cell_v9x2.glb", "cell_layout_v9x2.json": "cell_layout_v9x2.json",   # v9x2: 2 benches
          "manip_layers.js": "manip_layers.js",                                     # manipulability layers (3D view)
          "collision_layer.js": "collision_layer.js",                               # collisions panel (3D view)
          "manip_data.json": "manipulability/manip_data.json"}                      # manipulability.py all

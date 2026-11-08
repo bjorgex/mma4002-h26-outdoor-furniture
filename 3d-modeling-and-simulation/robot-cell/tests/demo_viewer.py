@@ -87,6 +87,7 @@ class RealScenarios:
 
     def __init__(self, a):
         self.a, self.proc, self.name, self.state, self.code, self.stopped = a, None, None, "idle", None, False
+        self.lines, self.err = [], None
         self.lock = threading.Lock()
 
     def list(self):
@@ -94,16 +95,57 @@ class RealScenarios:
 
     def status(self):
         return {"t": "scenario", "name": self.name, "state": self.state, "code": self.code, "fast": 1,
-                "fast_user": False, "robodk": False, "rdk_busy": False, "station": None}
+                "fast_user": False, "robodk": False, "rdk_busy": False, "station": None,
+                "error": self.err if self.state == "failed" else None, "env": "real", "robot": self.a.robot}
 
     def _set(self, state, code=None):
+        if state == "running" and self.state != "running":
+            self.t0 = time.time()                       # wall clock: the real assembly time
+        if state == "finished" and self.state == "running" and self.name:
+            tm.save_run_time(self.name, "real", time.time() - self.t0)
         self.state, self.code = state, code
+        self.err = tm.error_line(self.lines) if state == "failed" else None
+        if state != "running":                          # a script that ended can't be on hold any more
+            tm.VIEW.hold = None
         tm.emit(**self.status())
+
+    def preflight(self):
+        """None if the robot is ready for a run (Listen node open and TMflow in it), else why not - in plain words."""
+        ip = self.a.robot
+        try:
+            s = socket.create_connection((ip, lt.LISTEN), timeout=2)
+        except OSError:
+            if not tm.VIEW.live.get("link"):
+                return f"No robot: {ip} does not answer (cable / network / controller off?)"
+            return (f"Robot {ip} is on, but TMflow is not in a Listen node (port {lt.LISTEN} closed): "
+                    "start HandE_Bridge_v1 and wait for the Bridge node")
+        try:
+            s.settimeout(3)
+            s.sendall(lt.packet("TMSTA", "00"))
+            buf = b""
+            while b"\r\n" not in buf:
+                chunk = s.recv(1024)
+                if not chunk:
+                    break
+                buf += chunk
+            reply = buf.decode(errors="replace")
+        except OSError as e:
+            return f"Robot {ip}: no answer from the Listen node ({e}) - is another script connected?"
+        finally:
+            s.close()
+        if ",true," not in reply:
+            return f"Robot {ip}: TMflow is not in a Listen node right now ({reply.strip()[:60]})"
+        return None
 
     def run(self, name):
         sc = {s["name"]: s for s in self.list()}.get(name)
         if not sc:
             return 404, f"no scenario {name!r}"
+        why = self.preflight()
+        if why:
+            self.name, self.lines = name, [why]
+            self._set("failed")
+            return 503, why
         with self.lock:
             if self.proc and self.proc.poll() is None:
                 return 409, f"{self.name} is still running: stop it first"
@@ -126,9 +168,11 @@ class RealScenarios:
             proc.stdin.close()
         except OSError:
             pass
+        self.lines = []
         for line in proc.stdout:
             line = line.rstrip("\r\n")
             tm.emit("out", line=line)
+            self.lines = (self.lines + [line])[-60:]
             print(line, flush=True)
         code = proc.wait()
         if proc is self.proc:
@@ -142,6 +186,21 @@ class RealScenarios:
             self.proc.kill()
             self.proc.wait()
         return 200, "script stopped (queued robot moves may still run: E-stop)"
+
+    def reset_all(self):
+        """The page's Reset on the REAL robot: stops the script if one runs and puts the 3D view's parts back at the
+        start. The robot itself is not moved (Home is TMflow's job)."""
+        with self.lock:
+            if self.proc and self.proc.poll() is None:
+                self.stopped = True
+                self.proc.kill()
+                self.proc.wait()
+            cell = next((s.get("cell", "cell") for s in self.list() if s.get("default")), "cell_v8")
+            tm.VIEW.reset()
+            tm.emit("reset", flow="hande", title=tm.VIEW.flow.title, cell=cell)
+            self.name, self.lines, self.err = None, [], None
+            self._set("idle")
+        return 200, "reset: 3D parts at the start (the real robot is not moved)"
 
     def robodk_reset(self):
         return 404, "no RoboDK on the real-robot viewer"

@@ -46,7 +46,7 @@ def main(cell, glb=None):
         if "move" in s:
             flange = to_np(Techman_2_Pose(s["flange"]))
             continue
-        if s["gripper"] == "grip":
+        if s.get("gripper") == "grip":
             n += 1
             tip = (flange @ [0, 0, TIP - 10, 1])[:3]
             d = {p: box_dist(meshes[p], tip) if p in meshes else None for p in s["parts"]}
@@ -59,7 +59,7 @@ def main(cell, glb=None):
                   f"{'-' if near is None else f'{near:.1f} mm'}{'  MISSING ' + str(missing) if missing else ''}"
                   f"  {'ok' if ok else 'FAR'}")
             held = [(p, np.linalg.inv(flange)) for p in s["parts"] if p in meshes]
-        elif s["gripper"] == "release":
+        elif s.get("gripper") == "release":
             for p, inv in held:
                 meshes[p].apply_transform(flange @ inv)
             held = []

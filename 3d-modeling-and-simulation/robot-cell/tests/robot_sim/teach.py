@@ -202,6 +202,7 @@ def do_rebuild(a):
     if r.returncode:
         raise SystemExit(r.returncode)
     out = a.out or str(CELL / "bench_tmflow" / a.version / "AssembleBench.zip")
+    Path(out).parent.mkdir(parents=True, exist_ok=True)            # e.g. bench_tmflow/v8x2/ the first time
     subprocess.run([py, str(HERE / "tmflow_export.py"), "export", str(CELL / "tests" / f"{a.version}_moves.json"),
                     "--base-from", str(CELL / "bench_tmflow" / "v7" / "AssembleBench.zip"), "-o", out], cwd=CELL, check=True)
 

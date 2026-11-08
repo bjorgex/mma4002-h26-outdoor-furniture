@@ -323,6 +323,12 @@ def build_project(program, when=None):
                     display(f"Simulation: release {p}")
         elif "message" in s:
             display(s["message"])
+        elif "reload" in s:                               # bench_cell_v8 Program.reload (v8x2): people reload the jig
+            # TMflow on its own: a Display node (the message) + a RELOAD_WAIT_MS WaitFor at Home; more time: Pause on
+            # the robot stick. (Driven from v4_replay.py the robot stays in the Listen node until Resume on the page.)
+            display(f"Reload: {s.get('name', 'reload the jig')} ({s['reload']}) - {RELOAD_WAIT_MS // 1000} s", "Reload", "White",
+                    "Reload")
+            add("WaitFor", "WaitFor", lambda k: f"WaitReload{k}", _wait(RELOAD_WAIT_MS))
         elif "wait_ms" in s:
             add("WaitFor", "WaitFor", lambda k, ms=s["wait_ms"]: f"Wait{ms}ms{k}", _wait(s["wait_ms"]))
     objs = []
@@ -372,6 +378,9 @@ def build_project(program, when=None):
             f"Projects/{prog}/{prog}.dat": dat.encode("utf-8"),
             f"Projects/{prog}/{prog}.flow": flow_text.encode("utf-8"),
             f"Projects/{prog}/{prog}.prog": PROG_STUB}
+
+
+RELOAD_WAIT_MS = 120000                                    # a reload step's WaitFor in the TMflow export (2 min)
 
 
 def _wait(ms):

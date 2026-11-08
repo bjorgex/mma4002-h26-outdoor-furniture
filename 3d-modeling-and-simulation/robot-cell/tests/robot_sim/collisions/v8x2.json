@@ -1,0 +1,179 @@
+{
+ "cell": "v8x2",
+ "moves_file": "tests/v8x2_moves.json",
+ "cell_file": "tests/robot_sim/cell_v8x2.glb",
+ "n_moves": 240,
+ "free": false,
+ "hits": [
+  {
+   "move": 100,
+   "name": "big half slide out",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide big",
+     "plank1"
+    ],
+    [
+     "Guide big",
+     "plank2"
+    ],
+    [
+     "Guide big",
+     "plank3"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 6,
+   "objects": [
+    "Guide big",
+    "plank1",
+    "plank2",
+    "plank3"
+   ]
+  },
+  {
+   "move": 101,
+   "name": "big half up",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide big",
+     "frame1"
+    ],
+    [
+     "Guide big",
+     "piece A1"
+    ],
+    [
+     "Guide big",
+     "piece A3"
+    ],
+    [
+     "Guide big",
+     "plank1"
+    ],
+    [
+     "Guide big",
+     "plank3"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 6,
+   "objects": [
+    "Guide big",
+    "frame1",
+    "piece A1",
+    "piece A3",
+    "plank1",
+    "plank3"
+   ]
+  },
+  {
+   "move": 219,
+   "name": "big half slide out",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide big",
+     "plank1 #2"
+    ],
+    [
+     "Guide big",
+     "plank2 #2"
+    ],
+    [
+     "Guide big",
+     "plank3 #2"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 14,
+   "objects": [
+    "Guide big",
+    "plank1 #2",
+    "plank2 #2",
+    "plank3 #2"
+   ]
+  },
+  {
+   "move": 220,
+   "name": "big half up",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide big",
+     "frame1 #2"
+    ],
+    [
+     "Guide big",
+     "piece A1 #2"
+    ],
+    [
+     "Guide big",
+     "piece A3 #2"
+    ],
+    [
+     "Guide big",
+     "plank1 #2"
+    ],
+    [
+     "Guide big",
+     "plank3 #2"
+    ]
+   ],
+   "context": "after 'attach Guide big', before 'release Guide big'",
+   "stage": 14,
+   "objects": [
+    "Guide big",
+    "frame1 #2",
+    "piece A1 #2",
+    "piece A3 #2",
+    "plank1 #2",
+    "plank3 #2"
+   ]
+  }
+ ],
+ "step": 2.0,
+ "geometry": "techman",
+ "generated": "2026-11-07 22:29:04",
+ "seconds": 39.8,
+ "inputs": {
+  "v8x2_moves.json": [
+   1794086889.934,
+   105513
+  ],
+  "cell_v8x2.glb": [
+   1794081584.37,
+   3677936
+  ],
+  "cell_layout_v8x2.json": [
+   1794081584.377,
+   20431
+  ],
+  "collision.py": [
+   1794081078.733,
+   22280
+  ],
+  "tm5_links.glb": [
+   1793406923.457,
+   3778684
+  ],
+  "tm5_kin.py": [
+   1793406923.464,
+   13724
+  ],
+  "kin_check.py": [
+   1793966843.028,
+   12403
+  ],
+  "tmflow_export.py": [
+   1794081470.405,
+   34096
+  ],
+  "collision_view.py": [
+   1794081059.799,
+   8326
+  ]
+ }
+}

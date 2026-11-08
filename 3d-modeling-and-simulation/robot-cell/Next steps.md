@@ -2,6 +2,48 @@
 
 **Program:** [bench_cell_v8.py](bench_cell_v8.py) → [tests/v8_moves.json](tests/v8_moves.json) · **Jig:** [jig_v5.py](jig_v5.py), [Jig V5 assembly](<../jig-cad/Jig V5/JigAssembly_V5.STEP>) · **Own tools:** [tests/robot_sim/OWN_TOOL.md](tests/robot_sim/OWN_TOOL.md) · **TMflow:** [bench_tmflow/v8/AssembleBench.zip](bench_tmflow/v8/AssembleBench.zip)
 
+## 0e. 2026-11-07 evening: back-end grip, guide split V6 proposal
+- **Stage 6 program now: the big half's free back end** (`BIG_GRIP_BACK = "end"`). It's the B-side leg's far corner, gripped across the 10 mm wall and leaning 55° away from the robot. It travels at 290 mm there, since 450 is out of reach. On B it's **let go 18 mm above the seat** (`END_DROP`) and falls onto its own bosses, so the fingers stay above the small half, which sits flush in that corner. **Whole program: no gripper or arm hit**; 2 hits left, both the loose guide passing the bench on the way out.
+- **Guide split V6 proposal** (Bjørge's idea), in [Jig V6 proposal](<../jig-cad/Jig V6 proposal>), made by [guide_split_v6.py](guide_split_v6.py). Jig V5 is untouched.
+  - The tooth between the back-rest slots (P5 | P6), plus its mirror image, moves from the big half to the small half.
+  - Check against the planks as in stage 6: the **new big half slides 200 mm straight towards the robot without touching a plank** (the old one is blocked after 2.5 mm by plank 5). The small half then slides out towards the AMR.
+  - Files: `JigAssembly_V6_proposal.STEP` (Jig V5 with the new halves), `GuideSplit_V6_small.STEP` and `GuideSplit_V6_big.STEP` (base-local), `guide_split_v6_top.png`.
+  - Not in the program yet. Stage 6 would become: big half first (lift ~90 mm over the rack's height, slide −x out), then the small half (−y).
+
+## 0d. 2026-11-07 day: stage 6 reworked, XYZ axes
+- **Stage 6, big half out of the bench** (`BIG_SIDE_IN`, `BIG_SNAP`, `BIG_HELP_MS`, `BIG_EXIT` in [bench_cell_v8.py](bench_cell_v8.py)):
+  1. Comes in at a slant past frame 1's edge (120 mm, 75° up, towards −x; the only free line). The approach is **collision-free** now (old #96 gone).
+  2. Lifts 90 mm to the middle of the bench, with the guide's bottom above the plank rack's height.
+  3. Turns 30° about z, away from the AMR (+30°: the guide's closest point to the AMR goes from 182 to 192 mm). On the real jig this snaps the guide off.
+  4. **Waits 5 s** (TMflow WaitFor; the full run and step_run sleep) so people can help.
+  5. Goes back out the way it came in, then up, onto the start base.
+- Left in the model (accepted): #99 the turn (gripper vs frame 1 / planks 1–2; a smaller lift doesn't help), #100–101 the way out (the guide passes the bench).
+- **3D view:** "Base XYZ" / "Tool XYZ" buttons in the Simulator bar: labelled axes of the robot base frame and the tool frame at the fingertips (the Adjust panel's Base / Tool).
+- The timeline doesn't show the 5 s wait yet. Only the run does it.
+- **Side grip on the tab's end (from the robot side), tested and parked** (`BIG_GRIP_BACK = "side"` is in the code, default `"top"`):
+  - Rack where it is: only a steep grip (65° down) clears the rack, and then the 30° turn hits frame 1 and planks 1–2 just as the top grip does (the fingers sit under frame 1's edge, between the planks).
+  - Rack towards the robot (−x): the rack ends up under the upper arm.
+  - Rack towards B (+y): clears A, but blocks setting the guide down on B, and the plate has no room for both.
+  - So the turn hit is not about the grip: anything holding the tab is under frame 1's edge beside planks 1–2.
+- **NOW: stage 6 grips the big half's U-leg at its robot end** (`BIG_GRIP_BACK = "leg"`, `BIG_LEG`; Bjørge's screenshot idea):
+  - the leg on base B's side, plate x 140 (11.5 mm in from the end), fingers across the 41 mm leg (Hand-E opens to 50), gripper leaning 45° out of the bench
+  - **Whole program: 2 hits, both the loose guide passing the bench on the way out (#100–101, accepted).** No gripper or arm hit anywhere.
+  - The AMR-side leg (as marked) works at A, but at B its lean points back at the bench on A → wrist hits frame 1.
+  - Check at the robot: the snap turn is stiff (μ1 3.7) and 3.5° from a joint limit; the 41 mm leg leaves 4.5 mm per finger when open.
+- **Free back end of the big half (`"end"`, Bjørge's 2nd screenshot), tested:**
+  - Clean at A (fingers across the 10 mm wall, leaning 55° away from the robot): pick, lift and turn have no gripper or arm hit.
+  - But the small half sits flush inside that corner (0 mm gap). On B (small half already back) the inner finger has no room.
+  - Swapping stages 5/6 moves the clash to A. Not usable unless the guide gets a gap there (CAD) or another place for the small half.
+
+## 0c. Night of 2026-11-07: guide grips, AMR, sim tools
+- **Guide halves gripped by the grip tab** (10 mm wide, on top, middle): small y 22, big y −60 (`GUIDE_TAB`). Base A moved in line with base B. Rack = the 4-hole PlankRack_V3 (`RACK_STL`).
+- **Big half, stage 3 (B → A): collision-free.** Found by search (collision.py per candidate): grip **turned 180°** (`GUIDE_SPIN` big 0: the TM5 wrist housing ends up away from planks 1–3) + **tilted 20° away from the planks** (`GRIP_ROLL` big 20), old side tilt off (`GRIP_TILT` 0). Small half tilted 10° → its wrist clears frame 1.
+  - Ruled out: tilt only (9+ hits: the wrist hits the planks), gripping further out on the tab, flipped wrist (J5 > 0: the upper arm goes into the bases).
+- **Left: 4 hits, all stage 6 (big half out of the bench on A):** #96 approach (frame 1 lies above the tab after the flip) + #99–101 the forced removal (accepted). Options: grip the big half elsewhere in stage 6, or a longer tab on the big half (CAD).
+- **AMR:** simplified Omron LD-250 in the 3D cell (`amr_ld250.py`; RoboDK's model can't be exported).
+- **Sim page:** Mock/Real switch, Run/Pause/Stop/Reset, timeline (click = jump, drag = speed-limited, play/pause/step), Adjust-step panel (base/tool, X…RZ, history, Save = teach), errors shown.
+- Nothing of this committed yet.
+
 ## 0b. As built (2026-11-07)
 - **Rack and base B are planned where they really sit** (`AS_BUILT_RACK` −2.1/−14.8 mm, `AS_BUILT_B` +8.5/−7.6 mm in [bench_cell_v8.py](bench_cell_v8.py)); program, 3D sim and collision check all use them. Jig design files unchanged.
 - Taught corrections rebased to small residuals; **stage 1 on the robot unchanged (0.00 mm)**, stages 2–6 moved ≤ 8.5 mm towards reality.
@@ -11,7 +53,7 @@
 - **Big guide half out with frame 2 on (stage 6, #105): accepted as forced** (Bjørge 2026-11-07) — it comes out by force, the planks flex. Proposed motion: lift straight up to the middle of the bench (where the planks flex most), turn 45° there, then out; in the sim mark that hit as expected. Waiting: "middle" = half the bench height? implement now or later?
 
 ## 0. Real robot, 2026-11-06 evening
-- **Run on the real robot from the page:** `python tests/demo_viewer.py view --robot 10.0.12.101 --port 8092 --cell cell_v8`, then http://127.0.0.1:8092/all → preset → **Run** (same page as the sim; the 3D arm follows the real joints). Run answers every "Enter" prompt; Stop only kills the script (queued moves still run: E-stop). Use `v8-full`, not `-fast`, on the robot.
+- **Run on the real robot from the page:** `python tests/demo_viewer.py view --robot 10.0.12.101 --port 8092 --cell cell_v8`, then http://127.0.0.1:8092/all → preset → **Run** (same page as the sim; the 3D arm follows the real joints). Run answers every "Enter" prompt; Stop only kills the script (queued moves still run: E-stop). (The "-fast" presets are gone: 1× is real time; speed up with Robot speed.)
 - **Bridge check passed** (`hande_bridge.py check`): RELEASE, GRIP, Home2 all answer.
 - **GRIP1 target must be fully closed (255).** It was 80 (~34 mm gap) → every grip reported "object loss".
 - **After a GripLost:** clear the error in TMflow and restart HandE_Bridge_v1, else the Listen node answers status but not scripts (the run hangs at connect).

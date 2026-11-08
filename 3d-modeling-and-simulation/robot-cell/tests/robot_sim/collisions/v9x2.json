@@ -1,0 +1,181 @@
+{
+ "cell": "v9x2",
+ "moves_file": "tests/v9x2_moves.json",
+ "cell_file": "tests/robot_sim/cell_v9x2.glb",
+ "n_moves": 244,
+ "free": false,
+ "hits": [
+  {
+   "move": 223,
+   "name": "small half slide clear",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "frame1"
+    ],
+    [
+     "EGP",
+     "piece A5"
+    ],
+    [
+     "EGP",
+     "piece A6"
+    ],
+    [
+     "EGP",
+     "plank5"
+    ],
+    [
+     "EGP",
+     "plank6"
+    ],
+    [
+     "Guide small",
+     "frame1"
+    ],
+    [
+     "Guide small",
+     "piece A3"
+    ],
+    [
+     "Guide small",
+     "plank1"
+    ],
+    [
+     "Guide small",
+     "plank3"
+    ]
+   ],
+   "context": "after 'attach Guide small', before 'release Guide small'",
+   "stage": 14,
+   "objects": [
+    "EGP",
+    "Guide small",
+    "frame1",
+    "piece A3",
+    "piece A5",
+    "piece A6",
+    "plank1",
+    "plank3",
+    "plank5",
+    "plank6"
+   ]
+  },
+  {
+   "move": 224,
+   "name": "small half up",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "frame1"
+    ],
+    [
+     "EGP",
+     "piece A5"
+    ],
+    [
+     "EGP",
+     "piece A6"
+    ],
+    [
+     "EGP",
+     "plank5"
+    ],
+    [
+     "EGP",
+     "plank6"
+    ],
+    [
+     "Guide small",
+     "frame1"
+    ],
+    [
+     "Guide small",
+     "piece A3"
+    ],
+    [
+     "Guide small",
+     "piece A5"
+    ],
+    [
+     "Guide small",
+     "piece A6"
+    ],
+    [
+     "Guide small",
+     "plank1"
+    ],
+    [
+     "Guide small",
+     "plank3"
+    ],
+    [
+     "Guide small",
+     "plank5"
+    ],
+    [
+     "Guide small",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach Guide small', before 'release Guide small'",
+   "stage": 14,
+   "objects": [
+    "EGP",
+    "Guide small",
+    "frame1",
+    "piece A3",
+    "piece A5",
+    "piece A6",
+    "plank1",
+    "plank3",
+    "plank5",
+    "plank6"
+   ]
+  }
+ ],
+ "step": 2.0,
+ "geometry": "techman",
+ "generated": "2026-11-08 02:38:34",
+ "seconds": 26.8,
+ "inputs": {
+  "v9x2_moves.json": [
+   1794087644.254,
+   106686
+  ],
+  "cell_v9x2.glb": [
+   1794101788.608,
+   3577588
+  ],
+  "cell_layout_v9x2.json": [
+   1794101788.612,
+   20431
+  ],
+  "collision.py": [
+   1794081078.733,
+   22280
+  ],
+  "tm5_links.glb": [
+   1793406923.457,
+   3778684
+  ],
+  "tm5_kin.py": [
+   1793406923.464,
+   13724
+  ],
+  "kin_check.py": [
+   1793966843.028,
+   12403
+  ],
+  "tmflow_export.py": [
+   1794081470.405,
+   34096
+  ],
+  "collision_view.py": [
+   1794087748.26,
+   8333
+  ]
+ }
+}

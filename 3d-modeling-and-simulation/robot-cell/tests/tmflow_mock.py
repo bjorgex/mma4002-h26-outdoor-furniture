@@ -43,6 +43,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -115,15 +116,42 @@ class Clock:
     def __init__(self, fast=1):
         self.lock = threading.Lock()
         self.fast, self.user = min(max(fast, self.LO), self.HI), False
+        self.paused = False                          # the page's Pause: simulated time stands still
+        self._sim, self._t = 0.0, time.monotonic()  # simulated seconds so far (robot time), up to self._t
+
+    def _acc(self):
+        """Book the simulated time since the last change (lock held), before the rate changes."""
+        now = time.monotonic()
+        self._sim += (now - self._t) * (0.0 if self.paused else self.fast)
+        self._t = now
+
+    def sim(self):
+        """Simulated seconds since this server started: robot time (the speed slider and Pause don't distort it)."""
+        with self.lock:
+            return self._sim + (time.monotonic() - self._t) * (0.0 if self.paused else self.fast)
 
     def get(self):
         with self.lock:
             return self.fast
 
+    def rate(self):
+        """Simulated seconds per real second now: 0 while paused (moves and node waits stand still)."""
+        with self.lock:
+            return 0.0 if self.paused else self.fast
+
+    def pause(self, on):
+        with self.lock:
+            self._acc()
+            self.paused = bool(on)
+        emit("pause", paused=self.paused)
+        log("paused" if on else "resumed")
+        return self.paused
+
     def set(self, x, user=False):
         """user: set on the page; from then on a scenario's own 'fast' no longer overrides it (this server's life)."""
         x = float(min(max(float(x), self.LO), self.HI))
         with self.lock:
+            self._acc()
             self.fast, self.user = x, self.user or user
             user = self.user
         emit("speed", fast=x, user=user)
@@ -133,13 +161,66 @@ class Clock:
         """Wait secs of simulated time; a speed change part-way re-scales what is left."""
         left = secs
         while left > 1e-6 and not stop():
-            x = self.get()
+            x = self.rate()
+            if x <= 0:                                   # paused: wait, nothing of the time passes
+                time.sleep(0.05)
+                continue
             dt = min(left / x, 0.05)
             time.sleep(dt)
             left -= dt * x
 
 
 CLOCK = Clock()
+
+RUN_TIMES = HERE / "run_times.json"     # last measured run per preset: {name: {"real": s, "real_at", "mock": s, "mock_at"}}
+_EST = {}                               # moves file -> (mtime, estimate)
+
+
+def save_run_time(name, kind, secs):
+    """kind "real" (wall clock on the robot) or "mock" (simulated robot time): the preset's last finished run."""
+    try:
+        d = json.loads(RUN_TIMES.read_text(encoding="utf-8")) if RUN_TIMES.exists() else {}
+        d.setdefault(name, {}).update({kind: round(secs, 1), f"{kind}_at": time.strftime("%Y-%m-%d %H:%M")})
+        RUN_TIMES.write_text(json.dumps(d, indent=1), encoding="utf-8")
+    except (OSError, ValueError) as e:
+        log(f"run time not saved: {e}")
+
+
+def preset_times(sc):
+    """{"est": s or None, "real": .., "real_at": .., "mock": .., "mock_at": ..} for a scenarios.json preset.
+    est (robot time at 1x) for the v4_replay presets: cycle_time.py's moves with TMflow's ramps (no blending) - its
+    0.5 s per gripper step replaced by the Hand-E node times (NODE_TIME: GRIP 4 s, RELEASE 3 s, + the RELEASE at the
+    start) - plus the program's waits."""
+    out = {}
+    try:
+        out.update(json.loads(RUN_TIMES.read_text(encoding="utf-8")).get(sc["name"], {}) if RUN_TIMES.exists() else {})
+    except ValueError:
+        pass
+    if Path(sc.get("script", "")).name != "v4_replay.py":
+        return out
+    args = [str(a) for a in sc.get("args", [])]
+    cell = args[args.index("--cell") + 1] if "--cell" in args else "v4"
+    f = HERE / f"{cell}_moves.json"
+    if not f.exists():
+        return out
+    m = f.stat().st_mtime
+    if _EST.get(f, (None,))[0] != m:
+        try:
+            sys.path.insert(0, str(HERE / "robot_sim"))
+            import cycle_time
+            prog = json.loads(f.read_text(encoding="utf-8"))
+            phases, _ = cycle_time.estimate(prog)
+            t = sum(b for _, b in phases.values())
+            for st in prog["steps"]:
+                if "do0" in st:
+                    t -= 0.5 if st.get("gripper") else 0.3
+                    t += {"grip": NODE_TIME["grip"], "release": NODE_TIME["release"]}.get(st.get("gripper"), 0)
+            _EST[f] = (m, round(t + NODE_TIME["release"], 1))
+        except Exception as e:                          # never break the preset list over an estimate
+            log(f"estimate for {f.name} failed: {e}")
+            _EST[f] = (m, None)
+    out["est"] = _EST[f][1]
+    return out
 
 
 def log(msg):
@@ -423,7 +504,7 @@ class Robot:
             if now - due > DT:                          # fell behind: start a new grid, no burst of short steps
                 due = now
             # live time scale (the slider); a stalled step counts as MAX_STEP so nothing jumps to catch up
-            done, last = min(t, done + min(now - last, MAX_STEP) * CLOCK.get()), now
+            done, last = min(t, done + min(now - last, MAX_STEP) * CLOCK.rate()), now   # rate 0 = paused
             s = done / t
             s = s * s * (3 - 2 * s)                     # ease in/out
             if kind == "jptp":
@@ -747,7 +828,10 @@ class View:
                 if path == "/events":
                     return view._sse(self)
                 if path == "/scenarios" and view.scenarios:     # the page's dropdown + the run state
-                    return view._json(self, 200, {"scenarios": view.scenarios.list(), **view.scenarios.status()})
+                    lst = [{**sc, "times": preset_times(sc)} for sc in view.scenarios.list()]
+                    return view._json(self, 200, {"scenarios": lst, **view.scenarios.status()})
+                if path == "/hold":                     # a script waiting for the page's Resume (Steps.hold)
+                    return view._json(self, 200, {"hold": view.hold})
                 if path == "/sim" or path.startswith("/sim/"):  # 3D view + meshes (robot_sim/), also for /all
                     sys.path.insert(0, str(HERE / "robot_sim"))
                     from sim_http import sim_get
@@ -765,6 +849,34 @@ class View:
 
             def do_POST(self):                          # step events from "run" (another process)
                 path = self.path.split("?")[0]
+                if path.startswith("/teach/"):          # the 3D page's "Adjust step" panel (robot_sim/teach_api.py)
+                    if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
+                        return self.send_error(415)
+                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                    sys.path.insert(0, str(HERE / "robot_sim"))
+                    import teach_api
+                    try:
+                        code, out = teach_api.handle(path, body)
+                    except Exception as e:              # a bad move name, a file problem ...: the panel shows it
+                        code, out = 500, {"ok": False, "msg": f"{type(e).__name__}: {e}"}
+                    if path == "/teach/save" and out.get("ok"):
+                        emit("program_changed", version=body.get("version", "v8"), move=body.get("move"))
+                    return view._json(self, code, out)
+                if path == "/hold/resume":              # the page's Resume on a script's hold (e.g. reload the jig);
+                    if self.headers.get("Content-Type", "").split(";")[0] != "application/json":   # mock AND real robot
+                        return self.send_error(415)
+                    was = view.resume_hold()
+                    st = view.scenarios.status() if view.scenarios else {}
+                    return view._json(self, 200 if was else 409, {"msg": "resumed" if was else "nothing is on hold", **st})
+                if path == "/pause":                    # the page's Pause / Resume: {"paused": true|false}
+                    if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
+                        return self.send_error(415)
+                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                    sc = view.scenarios
+                    if sc and hasattr(sc, "pause"):
+                        code, msg = sc.pause(bool(body.get("paused", True)))
+                        return view._json(self, code, {"msg": msg, **sc.status()})
+                    return view._json(self, 404, {"msg": "Pause is only in the mock - on the real robot use Pause on the robot stick"})
                 if path == "/speed":                    # the page's speed slider: {"fast": x}, x 0.25..50
                     if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
                         return self.send_error(415)     # JSON only, like /scenario/*
@@ -782,12 +894,13 @@ class View:
                         return self.send_error(415)
                     code, msg = view.scenarios.robodk_reset()
                     return view._json(self, code, {"msg": msg})
-                if path in ("/scenario/run", "/scenario/stop") and view.scenarios:
+                if path in ("/scenario/run", "/scenario/stop", "/scenario/reset") and view.scenarios:
                     if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
                         return self.send_error(415)     # JSON only: other sites' plain form posts can't start runs
                     body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
                     sc = view.scenarios
-                    code, msg = sc.run(str(body.get("name", ""))) if path == "/scenario/run" else sc.stop()
+                    code, msg = (sc.run(str(body.get("name", ""))) if path == "/scenario/run"
+                                 else sc.reset_all() if path == "/scenario/reset" else sc.stop())
                     return view._json(self, code, {"msg": msg, **sc.status()})
                 if path != "/step":
                     return self.send_error(404)
@@ -799,6 +912,7 @@ class View:
         self.demo = []                                  # this run's step events, for a /demo page opened mid-run
         self.moves = 0                                  # Listen-node moves since the run's "run" step event
         self.scenarios = None                           # Scenarios, set by serve
+        self.hold = None                                # a script's hold ({"msg", "id", ...}) until the page's Resume
         self.httpd = ThreadingHTTPServer((HOST, port), Handler)
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
 
@@ -816,6 +930,16 @@ class View:
             self.recent.clear()
             self.demo = []
             self.moves = 0
+            self.hold = None
+
+    def resume_hold(self):
+        """The page's Resume on a hold: clears it (the script polling GET /hold carries on). False if none."""
+        with self.lock:
+            was, self.hold = self.hold, None
+        if was:
+            self.step({"t": "hold", "on": False, "id": was.get("id"), "stage": was.get("stage")})
+            log(f"hold released on the page: {was.get('msg', '')}")
+        return bool(was)
 
     def count_move(self):
         """The next Listen-node move's number in this run (the page: move n of the script's "moves" total)."""
@@ -837,6 +961,9 @@ class View:
             if ev.get("t") == "run":
                 self.demo = []
                 self.moves = 0
+                self.hold = None
+            if ev.get("t") == "hold" and ev.get("on"):          # a script waits for the page's Resume
+                self.hold = {k: ev.get(k) for k in ("msg", "id", "stage")}
             if ev.get("t") == "carry" and LIVE:                 # RoboDK: what the next GRIP takes along
                 getattr(LIVE["robot"].kin, "carry", lambda *a: None)(ev.get("action"), ev.get("parts", []))
             self.demo.append(ev)
@@ -944,6 +1071,18 @@ def serve(a):
         j = (kin.ik(f, p["joints"]) if kin else None) or p["joints"]
         home = {"flange": f, "joints": j}
         log(f"no 'home' in {lt.POINTS.name}: home = 150 mm above pick")
+    # 2026-11-07: the TMflow flow's Home node = the default preset's program Home (its first move), so the robot
+    # starts - and the page's Reset puts it - where that program starts, not at the old demo's test pose
+    try:
+        dsc = next((s for s in json.loads(SCENARIOS.read_text(encoding="utf-8")) if s.get("default")), None)
+        cell_arg = dsc["args"][dsc["args"].index("--cell") + 1] if dsc and "--cell" in dsc.get("args", []) else None
+        mf = HERE / f"{cell_arg}_moves.json" if cell_arg else None
+        if mf and mf.exists():
+            first = next(s for s in json.loads(mf.read_text(encoding="utf-8"))["steps"] if "joints" in s)
+            home = {"flange": first["flange"], "joints": first["joints"]}
+            log(f"home = {mf.name}'s first move '{first['name']}' (the default preset's start)")
+    except Exception as e:                              # no default / no moves file: keep the points file's home
+        log(f"home from the default preset not used: {e}")
     known = [(home["flange"], home["joints"])] + [(v["flange"], v["joints"]) for v in pts.values()]
     flange = kin.fk(home["joints"]) if kin else home["flange"]
     CLOCK.set(a.fast)
@@ -970,6 +1109,17 @@ def serve(a):
         log("mock stopped")
 
 
+def error_line(lines):
+    """Why a run failed, for the page: the last line that looks like an error (exception, !!, refused, no robot ...),
+    else the last non-empty line of the script's output."""
+    keys = ("Error", "Exception", "error:", "!!", "refus", "timed out", "No robot", "not in Listen", "GripLost")
+    lines = [l.strip() for l in lines if l.strip()]
+    for l in reversed(lines):
+        if any(k in l for k in keys) and not l.startswith(("File ", "~", "^")):
+            return l[:300]
+    return lines[-1][:300] if lines else None
+
+
 class Scenarios:
     """The page's Run / Stop: whitelisted runs from scenarios.json, one at a time. Run resets the mock in place (the
     scenario's flow, GRIP results and time scale - unless the page's speed slider was used - robot at home), then starts "tmflow_mock.py run <script> <args>" on
@@ -978,7 +1128,9 @@ class Scenarios:
     def __init__(self, a, kin, home, known, flange):
         self.a, self.kin, self.home, self.known, self.flange = a, kin, home, known, flange
         self.proc, self.name, self.state, self.code, self.stopped = None, None, "idle", None, False
-        self.cell = "cell"                                  # the 3D cell of the last scenario (robot_sim/<cell>.glb)
+        self.lines, self.err = [], None                     # the run's output (for why it failed)
+        # the 3D cell of the last scenario (robot_sim/<cell>.glb); before any run: the default (newest) preset's
+        self.cell = next((s.get("cell", "cell") for s in self.list() if s.get("default")), "cell")
         self.lock = threading.Lock()
         self.rdk_busy = False                               # a Reset RoboDK in progress
 
@@ -988,10 +1140,28 @@ class Scenarios:
     def status(self):
         return {"t": "scenario", "name": self.name, "state": self.state, "code": self.code, "fast": CLOCK.get(),
                 "fast_user": CLOCK.user, "robodk": isinstance(self.kin, RoboDK), "rdk_busy": self.rdk_busy,
-                "station": self.kin.station() if isinstance(self.kin, RoboDK) else None}
+                "station": self.kin.station() if isinstance(self.kin, RoboDK) else None,
+                "error": self.err if self.state == "failed" else None, "env": "mock", "paused": CLOCK.paused}
+
+    def pause(self, on):
+        """Pause / resume a running scenario: the mock's time stands still (CLOCK.rate() = 0), the script just waits."""
+        if on and not (self.proc and self.proc.poll() is None):
+            return 409, "nothing is running"
+        CLOCK.pause(on)
+        emit(**self.status())
+        return 200, "paused" if on else "resumed"
 
     def _set(self, state, code=None):
+        if state == "running" and self.state != "running":
+            self.t0 = CLOCK.sim()                       # robot time at the start of the run
+        if state == "finished" and self.state == "running" and self.name:
+            save_run_time(self.name, "mock", CLOCK.sim() - self.t0)
         self.state, self.code = state, code
+        self.err = error_line(self.lines) if state == "failed" else None
+        if state != "running" and VIEW:                 # a script that ended can't be on hold any more
+            VIEW.hold = None
+        if state != "running" and CLOCK.paused:         # a run that ends / stops / starts again is never left paused
+            CLOCK.pause(False)
         emit(**self.status())
 
     def run(self, name):
@@ -1060,8 +1230,10 @@ class Scenarios:
             proc.stdin.close()
         except OSError:
             pass
+        self.lines = []
         for line in proc.stdout:
             emit("out", line=line.rstrip("\r\n"))
+            self.lines = (self.lines + [line.rstrip("\r\n")])[-60:]
         code = proc.wait()
         if proc is self.proc:
             self._set("stopped" if self.stopped else "finished" if code == 0 else "failed", code)
@@ -1104,6 +1276,20 @@ class Scenarios:
             flow = LIVE["flow"]
             self.reset(flow.name, flow.grips_given, self.cell)   # back to idle: home, in the flow
         return 200, "stopped"
+
+    def reset_all(self):
+        """The page's Reset: stop a run, robot home, gripper open, every part back at the start (the default cell)."""
+        with self.lock:
+            if self.proc and self.proc.poll() is None:
+                self.stopped = True
+                self.proc.kill()
+                self.proc.wait()
+            self.cell = next((s.get("cell", "cell") for s in self.list() if s.get("default")), self.cell)
+            flow = LIVE["flow"]
+            self.reset(flow.name, flow.grips_given, self.cell)
+            self.name, self.lines, self.err = None, [], None
+            self._set("idle")
+        return 200, "reset: home, everything at the start"
 
     def reset(self, name, grips, cell="cell"):
         """The mock as if serve had just started with this flow and GRIP results (no process restart; the time scale
@@ -1149,6 +1335,7 @@ def short(v):
     return v if isinstance(v, (int, float, str)) else repr(v)[:40]
 
 
+_REAL_SLEEP = time.sleep                                # before scale_sleep() replaces it
 NO_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))   # 127.0.0.1, never via a proxy
 
 
@@ -1163,6 +1350,31 @@ class Steps:
 
     def send(self, t, **ev):
         self.q.put({"t": t, **ev})
+
+    def hold(self, msg, keepalive=None, every=10.0, **ev):
+        """Hold the script until the page's Resume (POST /hold/resume, mock and real-robot viewer alike): a "hold" step
+        event, then GET /hold is polled until it is cleared. keepalive() is called every `every` real seconds meanwhile
+        (e.g. a Listen-node status poll, so the session stays alive). Returns False if the view server has no /hold
+        (an older server: restart it) - the caller then falls back to its own prompt."""
+        base = self.url.rsplit("/", 1)[0]
+        hid = f"{time.time():.3f}"
+        self.send("hold", on=True, msg=msg, id=hid, **ev)
+        self.q.join()
+        t_keep = time.monotonic()
+        while True:
+            try:
+                with NO_PROXY.open(f"{base}/hold", timeout=2) as r:
+                    h = json.loads(r.read()).get("hold")
+            except urllib.error.HTTPError:
+                return False                            # no /hold on this server
+            except (OSError, ValueError):
+                h = {"id": hid}                         # server busy / restarting: keep holding
+            if not h or h.get("id") != hid:
+                return True
+            if keepalive and time.monotonic() - t_keep >= every:
+                keepalive()
+                t_keep = time.monotonic()
+            _REAL_SLEEP(0.3)                            # real seconds (scale_sleep scales time.sleep)
 
     def _post(self):
         while True:

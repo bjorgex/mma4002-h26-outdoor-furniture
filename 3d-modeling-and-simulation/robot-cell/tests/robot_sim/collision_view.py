@@ -16,6 +16,7 @@ v4_replay.py plays the file, so the page can tint the colliding objects while th
 """
 import argparse
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -42,7 +43,7 @@ def version(cell):
 def files(cell):
     """(moves json, cell glb) for a cell name; ValueError if unknown."""
     v = version(cell)
-    if not v.replace("v", "").isdigit():
+    if not re.fullmatch(r"v\d+(x\d+)?", v):              # v4 .. v9, v8x2 / v9x2 (2 benches)
         raise ValueError(f"unknown cell {cell!r}")
     glb = HERE / ("cell.glb" if v == "v4" else f"cell_{v}.glb")
     return TESTS / f"{v}_moves.json", glb

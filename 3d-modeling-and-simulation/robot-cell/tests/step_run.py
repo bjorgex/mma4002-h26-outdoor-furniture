@@ -20,6 +20,8 @@ TMflow: HandE_Bridge_v1 running and waiting in the Bridge Listen node, Manual mo
     python tests/step_run.py --from "plank1 pick travel"
     python tests/step_run.py --from "plank1 pick travel" --to "plank1 place up"
     python tests/step_run.py --list                the step names
+    python tests/step_run.py --cell v8x2 --from "reload the jig for bench 2"     the 2-bench program (v8x2_moves.json);
+                   its reload step is a prompt: reload the jig, then Enter (never a gripper action)
 Speeds: joint moves --ptp % (default 50), lines --line mm/s (default 100, capped by the program's own speed), lines ending lower than 15 mm above
 a place or pick --slow mm/s (default 10); nudges 20 mm/s (z down 5), back 30 mm/s.
 """
@@ -29,6 +31,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -65,8 +68,10 @@ SLOW_NEAR = ("pick", "place")                          # last approach into a gr
 
 
 def load():
-    """Moves + GRIP/RELEASE; the EGP finger pre-sets (gripper None) have no Hand-E step, as in v4_replay.py."""
-    return [s for s in json.loads(MOVES.read_text(encoding="utf-8"))["steps"] if "move" in s or s.get("gripper")]
+    """Moves + GRIP/RELEASE; the EGP finger pre-sets (gripper None) have no Hand-E step, as in v4_replay.py; waits (wait_ms)
+    and reload holds (v8x2) stay."""
+    return [s for s in json.loads(MOVES.read_text(encoding="utf-8"))["steps"]
+            if "move" in s or s.get("gripper") in ("grip", "release") or "wait_ms" in s or "reload" in s]
 
 
 def state(n=5):
@@ -122,7 +127,11 @@ def describe(s):
     if "move" in s:
         f = s["flange"]
         return f'{s["name"]:28s} {s["move"]:4s} to x {f[0]:7.1f}  y {f[1]:7.1f}  z {f[2]:6.1f}  (J6 {s["joints"][5]:6.1f})'
-    return f'{s["gripper"].upper():28s} ({", ".join(s.get("parts", [])[:3])})'
+    if "wait_ms" in s:
+        return f'WAIT {s["wait_ms"] / 1000:.0f} s{"":21s} ({s.get("name", "")})'
+    if "reload" in s:
+        return f'RELOAD {s["reload"]:22s} ({s.get("name", "")}: put the parts in, then Enter)'
+    return f'{(s.get("gripper") or "open").upper():28s} ({", ".join(s.get("parts", [])[:3])})'
 
 
 def force(b, lift=2.0):
@@ -146,12 +155,14 @@ def main():
     ap.add_argument("--slow", type=float, default=10)
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--view", type=int, default=8092, help="3D page port for the gripper events (0 = off)")
+    ap.add_argument("--cell", default="v8", help="moves file tests/<cell>_moves.json: v8 (default), v8x2 (2 benches), v9 or v9x2 (Guide split V6)")
     a = ap.parse_args()
-    global VIEW
+    global VIEW, MOVES
     VIEW = a.view
+    MOVES = HERE / f"{a.cell}_moves.json"
 
     steps = load()
-    names = [s.get("name") or f'{s["gripper"]} {i}' for i, s in enumerate(steps)]
+    names = [s.get("name") or f'{s.get("gripper")} {i}' for i, s in enumerate(steps)]
     if a.list:
         for i, s in enumerate(steps):
             print(f"{i:3d} st{s['stage']} {describe(s)}")
@@ -190,7 +201,7 @@ def main():
                 print(f"    jumped to [{k}]. Enter = {kind} from here, {dist:.0f} mm away"
                       + ("  !! check the path is clear" if dist > 50 else ""))
             else:
-                print(f"    jumped to [{k}] ({t['gripper'].upper()}): Enter does the gripper action where the arm is now")
+                print(f"    jumped to [{k}] ({describe(t).split('  ')[0].strip()}): Enter does it where the arm is now")
             continue
         if cmd in ("open", "o"):                       # gripper only, the step pointer stays where it is
             b.release()
@@ -272,14 +283,23 @@ def main():
                     target = TO.T_to_pose(adj @ TO.pose_to_T(list(s["flange"])))
                     b.r.move(line(target, a.slow if slow else min(a.line, s.get("speed", a.line))))
                 done = s["name"]
-            elif s["gripper"] == "grip":
+            elif "wait_ms" in s:                    # Program.wait: the arm stands still (the full run's help pause)
+                print(f"    waiting {s['wait_ms'] / 1000:.0f} s ...")
+                time.sleep(s["wait_ms"] / 1000)
+            elif "reload" in s:                     # bench_cell_v8 Program.reload (v8x2): people reload, the robot waits
+                view(t="spawn", parts=list(s.get("spawn", {})), stage=s.get("stage"))   # the 3D page shows the new parts
+                input(f"    reload the jig ({s['reload']}: frames, interface pieces, planks), then Enter ")
+                b.r.status("00")                        # still in the Listen node (raises if the session dropped)
+            elif s.get("gripper") == "grip":
                 b.grip()                                # nudges kept: the lift goes straight up from here
                 view_grip(s.get("parts", []))           # the 3D page carries the program's parts from here
                 print("    GRIP OK")
-            else:
+            elif s.get("gripper") == "release":         # release (load() keeps no other gripper steps)
                 b.release()                             # nudges kept: out/up go straight from here
                 view_release(s.get("parts", []))
                 print("    RELEASE done")
+            else:                                       # a step type this tool doesn't know: never a gripper action
+                print(f"    skipped: unknown step {s.get('name', '')!r} (no robot or gripper action)")
         except hb.GripLost as e:
             view_grip([], ok=False)
             print(f"    !! {e}. Fix it (TMflow: clear the message, restart the project) and run again with --from")

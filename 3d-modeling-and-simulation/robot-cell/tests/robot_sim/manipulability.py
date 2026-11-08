@@ -503,16 +503,27 @@ def find_moves(cell):
 def target_table(moves_path, thr=MU1_THR):
     d = json.loads(Path(moves_path).read_text(encoding="utf-8"))
     rows = []
+    prev_st = None
     for k, st in enumerate(d["steps"]):
+        if "joints" in st:                          # seconds to reach this point at the program's speeds (3D slider)
+            if prev_st is None:
+                dur = 0.0
+            elif st.get("move") == "ptp":
+                dur = max(abs(a - b) for a, b in zip(st["joints"], prev_st["joints"])) / 50.0   # 50 deg/s, v4_replay
+            else:
+                dur = float(np.linalg.norm(np.subtract(st["flange"][:3], prev_st["flange"][:3]))) / max(float(st.get("speed", 100)), 1)
+            st_dur, prev_st = dur, st
         if "joints" not in st:
             if st.get("gripper") in ("grip", "release") and rows:   # the gripper acts where the last move ended
                 rows[-1]["grip"] = st["gripper"]
                 rows[-1]["grip_parts"] = st.get("parts", [])
+            if st.get("spawn") and rows:            # a reload step (v8x2): these parts appear after this point
+                rows[-1]["spawn"] = list(st["spawn"])
             continue
         q = st["joints"]
         a = analyse(q)
         p = a["T"][:3, 3]
-        rows.append(dict(i=k, stage=st.get("stage"), name=st.get("name", ""), move=st.get("move", ""), q=q,
+        rows.append(dict(i=k, stage=st.get("stage"), name=st.get("name", ""), move=st.get("move", ""), q=q, dur=st_dur,
                          p=p.round(1).tolist(), z_tool=a["T"][:3, 2].round(3).tolist(),
                          v=[float(x) for x in a["v"]], w=[float(x) for x in a["w"]],
                          vfix=[float(x) for x in a["vfix"]], A_fix=a["A_fix_base"].tolist(),
@@ -776,7 +787,9 @@ def write_json(data, lay, targets, iso, thr, iso_key):
                             mu1_v=round(r["v"][0], 2), mu2_v=round(r["v"][1], 2), mu3_v=round(r["v"][2], 4),
                             mu1_w=round(r["w"][0], 2), mu1_vfix=round(r["vfix"][0], 2),
                             mu1_full=round(r["full"][0], 2), margin=round(r["margin"], 1), flag=r["flag"],
-                            **({"grip": r["grip"], "grip_parts": r.get("grip_parts", [])} if r.get("grip") else {})))
+                            q=[round(float(v), 3) for v in r["q"]], dur=round(r.get("dur", 0.0), 3),   # joints + seconds, 3D slider
+                            **({"grip": r["grip"], "grip_parts": r.get("grip_parts", [])} if r.get("grip") else {}),
+                            **({"spawn": r["spawn"]} if r.get("spawn") else {})))
         progs[station] = lst
     iv, ifc = iso
     ivg = (np.c_[iv, np.ones(len(iv))] @ Gi.T)[:, :3] if len(iv) else np.zeros((0, 3))

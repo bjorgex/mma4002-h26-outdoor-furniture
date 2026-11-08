@@ -1,0 +1,50 @@
+{
+ "cell": "v9",
+ "moves_file": "tests/v9_moves.json",
+ "cell_file": "tests/robot_sim/cell_v9.glb",
+ "n_moves": 122,
+ "free": true,
+ "hits": [],
+ "step": 2.0,
+ "geometry": "techman",
+ "generated": "2026-11-08 02:38:06",
+ "seconds": 15.0,
+ "inputs": {
+  "v9_moves.json": [
+   1794087321.517,
+   50596
+  ],
+  "cell_v9.glb": [
+   1794101785.322,
+   3570048
+  ],
+  "cell_layout_v9.json": [
+   1794101785.324,
+   13166
+  ],
+  "collision.py": [
+   1794081078.733,
+   22280
+  ],
+  "tm5_links.glb": [
+   1793406923.457,
+   3778684
+  ],
+  "tm5_kin.py": [
+   1793406923.464,
+   13724
+  ],
+  "kin_check.py": [
+   1793966843.028,
+   12403
+  ],
+  "tmflow_export.py": [
+   1794081470.405,
+   34096
+  ],
+  "collision_view.py": [
+   1794087748.26,
+   8333
+  ]
+ }
+}

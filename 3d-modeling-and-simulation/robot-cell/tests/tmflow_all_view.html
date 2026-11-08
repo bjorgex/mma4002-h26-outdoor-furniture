@@ -259,10 +259,24 @@ body { padding: 0; overflow: hidden; }
 #details[hidden] { display: none; }
 /* scenarios: dropdown + Run / Stop in the header, the script's own output in the bridge pane */
 .scen { display: inline-flex; gap: 6px; align-items: center; }
+.sliders { display: inline-flex; flex-direction: column; gap: 2px; }
+.sliders .srow { display: flex; gap: 6px; align-items: center; }
+.sliders .slab { width: 82px; color: #fff; font: 12.5px var(--tm-font); white-space: nowrap; }
+.sliders input[type=range] { width: 220px; }
+.tl-row { flex-basis: 100%; width: 100%; padding: 2px 0 4px; }
+.env { display: inline-flex; gap: 0; align-items: center; }
+.env a { text-decoration: none; cursor: pointer; border-radius: 0; opacity: .7; }
+.env a:first-child { border-radius: 3px 0 0 3px; } .env a:last-child { border-radius: 0 3px 3px 0; }
+.env a.on { opacity: 1; font-weight: 600; outline: 2px solid #ffd23a; outline-offset: -2px; }
+.env .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #888; margin-left: 4px; vertical-align: middle; }
+.scen .err { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffd0d0; font: 12px var(--tm-font); }
 .scen[hidden] { display: none; }
 .tm-skin .scen select { font: 12.5px var(--tm-font); background: #fff; color: var(--tm-ink); border: 1px solid #4a5d64; border-radius: 3px;
   padding: 2px 4px; max-width: 290px; }
 .tm-skin .btn:disabled { opacity: .4; cursor: default; border-color: #4a5d64; }
+body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step panel only in Configure mode */
+.scen .sctime { font: 12px var(--tm-font); color: #cfe0e6; white-space: nowrap; margin: 0 4px; }
+.scen .sctime b { color: #fff; }
 .scen .state { font: 600 12px var(--tm-font); padding: 1px 9px; border-radius: 3px; background: #4a5d64; color: #fff; white-space: nowrap; }
 .scen .state.running, .scen .state.starting { background: var(--tm-sel); color: var(--tm-ink); }
 .scen .state.finished { background: var(--tm-green); color: var(--tm-ink); }
@@ -326,20 +340,29 @@ body { padding: 0; overflow: hidden; }
       <h1 id="title">Mock TMflow</h1>
     </div>
     <div class="right">
-      <span class="scen" id="scen" hidden><select id="sc-sel" aria-label="Scenario"></select>
-        <button class="btn" id="sc-run">▶ Run</button><button class="btn" id="sc-stop" disabled>■ Stop</button>
-        <span class="state" id="sc-state">idle</span>
+      <span class="env" id="env" title="Same page, same presets, same scripts - Mock runs them against the simulated TMflow + robot on this PC, Real robot against the TM5-900 (10.0.12.101)">
+        <a id="env-mock" class="btn">Mock (sim)</a><a id="env-real" class="btn">Real robot <span class="dot" id="env-dot"></span></a><a id="env-cfg" class="btn"
+          title="Configure mode: shows the 'Adjust step' panel (pause the 3D preview on a step, nudge x y z / rx ry rz, Save = new taught pose for that step). Works with Mock and Real robot; off = the panel is hidden">⚙ Configure</a></span>
+      <span class="scen" id="scen" hidden><select id="sc-sel" aria-label="Scenario"></select><span class="sctime" id="sc-time"></span>
+        <button class="btn" id="sc-run">▶ Run</button><button class="btn" id="sc-pause" disabled
+          title="Pause the running program (the simulation's time stands still) - press again to continue">⏸ Pause</button><button class="btn" id="sc-stop" disabled>■ Stop</button><button class="btn" id="sc-reset"
+          title="Back to the start: stops a run, robot home, gripper open, every part (planks, frames, guide) at its start position, Move robot back to the start. On Real robot: only the 3D view">⟲ Reset</button><button class="btn" id="sc-video"
+          title="Export video: 6 s intro with the gripper path and manipulability map, then the chosen preset's program plays in the 3D view from start to end (no robot, no mock run, layers and axes hidden) at Robot speed, and is saved as a video file. Set the camera and Robot speed first; maximise the 3D pane for a sharper video. Click again to stop early">⏺ Export video</button>
+        <span class="state" id="sc-state">idle</span><span class="err" id="sc-err"></span>
         <button class="btn" id="rdk-reset" hidden title="Close RoboDK's station WITHOUT saving, reload its .rdk from disk, robot to home">⟲ Reset RoboDK</button>
         <span class="state" id="rdk-state" hidden></span></span>
-      <label class="speed" title="Simulation speed, × real time (0.25 to 50). Applies at once, also to a move in progress; once set here it wins over a scenario's own speed">Speed
-        <input type="range" id="sp-range" min="0" max="8" step="1" value="2" aria-label="Simulation speed">
-        <input type="number" id="sp-num" min="0.25" max="50" step="any" value="1" aria-label="Simulation speed, × real time"><b>×</b></label>
+      <span class="sliders">                          <!-- two rows, one under the other, sliders lined up -->
+        <label class="srow speed" title="× real time (0.25 to 50). Sets how fast a run plays, and how fast 'Move robot' may move the robot; applies at once">
+          <span class="slab">Robot speed</span>
+          <input type="range" id="sp-range" min="0" max="8" step="1" value="2" aria-label="Robot speed">
+          <input type="number" id="sp-num" min="0.25" max="50" step="any" value="1" aria-label="Robot speed, × real time"><b>×</b></label></span>
       <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
         <button class="btn" data-layout="cols">3 columns</button></span>
       <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)">Show:
         <button class="btn" data-pane="p-tm">TMflow</button><button class="btn" data-pane="p-py">Bridge</button><button class="btn" data-pane="p-sim">3D</button></span>
       <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
     </div>
+    <div class="tl-row" id="move-slot" hidden></div>      <!-- "Move robot" timeline, its own full-width line -->
     <div id="sc-load" role="progressbar" aria-label="Starting the scenario" hidden></div>
   </header>
 
@@ -388,9 +411,10 @@ body { padding: 0; overflow: hidden; }
     </div>
 
     <div class="panel pane" id="p-sim">
-      <div class="tm-bar"><b>Simulator</b><span>TM5-900 + v4 cell (robot_sim)</span><span class="sp"></span>
+      <div class="tm-bar"><b>Simulator</b><span id="sim-cellname">TM5-900 + cell (robot_sim)</span><span class="sp"></span>
         <button class="btn" data-cam="iso">3D</button><button class="btn" data-cam="top">Top</button>
         <button class="btn" data-cam="side">Side</button>
+        <button class="btn" data-axes="base" title="Show / hide the robot base frame's X Y Z (the Adjust panel's Base)">Base XYZ</button><button class="btn" data-axes="tool" title="Show / hide the tool frame's X Y Z at the fingertips (Z along the gripper, X the closing direction; the Adjust panel's Tool)">Tool XYZ</button>
         <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div id="sim"><div class="note" id="sim-note">loading the 3D view…</div>
@@ -582,6 +606,7 @@ function handlePanes(ev) {
       break;
     case 'state':
       lastState = ev;
+      setEnv(ev.real ? 'real' : 'mock'); if (ev.real) envDot(ev.link);
       kv($('#tm-kv'), [
         ['node', nodeLabel(ev.node || '—') + (ev.listening ? '  · listening' : '')],
         ['motion', ev.error ? `ERROR: ${ev.error}` : ev.busy ? `moving (${ev.queued} queued)` : 'idle'],
@@ -685,6 +710,7 @@ function progEvent(ev) {
     case 'done': prog.stepDone = Math.max(prog.stepDone, ev.n); break;
     case 'move': if (ev.n) { prog.n = ev.n; prog.nAt = ev.at; prog.mvT = performance.now(); prog.mvSecs = ev.secs; } break;
     case 'end': prog.state = ev.result === 'done' ? 'end' : 'fail'; if (ev.result === 'done') prog.shown = 1; break;
+    case 'hold': if (ev.on && ev.stage) prog.stepN = Math.max(prog.stepN, ev.stage); break;   // the reload stage (no moves)
     default: return;
   }
   progDraw();
@@ -723,10 +749,15 @@ function progDraw() {
   if (cur) parts.push(`<b>${word} ${cur} of ${nSteps}</b>`, esc(segs[cur - 1] ? segs[cur - 1].name : ''));
   if (prog.n) parts.push(byMoves ? `move ${prog.n} / ${prog.total}` : `move ${prog.n}`);
   parts.push(`${pct} %`);
-  if (prog.state === 'run' && prog.f0 !== null && prog.shown - prog.f0 > 0.02 && prog.sim > 2) {
-    parts.push(`~${mmss(prog.sim * (1 - prog.shown) / (prog.shown - prog.f0) / prog.fast)} left`);
-  } else if (prog.state === 'end') parts.push('done');
-  else if (prog.state === 'fail') parts.push('stopped');
+  // run time = robot time: page time x Robot speed (1x = real time; on the real robot always 1x), stands still while
+  // paused. Opened mid-run: counted from when this page opened.
+  const rt = `<b>${mmss(prog.sim)}</b>` + (prog.f0 > 0.01 ? ' (since this page opened)' : '');
+  if (prog.state === 'run') {
+    parts.push(`run time ${rt}`);
+    if (prog.f0 !== null && prog.shown - prog.f0 > 0.02 && prog.sim > 2)
+      parts.push(`~${mmss(prog.sim * (1 - prog.shown) / (prog.shown - prog.f0))} left (robot time)`);
+  } else if (prog.state === 'end') parts.push(`done in ${rt}`);
+  else if (prog.state === 'fail') parts.push(`stopped after ${rt}`);
   $('#prog-txt').innerHTML = parts.join(' · ');
 }
 let progLast = performance.now();
@@ -734,7 +765,7 @@ setInterval(() => {
   const now = performance.now(), dt = (now - progLast) / 1000; progLast = now;
   if (prog.state !== 'run') return;
   if (prog.f0 === null) prog.f0 = prog.shown;           // opened mid-run: time left from what we saw ourselves
-  prog.sim += Math.min(dt, 1) * prog.fast;               // simulated seconds (the slider scales the moves and waits)
+  if (!scPaused) prog.sim += Math.min(dt, 1) * prog.fast;   // robot seconds (the slider scales the moves and waits)
   progDraw();
 }, 200);
 
@@ -834,15 +865,67 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   sim = m.createSim($('#sim'), { log: (cls, text) => addLog($('#tm-log'), cls, text, lastState && lastState.at) });
   $('#sim-note').remove();
   document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => sim.setView(b.dataset.cam));
+  document.querySelectorAll('[data-axes]').forEach(b => { b.classList.toggle('on', sim.axesOn(b.dataset.axes));
+    b.onclick = () => b.classList.toggle('on', sim.setAxes(b.dataset.axes, !sim.axesOn(b.dataset.axes))); });
   window.__sim = sim;                                    // for checks from the console
 }).catch(e => { $('#sim-note').textContent = '3D view not loaded: ' + e.message; });
 
+// ---- environment: Mock (tmflow_mock.py serve, port 8090) | Real robot (demo_viewer.py view, port 8092) ---------
+// The same page and presets on both; the server it is served from decides where Run goes.
+const ENV_PORT = { mock: 8090, real: 8092 };
+let curEnv = null;
+['mock', 'real'].forEach(k => { $('#env-' + k).href = `${location.protocol}//${location.hostname}:${ENV_PORT[k]}${location.pathname}`; });
+// ---- Configure mode (page only, remembered): the Adjust step panel is shown only while it is on ----
+function setCfg(on) {
+  document.body.classList.toggle('cfg', on); $('#env-cfg').classList.toggle('on', on);
+  try { localStorage.setItem('cfgMode', on ? '1' : '0'); } catch (e) { /* private window */ }
+}
+$('#env-cfg').onclick = () => setCfg(!document.body.classList.contains('cfg'));
+setCfg((() => { try { return localStorage.getItem('cfgMode') === '1'; } catch (e) { return false; } })());
+function setEnv(env) {
+  if (env === curEnv) return;
+  curEnv = env;
+  $('#env-mock').classList.toggle('on', env === 'mock'); $('#env-real').classList.toggle('on', env === 'real');
+  if (env === 'real') { $('#title').textContent = 'Real robot (TM5-900)'; document.title = 'Real robot · TM5-900'; }
+}
+function envDot(link) {                                 // real robot: its state stream (5891) is live
+  const d = $('#env-dot'); d.style.background = link ? '#3cc846' : '#e03030';
+  d.title = link ? 'robot connected (state stream live)' : 'no robot: state stream not reachable';
+}
+
 // ---- scenarios: dropdown + Run / Stop (server-side whitelist, tests/scenarios.json) -----------------------
 const SC_TEXT = { idle: 'idle', starting: 'loading station…', running: 'running…', finished: 'finished ✓', failed: 'failed ✗', stopped: 'stopped' };
+// a script's hold (v8x2's reload step: Steps.hold in tmflow_mock.py): the robot waits at Home until Resume here - on the
+// mock AND the real-robot viewer (POST /hold/resume); the Pause button turns into that Resume while it lasts
+let hold = null;
+function holdEvent(ev) {
+  hold = ev.on ? ev : null;
+  if (hold) {
+    banner('grip', `Stage ${ev.stage || ''} · waiting`, hold.msg || 'Waiting - press Resume', 'the robot waits at Home');
+    talk('head', '', `HOLD: ${hold.msg || 'waiting'} (Resume button)`, ev.at);
+  } else talk('head', '', 'resumed: the program carries on', ev.at);
+  if (lastSc.state) scState(lastSc);
+}
 function scState(s) {
   const el = $('#sc-state'); el.className = 'state ' + s.state;
   el.textContent = (SC_TEXT[s.state] || s.state) + (s.state === 'failed' && s.code !== null && s.code !== undefined ? ` (exit ${s.code})` : '');
   el.title = s.name || '';
+  const er = $('#sc-err'); er.textContent = s.state === 'failed' && s.error ? s.error : ''; er.title = er.textContent;
+  scPaused = !!s.paused && s.state === 'running';
+  const pb = $('#sc-pause');
+  pb.disabled = s.state !== 'running' || s.env === 'real';
+  pb.textContent = scPaused ? '▶ Resume' : '⏸ Pause';
+  pb.title = s.env === 'real' ? 'Pause is only in the mock - on the real robot use Pause on the robot stick'
+    : 'Pause the running program (the simulation\'s time stands still) - press again to continue';
+  if (scPaused) { el.textContent = 'paused ⏸'; el.className = 'state starting'; }
+  if (s.state !== 'running') hold = null;
+  if (hold) {                                            // Resume = the hold's go-ahead (also on the real robot)
+    pb.disabled = false; pb.textContent = '▶ Resume'; pb.title = (hold.msg || 'Waiting') + ' - the robot waits at Home';
+    el.textContent = '⏸ ' + (hold.msg || 'waiting - press Resume'); el.className = 'state starting'; el.title = hold.msg || '';
+  }
+  if (s.state === 'finished' && lastSc.state !== 'finished') scTimesReload();   // the run just saved its time
+  lastSc = s; previewUI();
+  if (s.env) setEnv(s.env);
   const busy = s.state === 'running' || s.state === 'starting';   // starting: RoboDK loads the scenario's station
   $('#sc-sel').disabled = $('#sc-run').disabled = busy || rdkBusy; $('#sc-stop').disabled = !busy;
   scBusy = busy; $('#rdk-reset').disabled = busy || rdkBusy;
@@ -897,13 +980,134 @@ async function scPost(path, body) {
 }
 fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
   if (!j) return;                                        // a mock from before the scenarios: no controls
-  $('#sc-sel').innerHTML = j.scenarios.map(s => `<option value="${esc(s.name)}">${esc(s.label || s.name)}</option>`).join('');
-  try { const last = localStorage.getItem('tm-all-scenario'); if (j.scenarios.some(s => s.name === last)) $('#sc-sel').value = last; } catch (e) {}
+  // grouped (scenarios.json "group"), groups and presets alphabetical; always starts on the "default" one (the newest)
+  const groups = {};
+  j.scenarios.forEach(s => (groups[s.group || 'Other'] ||= []).push(s));
+  $('#sc-sel').innerHTML = Object.keys(groups).sort().map(g => `<optgroup label="${esc(g)}">` +
+    groups[g].sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name, undefined, { numeric: true }))
+      .map(s => `<option value="${esc(s.name)}">${esc(s.label || s.name)}</option>`).join('') + '</optgroup>').join('');
+  const def = j.scenarios.find(s => s.default) || j.scenarios[j.scenarios.length - 1];
+  if (def) $('#sc-sel').value = def.name;
+  scTimes = Object.fromEntries(j.scenarios.map(s => [s.name, s.times || {}])); scList = j.scenarios; scTimeShow();
   $('#rdk-reset').hidden = !j.robodk;                    // only with serve --robodk
   rdkBusy = !!j.rdk_busy; $('#scen').hidden = false; scState(j); spShow(j.fast);
 }).catch(() => {});
-$('#sc-run').onclick = () => { try { localStorage.setItem('tm-all-scenario', $('#sc-sel').value); } catch (e) {} loadSet('starting'); scPost('/scenario/run', { name: $('#sc-sel').value }); };
+// ---- assembly time of the chosen preset: estimate + the last measured runs (server: tmflow_mock.preset_times) ----
+let scTimes = {}, scList = [];
+function scTimeShow() {
+  const t = scTimes[$('#sc-sel').value] || {}, el = $('#sc-time'), parts = [];
+  if (t.real != null) parts.push(`real robot <b>${mmss(t.real)}</b>`);
+  if (t.est != null) parts.push(`est. <b>${mmss(t.est)}</b>`);
+  if (t.mock != null) parts.push(`last mock ${mmss(t.mock)}`);
+  el.innerHTML = parts.length ? '⏱ ' + parts.join(' · ') : '';
+  el.title = [
+    'Assembly time of this preset, robot time at 1x (real speed):',
+    t.real != null ? `real robot: last finished run on the TM5 (${t.real_at}), wall clock` : 'real robot: not run to the end yet',
+    t.est != null ? 'est.: the program moves with TMflow ramps + Hand-E GRIP 4 s / RELEASE 3 s + waits (no blending)' : '',
+    t.mock != null ? `last mock: simulated run (${t.mock_at})` : ''].filter(Boolean).join('\n');
+}
+$('#sc-sel').addEventListener('change', scTimeShow);
+function scTimesReload() {
+  fetch('/scenarios').then(r => r.ok ? r.json() : null).then(j => {
+    if (j) { scTimes = Object.fromEntries(j.scenarios.map(s => [s.name, s.times || {}])); scTimeShow(); }
+  }).catch(() => {});
+}
+$('#sc-run').onclick = () => { loadSet('starting'); scPost('/scenario/run', { name: $('#sc-sel').value }); };
 $('#sc-stop').onclick = () => scPost('/scenario/stop');
+let scPaused = false, lastSc = {}, pvState = { mode: 'off' };
+// the 3D preview (Move robot timeline) when no program runs: paused at the point you chose -> Resume plays on
+function previewUI() {
+  if (lastSc.state === 'running' || lastSc.state === 'starting') return;          // a real run owns the buttons
+  const pb = $('#sc-pause'), el = $('#sc-state');
+  if (!pvState || pvState.mode === 'off') { pb.disabled = lastSc.state !== 'running'; return; }
+  pb.disabled = false;
+  const go = pvState.mode === 'playing' || pvState.mode === 'moving';
+  pb.textContent = go ? '⏸ Pause' : '▶ Resume';
+  pb.title = go ? 'Pause the 3D playback' : (pvState.mode === 'end' ? 'Play the program again from the start (3D)' : 'Play on from here to the end (3D, at Robot speed)');
+  el.className = 'state ' + (go ? 'running' : 'starting');
+  el.textContent = (pvState.mode === 'playing' ? 'playing ▶ ' : pvState.mode === 'moving' ? 'moving ' : pvState.mode === 'end' ? 'at the end ' : 'paused ⏸ ')
+    + `${pvState.step}/${pvState.of}`;
+  el.title = pvState.name || '';
+}
+const pvHook = setInterval(() => {                       // hook into the 3D panel once it has loaded
+  const m = sim && sim.manip;
+  if (!m || !m.onPreviewState) return;
+  clearInterval(pvHook);
+  m.onPreviewState(st => { pvState = st; if (st.mode === 'off') scState(lastSc.state ? lastSc : { state: 'idle' }); else previewUI(); });
+}, 300);
+// ---- Export video: the chosen preset's program, played in the 3D view (the timeline playback, at Robot speed, no
+// run), recorded from the 3D canvas with a caption (preset, step, speed) and saved as .mp4 (or .webm if the browser
+// can't record mp4) ----
+let rec = null;
+async function exportVideo() {
+  if (rec) { rec.stop(); return; }                       // second click: stop early (what is recorded is saved)
+  const btn = $('#sc-video'), m = sim && sim.manip;
+  if (!m || !sim.useCell) { alert('The 3D view is not ready yet.'); return; }
+  if (lastSc.state === 'running') { alert('Stop the run first: the export plays the program in the 3D view itself.'); return; }
+  const sc = scList.find(x => x.name === $('#sc-sel').value) || {};
+  const speed = +$('#sp-num').value || 1;
+  btn.disabled = true; btn.textContent = 'loading…';
+  try { await sim.useCell(sc.cell || 'cell'); } catch (e) { btn.disabled = false; btn.textContent = '⏺ Export video'; alert(e.message); return; }
+  await new Promise(r => setTimeout(r, 800));            // the timeline picks up the cell's program
+  m.resetMove(); m.jump(0);
+  const axesWas = { base: sim.axesOn('base'), tool: sim.axesOn('tool') };
+  sim.setAxes('base', false); sim.setAxes('tool', false);   // just the cell and the robot in the video
+  m.videoLayers('show');                                 // the intro: gripper path + manipulability map, to explain
+  let phase = 'intro';
+  await new Promise(r => setTimeout(r, 300));
+  const src = sim.canvas, out = document.createElement('canvas');
+  out.width = src.width - (src.width % 2); out.height = src.height - (src.height % 2);
+  const ctx = out.getContext('2d'), fs = Math.max(14, Math.round(out.height / 34));
+  sim.onFrame(c => {                                     // right after each render: the frame + the caption
+    ctx.drawImage(c, 0, 0, out.width, out.height);
+    const lines = phase === 'intro'
+      ? [`${sc.label || sc.name || ''}`, 'Gripper path (points coloured by μ1) and manipulability map', 'the whole program, before it runs']
+      : (ps => [`${sc.label || sc.name || ''}`, ps && ps.of ? `step ${ps.step}/${ps.of}  ${ps.name || ''}` : '', `${speed}× real time`])(m.previewState);
+    ctx.font = `600 ${fs}px Arial, sans-serif`;
+    const w = Math.max(...lines.map(t => ctx.measureText(t).width)) + fs, h = lines.length * fs * 1.35 + fs * 0.6;
+    ctx.fillStyle = 'rgba(18,20,19,.72)'; ctx.fillRect(fs * 0.6, out.height - h - fs * 0.6, w, h);
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((t, i) => ctx.fillText(t, fs * 1.1, out.height - h - fs * 0.6 + fs * 1.25 + i * fs * 1.35));
+  });
+  const mime = ['video/mp4;codecs=avc1.640028', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  if (!mime) { sim.onFrame(null); btn.disabled = false; btn.textContent = '⏺ Export video'; alert('This browser cannot record video (MediaRecorder).'); return; }
+  const chunks = [], r = new MediaRecorder(out.captureStream(30), { mimeType: mime, videoBitsPerSecond: 10e6 });
+  r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  let watch = null;
+  r.onstop = () => {
+    clearInterval(watch); sim.onFrame(null); rec = null;
+    m.videoLayers('restore'); sim.setAxes('base', axesWas.base); sim.setAxes('tool', axesWas.tool);
+    btn.disabled = false; btn.textContent = '⏺ Export video'; btn.classList.remove('on');
+    const blob = new Blob(chunks, { type: mime.split(';')[0] }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `${sc.name || 'sim'}_${speed}x.${mime.includes('mp4') ? 'mp4' : 'webm'}`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    addLog($('#tm-log'), 'ev', `video saved: ${a.download} (${(blob.size / 1e6).toFixed(1)} MB)`);
+  };
+  rec = r; r.start(1000);
+  btn.disabled = false; btn.classList.add('on'); btn.textContent = '■ Stop recording';
+  await new Promise(r => setTimeout(r, 9000));           // intro with the path and the map (the map renders slowly:
+                                                         // fewer frames, so it is shorter in the video)
+  if (rec !== r) return;                                 // stopped during the intro
+  m.videoLayers('hide'); phase = 'run';
+  await new Promise(r => setTimeout(r, 400));
+  m.play();
+  let endAt = null;
+  watch = setInterval(() => {                            // at the end of the program: 1.5 s more, then save
+    if (pvState && pvState.mode === 'end') { endAt = endAt || performance.now(); if (performance.now() - endAt > 1500) r.stop(); }
+    else endAt = null;
+  }, 200);
+}
+$('#sc-video').onclick = exportVideo;
+$('#sc-reset').onclick = () => {                         // back to the start: the 3D preview ends, then the server resets
+  try { sim?.manip?.resetMove?.(); } catch (e) {}
+  scPost('/scenario/reset');
+};
+$('#sc-pause').onclick = () => {
+  if (hold && lastSc.state === 'running') { hold = null; return scPost('/hold/resume', {}); }   // the reload hold
+  if (lastSc.state === 'running') return scPost('/pause', { paused: !scPaused });   // a real run: the mock's clock
+  const m = sim && sim.manip; if (!m || !pvState || pvState.mode === 'off') return;
+  if (pvState.mode === 'playing' || pvState.mode === 'moving') m.pause(); else m.play();   // the 3D playback
+};
 // ---- speed: slider steps 0.25 … 50 (log), the number box takes any value in between ------------------------
 const SP = [0.25, 0.5, 1, 2, 3, 5, 10, 20, 50];
 let spHeld = false;                                      // dragging / typing: the stream doesn't move the controls
@@ -1062,9 +1266,12 @@ loadDiagram().then(() => {
     const ev = JSON.parse(m.data);
     if (ev.t === 'reset') resetPage(ev);
     else if (ev.t === 'scenario') scState(ev);
+    if (ev.t === 'reset' && ev.cell) $('#sim-cellname').textContent = `TM5-900 + ${{ cell: 'v4', cell_v5: 'v5', cell_v6: 'v6', cell_v8: 'v8', cell_v8x2: 'v8 · 2 benches', cell_v9: 'v9', cell_v9x2: 'v9 · 2 benches' }[ev.cell] || ev.cell} cell (robot_sim)`;
     else if (ev.t === 'out') outLine(ev.line);
     else if (ev.t === 'rdk') rdkState(ev.state, ev.msg);
     if ('fast' in ev && /^(speed|state|scenario|hello)$/.test(ev.t)) spShow(ev.fast);
+    if (ev.t === 'hold') holdEvent(ev);
+    else if (ev.t === 'reset' || ev.t === 'run') hold = null;
     handlePanes(ev); handleSteps(ev); plain(ev); progEvent(ev);
     if (sim) sim.handle(ev);
     loadProgress(ev);

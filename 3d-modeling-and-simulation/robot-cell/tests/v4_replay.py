@@ -32,6 +32,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
@@ -47,7 +48,11 @@ STEPS = {"guide_to_base_a": ("guide B-A",), "planks_into_frame1": ("plank",), "g
          "bench_to_amr": ("bench", "back to middle"),    # "Home" stays in the stage it's in
          "inner_half_to_base_a": ("inner",), "outer_half_to_base_a": ("outer",),          # v6
          "small_half_to_finish": ("guide small",), "big_half_to_finish": ("guide big",),   # v8 (JigV3 halves)
-         "small_half_back": ("small half",), "big_half_back": ("big half",)}
+         "small_half_back": ("small half",), "big_half_back": ("big half",),
+         "reload_jig_for_bench_2": (), "bench_2_onto_bench_1": ("bench stack",)}             # v8x2 (moves file only)
+STEPS.update({f"bench_2_{k}": v for k, v in list(STEPS.items()) if k in (
+    "planks_into_frame1", "small_half_to_finish", "big_half_to_finish", "frame1_into_frame2", "small_half_back",
+    "big_half_back")})
 CELLS = {"v4": ("Bench V1 cell v4", ["guide_to_base_a", "planks_into_frame1", "guide_back_to_base_b",
                                      "frame1_into_frame2", "inner_half_to_pad", "outer_half_to_pad", "bench_to_amr"]),
          "v5": ("Bench V1 cell v5", ["planks_into_frame1", "guide_back_to_base_b", "frame1_into_frame2",
@@ -58,7 +63,23 @@ CELLS = {"v4": ("Bench V1 cell v4", ["guide_to_base_a", "planks_into_frame1", "g
          # same order as bench_cell_v8.STAGES: the guide out before the bench, the big half parked on the AMR
          "v8": ("Bench V1 cell v8", ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish",
                                      "frame1_into_frame2", "small_half_back", "big_half_back",
-                                     "bench_to_amr"])}      # the halves straight back onto the start base
+                                     "bench_to_amr"]),      # the halves straight back onto the start base
+         # v8x2: two benches (bench_cell_v8x2.py): v8's stages 1-7, a reload hold (8), the same 7 stages with bench 2's
+         # parts ("... #2"), the last one onto bench 1 (stacked on the AMR)
+         "v8x2": ("Bench V1 cell v8x2", ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish",
+                                         "frame1_into_frame2", "small_half_back", "big_half_back", "bench_to_amr",
+                                         "reload_jig_for_bench_2",
+                                         "bench_2_planks_into_frame1", "bench_2_small_half_to_finish",
+                                         "bench_2_big_half_to_finish", "bench_2_frame1_into_frame2",
+                                         "bench_2_small_half_back", "bench_2_big_half_back", "bench_2_onto_bench_1"])}
+# v9 (bench_cell_v9.py, Guide split V6): v8 with the big half out first (slid towards the robot), then the small half
+STEPS.update({"big_half_slide_out": ("big half",), "small_half_slide_out": ("small half",)})
+CELLS["v9"] = ("Bench V1 cell v9", ["planks_into_frame1", "small_half_to_finish", "big_half_to_finish",
+                                    "frame1_into_frame2", "big_half_slide_out", "small_half_slide_out", "bench_to_amr"])
+# v9x2 (bench_cell_v9x2.py): v9's stages 1-7, the reload hold (8), bench 2's 7 stages (v9's 5/6), onto bench 1
+STEPS.update({f"bench_2_{k}": STEPS[k] for k in ("big_half_slide_out", "small_half_slide_out")})
+CELLS["v9x2"] = ("Bench V1 cell v9x2", CELLS["v9"][1] + ["reload_jig_for_bench_2"] +
+                 [f"bench_2_{k}" for k in CELLS["v9"][1][:-1]] + ["bench_2_onto_bench_1"])
 CELL = MOVES = STATION = None                           # set by use(): --cell
 STAGE = []                                              # (stage, move name prefix)
 
@@ -180,6 +201,25 @@ def announce():
         steps.q.join()
 
 
+def reload(s):
+    """The reload hold (v8x2 stage 8): the next bench's parts appear in the 3D view ("spawn" event), then the robot
+    stands at Home until people have reloaded the jig and pressed Resume on the page - under the page's Run (mock
+    tmflow_mock.py serve / real robot demo_viewer.py view) a "hold" event + polling GET /hold (Steps.hold: the page's
+    auto-Enter can't skip it); the Listen node session is kept alive meanwhile. From a terminal: Enter."""
+    msg = f"Reload the jig for bench {s['reload'].lstrip('#')}, then press Resume"
+    print(f"    HOLD: {s.get('name', 'reload')} - {len(s.get('spawn', {}))} parts to put in (frames, pieces, planks)")
+    steps = getattr(sys.getprofile(), "__self__", None)
+    if hasattr(steps, "hold"):
+        steps.send("spawn", parts=list(s.get("spawn", {})), stage=s["stage"])
+        print(f"    {msg} (the page's Resume button)", flush=True)
+        keep = (lambda: b.r.status("00")) if b is not None else None   # the Listen node: a status poll now and then
+        if steps.hold(msg, keepalive=keep, stage=s["stage"]):
+            print("    resumed on the page")
+            return
+        print("    !! this view server has no /hold (restart it): falling back to Enter")
+    input(f"    {msg.replace('press Resume', 'press Enter')} ")
+
+
 def play(stage):
     """One stage: the moves between two gripper actions go out as one queue, then GRIP or RELEASE."""
     batch = []
@@ -190,6 +230,13 @@ def play(stage):
         if batch:
             b.r.move(*batch)
             batch = []
+        if "reload" in s:                                # bench_cell_v8 Program.reload: people reload, the robot waits
+            reload(s)
+            continue
+        if "wait_ms" in s:                               # bench_cell_v8 Program.wait: the arm stands still (people help)
+            print(f"    wait {s['wait_ms'] / 1000:.0f} s: {s.get('name', '')}")
+            time.sleep(s["wait_ms"] / 1000)
+            continue
         if s["gripper"] == "grip":
             print(f"    grip: {', '.join(s['parts'][:3])}{' ...' if len(s['parts']) > 3 else ''}  (EGP DO 0 = {s['do0']})")
             carry("grip", s["parts"])
@@ -262,13 +309,73 @@ def small_half_back():
 
 
 def big_half_back():
-    """big guide half: lifted, turned 45 deg, slid out from between the frames, straight onto the start base (B)  (v8)"""
+    """big guide half: slanted in past frame 1, lifted to mid bench, turned 30 deg (snaps it off), 5 s wait, out -> start base (B)  (v8)"""
     play(stage_of("big_half_back"))
+
+
+def big_half_slide_out():
+    """big guide half (split V6) first: tab grip, lifted along the planks, slid out towards the robot, sideways under frame 1 -> start base (B)  (v9)"""
+    play(stage_of("big_half_slide_out"))
+
+
+def small_half_slide_out():
+    """small guide half (split V6): lifted off the bosses, slid out towards the AMR -> start base (B), inside the big half  (v9)"""
+    play(stage_of("small_half_slide_out"))
 
 
 def bench_to_amr():
     """finished bench: re-gripped at frame 1's foot, lifted out of base B onto the AMR plate, back home"""
     play(stage_of("bench_to_amr"))
+
+
+def reload_jig_for_bench_2():
+    """reload: people put bench 2's frames, interface pieces and planks in; the robot waits at Home for Resume  (v8x2)"""
+    play(stage_of("reload_jig_for_bench_2"))
+
+
+def bench_2_planks_into_frame1():
+    """bench 2: planks (#2) from the rack through the guide into frame 1 #2  (v8x2)"""
+    play(stage_of("bench_2_planks_into_frame1"))
+
+
+def bench_2_small_half_to_finish():
+    """bench 2: small guide half lifted off the planks -> finish base  (v8x2)"""
+    play(stage_of("bench_2_small_half_to_finish"))
+
+
+def bench_2_big_half_to_finish():
+    """bench 2: big guide half lifted clear, turned 45 deg -> finish base  (v8x2)"""
+    play(stage_of("bench_2_big_half_to_finish"))
+
+
+def bench_2_frame1_into_frame2():
+    """bench 2: frame 1 #2 + planks turned over into frame 2 #2  (v8x2)"""
+    play(stage_of("bench_2_frame1_into_frame2"))
+
+
+def bench_2_small_half_back():
+    """bench 2: small guide half back onto the start base  (v8x2)"""
+    play(stage_of("bench_2_small_half_back"))
+
+
+def bench_2_big_half_back():
+    """bench 2: big guide half out of the bench (snap turn, 5 s wait) -> start base  (v8x2)"""
+    play(stage_of("bench_2_big_half_back"))
+
+
+def bench_2_big_half_slide_out():
+    """bench 2: big guide half (split V6) slid out towards the robot, sideways under frame 1 #2 -> start base  (v9x2)"""
+    play(stage_of("bench_2_big_half_slide_out"))
+
+
+def bench_2_small_half_slide_out():
+    """bench 2: small guide half (split V6) slid out towards the AMR -> start base, inside the big half  (v9x2)"""
+    play(stage_of("bench_2_small_half_slide_out"))
+
+
+def bench_2_onto_bench_1():
+    """bench 2: gripped at frame 1 #2's backrest, turned up, set on top of bench 1 on the AMR, back home  (v8x2)"""
+    play(stage_of("bench_2_onto_bench_1"))
 
 
 def steps():
@@ -295,7 +402,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cache", nargs="?", choices=["cache", "derive"],
                     help=f"cache: read {PROGRAM} from RoboDK into <cell>_moves.json; derive: v5 from v4, no RoboDK")
-    ap.add_argument("--cell", choices=list(CELLS), default="v4", help="v4 (default), v5 (guide starts on base A), v6 (v5, halves back onto A) or v8 (Jig V5)")
+    ap.add_argument("--cell", choices=list(CELLS), default="v4", help="v4 (default), v5 (guide starts on base A), v6 (v5, halves back onto A), v8 (Jig V5) or "
+                                                               "v8x2 (v8 twice, bench 2 stacked on bench 1), v9 / v9x2 (Guide split V6)")
     ap.add_argument("--speed", type=float, default=1, help="programmed speeds times this (default 1)")
     ap.add_argument("--list", action="store_true", help="print the stages and exit")
     a = ap.parse_args()

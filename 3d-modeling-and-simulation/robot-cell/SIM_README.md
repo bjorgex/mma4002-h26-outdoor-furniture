@@ -63,8 +63,9 @@ when it is active. In a new terminal, activate it again with `.venv\Scripts\Acti
    It is ready when it prints `Listen1: Listen node waiting on 127.0.0.1:5890`. Leave this terminal
    open; **Ctrl+C** stops the simulator.
 2. Open **http://127.0.0.1:8090/all** in your browser.
-3. Pick the scenario **"Bench V1 v8: full assembly"** (`v8-full`) and press **Run**. Use
-   `v8-full-fast` for a quicker run.
+3. Pick the scenario **"Bench V1 v8: full assembly"** (`v8-full`) and press **Run**. It runs at real speed
+   (1×); turn up **Robot speed** for a quicker run. The progress bar shows the **run time** (robot time, also
+   when sped up) and "done in m:ss" at the end.
 4. What you see on the page:
    - the robot moving in the 3D cell, with a progress bar per stage
    - the **Speed** slider, which changes the speed while the program runs

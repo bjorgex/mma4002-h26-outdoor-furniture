@@ -37,6 +37,8 @@ Checks, as bench_cell_v7.py does them in RoboDK:
               moves after a grip and the last two before the release, carried parts may only touch what they
               already touch at the grip / release pose (sliding out of a slot, setting down); anything new is a
               hit (2026-11-06: the old blanket skip hid a bench lifted up through the guide).
+    spawn       a step {"spawn": {part: pose, ...}} (v8x2's reload: bench 2's parts) - those parts are absent before it
+              (not in the parts check at all) and stand at their start poses in the cell from it on.
 Exit code 1 if anything collides.
 """
 import argparse
@@ -263,6 +265,23 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
                     "EGP": trimesh.util.concatenate([box(lo, hi) for lo, hi in egp])})
     part_mesh = {n: m for n, (k, m) in cell.items() if k == "part"}
     world = _manager(part_mesh) if parts else None
+    spawn_at, k_ = {}, -1                                    # parts that appear after move k (a reload step)
+    for s in moves["steps"]:
+        if "move" in s:
+            k_ += 1
+        elif s.get("spawn"):
+            spawn_at.setdefault(k_, []).extend(n for n in s["spawn"] if n in part_mesh)
+    absent = {n for v in spawn_at.values() for n in v}
+
+    def spawn(k):
+        for n in spawn_at.get(k, []):
+            if n in absent:
+                absent.discard(n)
+                if world is not None:
+                    world.add_object(n, part_mesh[n], transform=pose[n])
+    if world is not None:
+        for n in absent:
+            world.remove_object(n)
     arm = _manager({**{f"link_{i}": l for i, l in enumerate(robot_meshes()) if i >= 3},     # for the clearance:
                     "EGP": trimesh.util.concatenate([box(lo, hi) for lo, hi in egp])})     # the base stays put
     pose = {n: np.eye(4) for n in part_mesh}             # part transform (applied to its start mesh)
@@ -275,6 +294,7 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
     gap_now = None
     anchor_after = set()                                     # held-part contacts at the last grip pose
     rel_cache = {}
+    spawn(-1)
 
     def contacts(F):
         """(held part, other) contact pairs with the held parts at gripper pose F."""
@@ -361,6 +381,7 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
                 elif s["gripper"] == "release":
                     last_released = set(held)
                     held, rel, held_mgr = [], {}, None
+        spawn(mi)
     return hits
 
 

@@ -22,7 +22,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 export async function addCollisionLayer({ THREE, scene, el, base = "/sim/", log = () => {}, extra = {},
                                           pos = "right:10px;top:10px" }) {
   const st = load();
-  let data = null, cell = null, move = null, pinned = null, poll = null, loggedFor = null, gen = 0;
+  let data = null, cell = null, move = null, pinned = null, poll = null, loggedFor = null, gen = 0, onPick = null;
 
   // ---- tint: each mesh gets a red clone of its material, the original back on untint -----------------------
   const tinted = new Map();                          // mesh -> original material
@@ -89,7 +89,7 @@ export async function addCollisionLayer({ THREE, scene, el, base = "/sim/", log 
       <div data-k="list"></div>
       <div style="color:#666;font-size:11px;margin-top:4px">From collision.py (robot links + gripper vs fixtures and parts,
         carried parts vs parts, fixtures and the arm), per move of the program the mock plays. Click a hit to pin its
-        objects red; the live view can't jump back to that move.</div>
+        objects red and jump the 3D view (timeline) to that move; click again to unpin.</div>
     </div>`;
   el.appendChild(box);
   const q = k => box.querySelector(`[data-k="${k}"]`);
@@ -103,6 +103,7 @@ export async function addCollisionLayer({ THREE, scene, el, base = "/sim/", log 
     if (!d) return;
     const h = data.hits[+d.dataset.i];
     pinned = pinned === h ? null : h;
+    if (pinned) try { onPick?.(h.move); } catch (err) { log("err", "jump to the collision: " + err.message); }
     redraw(); panel();
   });
 
@@ -169,6 +170,7 @@ export async function addCollisionLayer({ THREE, scene, el, base = "/sim/", log 
       redraw(); loggedFor = n; panel();
     },
     reset() { move = null; pinned = null; redraw(); panel(); },
+    set onPick(cb) { onPick = cb; },                  // a hit clicked in the list: cb(its move number) - the timeline jumps there
     refresh: fetchData,
     get data() { return data; }, state: st,
   };
