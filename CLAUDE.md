@@ -32,8 +32,6 @@ plank is procedurally generated three.js geometry, traced from the real CAD (see
 - Sizes in the configurator match the CAD demonstrator model as modelled (see `BENCH_LEN`,
   `FRAME_DEPTH` etc.) — deliberately not rescaled to a real-world spec; a `STAGE` constant scales
   only the environment/camera/lights to suit, not the frame or planks.
-- `index_assignment1_old.html` is an archived snapshot of the earlier cast-iron, ten-side-design,
-  plank-angle-slider configurator, kept for reference.
 
 ## `3d-modeling-and-simulation/` — CAD, concept models, and the RoboDK cell
 

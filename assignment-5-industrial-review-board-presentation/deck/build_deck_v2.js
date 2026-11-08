@@ -3,7 +3,7 @@
 // lean numbers -> simulation (the wow factor) -> real robot video -> bridge + gripper + changing a step ->
 // vision: an AI improving a whole factory in simulation -> what we learned / next.
 // Build:  cd assignment-5-industrial-review-board-presentation/deck && node build_deck_v2.js
-// Output: ../MMA4002_IRB_Outdoor_Bench_v2.pptx   (the first deck, build_deck.js, is kept)
+// Output: ../MMA4002_IRB_Outdoor_Bench_v2.pptx
 // Real robot video: put it at media/real_robot.mp4 (+ optional media/real_robot_poster.jpg) and rebuild; until
 // then slide 7 shows a still from the lab.
 

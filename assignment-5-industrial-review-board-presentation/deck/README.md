@@ -1,12 +1,12 @@
 # IRB deck: build and sources
 
-The Industrial Review Board deck (`../MMA4002_IRB_Outdoor_Bench.pptx`) is generated. Edit it in PowerPoint
-for small changes. For structural changes, edit `build_deck.js` and rebuild:
+The Industrial Review Board deck (`../MMA4002_IRB_Outdoor_Bench_v2.pptx`) is generated. Edit it in PowerPoint
+for small changes. For structural changes, edit `build_deck_v2.js` and rebuild:
 
 ```
 cd assignment-5-industrial-review-board-presentation/deck
-npm install          # pptxgenjs, react-icons, sharp (node_modules is gitignored)
-node build_deck.js   # writes ../MMA4002_IRB_Outdoor_Bench.pptx and applies the theme (apply_theme.js)
+npm install            # pptxgenjs, react-icons, sharp (node_modules is gitignored)
+node build_deck_v2.js  # writes ../MMA4002_IRB_Outdoor_Bench_v2.pptx and applies the theme (apply_theme.js)
 ```
 
 Rebuilding overwrites the .pptx, so edits made in PowerPoint are lost. Each slide has speaker notes

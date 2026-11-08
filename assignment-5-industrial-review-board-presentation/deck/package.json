@@ -1,9 +1,9 @@
 {
   "name": "irb-deck",
   "private": true,
-  "description": "Builds the Industrial Review Board deck (Assignment 5): npm install, then node build_deck.js",
+  "description": "Builds the Industrial Review Board deck (Assignment 5): npm install, then node build_deck_v2.js",
   "scripts": {
-    "build": "node build_deck.js"
+    "build": "node build_deck_v2.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",

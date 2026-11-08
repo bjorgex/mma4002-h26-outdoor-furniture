@@ -15,7 +15,6 @@ frame itself.
 | File | What it is |
 |---|---|
 | `index.html` | The whole site. One file — page, configurator and QR code. No build step, no dependencies to install. |
-| `index_assignment1_old.html` | Archived snapshot of the earlier cast-iron, ten-side-design configurator, kept for reference. |
 
 The page pulls two things from the open web at runtime: **three.js r128** from
 cdnjs and **Archivo / IBM Plex Mono** from Google Fonts. Everything else,
