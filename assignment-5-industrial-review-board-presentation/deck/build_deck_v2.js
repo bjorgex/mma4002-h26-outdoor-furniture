@@ -181,7 +181,6 @@ function cadBench(slide, x, y, h, tag) {
   let s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "Opening" });
   kicker(s, "MMA4002 DESIGN FOR AUTOMATED MANUFACTURING", M, 1.3, 7.6, C.accent3);
   s.addText("Configure it online, build it with a cobot", { placeholder: "title" });
-  s.addText("An outdoor bench: from the customer's web order to a robot cell we designed and tested in our own simulator", { placeholder: "body" });
   text(s, "Bjørge Skjelbreid Djuve · John Isak Hammer", { x: M, y: 5.75, w: 7, h: 0.35, fontSize: 16, bold: true, color: C.background1 });
   text(s, "NTNU Ålesund · L167 · 9 November 2026", { x: M, y: 6.15, w: 4.6, h: 0.35, fontSize: 14, color: C.accent5 });
   text(s, [{ text: SITE, options: { color: C.accent3, bold: true } }],
@@ -206,8 +205,7 @@ function cadBench(slide, x, y, h, tag) {
    [I.cart, "Order", "A quote request straight from the page. Production knows the variant before anything is cut."]].forEach((r, i) => {
     const y = 1.6 + i * 1.7;
     iconDot(s, r[0], rx, y, 0.7, i === 2 ? C.accent1 : C.accent2, "web " + i);
-    text(s, r[1], { x: rx + 0.95, y: y - 0.02, w: rw - 0.95, h: 0.4, fontSize: 20, bold: true });
-    text(s, r[2], { x: rx + 0.95, y: y + 0.45, w: rw - 0.95, h: 1.0, fontSize: 15, color: C.text2 });
+    text(s, r[1], { x: rx + 0.95, y: y + 0.12, w: rw - 0.95, h: 0.45, fontSize: 22, bold: true });
   });
   s.addNotes("Suggested speaker: John Isak. Invite the board to scan the QR code and try it while you talk.\n\n" +
     "The paying customer is a municipality or a company. On our website they choose backrest or not and the mark on the top plank, see the bench in 3D, and send an order. The order tells production exactly which variant to build before anything is cut.");
@@ -235,10 +233,9 @@ function cadBench(slide, x, y, h, tag) {
   [["Plank pockets", "Same 25 × 5 section for every plank. 0.2 mm play, chamfers: the robot hits within ±2.7 mm."],
    ["Backrest arm", "The only variant in the frame: the same bar, bent further."],
    ["No fasteners", "The bent bar is also the leg. Nothing to screw or adjust."]].forEach((r, i) => {
-    const x = cx3(i), y = 5.4;
+    const x = cx3(i), y = 5.55;
     num(s, i + 1, x, y);
-    text(s, r[0], { x: x + 0.6, y: y - 0.02, w: cw3 - 0.6, h: 0.4, fontSize: 17, bold: true });
-    text(s, r[1], { x: x + 0.6, y: y + 0.38, w: cw3 - 0.6, h: 0.85, fontSize: 13, color: C.text2 });
+    text(s, r[0], { x: x + 0.6, y: y + 0.0, w: cw3 - 0.6, h: 0.42, fontSize: 19, bold: true });
   });
   s.addNotes("Suggested speaker: John Isak.\n\n" +
     "The product is one laser-cut flat bar, bent in a press brake, in two states: with or without the backrest arm. All planks share one section. The critical interface is the plank pocket: tight enough that the plank stands straight, but with chamfers so an offline-programmed robot still gets it in. The design was made for the robot, and the robot cell for the design.");
@@ -255,13 +252,12 @@ function cadBench(slide, x, y, h, tag) {
     iconDot(s, st[0], cx - 0.42, 1.6, 0.84, i === 3 || i === 5 ? C.accent2 : C.accent1, "step " + i);
     if (i < steps.length - 1) arrow(s, cx + 0.55, 2.02, stw - 1.1, "flow arrow " + i);
     text(s, st[1], { x: x + 0.05, y: 2.62, w: stw - 0.1, h: 0.4, fontSize: 16, bold: true, align: "center" });
-    text(s, st[2], { x: x + 0.1, y: 3.02, w: stw - 0.2, h: 0.5, fontSize: 13, color: C.text2, align: "center" });
   });
   card(s, M, 3.9, W - 2 * M, 2.45, C.background2, "lean card");
   kicker(s, "FROM OUR LEAN ASSIGNMENT · ESTIMATES", M + 0.35, 4.15, 8);
   const sw = (W - 2 * M - 0.7 - 3 * 0.3) / 4;
-  [["3.65 h", "takt time: 1000 benches in six months"], ["≈ 18 min", "work per bench, rework included"],
-   ["≈ 8 %", "of the available time used: room to grow"], ["≈ 6.5 min", "cobot assembly, from our simulation"]].forEach((st, i) =>
+  [["3.65 h", "takt time"], ["≈ 18 min", "work per bench"],
+   ["≈ 8 %", "of the time used"], ["≈ 6.5 min", "cobot assembly (sim)"]].forEach((st, i) =>
     stat(s, st[0], st[1], M + 0.35 + i * (sw + 0.3), 4.65, sw, i === 3 ? C.accent2 : C.accent1));
   s.addNotes("Suggested speaker: John Isak, then hand over to Bjørge.\n\n" +
     "The flow from order to delivery. The green steps are robots: the cobot assembles, the mobile robot delivers. From our lean assignment, as estimates: 1000 benches in six months gives a takt of 3.65 hours, against about 18 minutes of work per bench, so one cell has plenty of capacity. Our simulation estimates the cobot assembly at about six and a half minutes; the real-robot time we measure now.");
@@ -276,19 +272,15 @@ function cadBench(slide, x, y, h, tag) {
     const dim = require("image-size")(MEDIA("tmflow_mock.png"));
     const bw = 8.2, iw = bw, ih = bw * dim.height / dim.width;
     img(s, "tmflow_mock.png", M, 1.4, iw, ih, "TMflow mock and the 3D cell", false);
-    text(s, "Left: the TMflow project the robot runs (Listen node, gripper nodes, error exits), mocked by us · right: the 3D cell",
-      { x: M, y: 1.4 + ih + 0.1, w: iw, h: 0.55, fontSize: 12, color: C.text2 });
     const qx = M + bw + 0.45, qw = W - M - qx;
     kicker(s, "THE LOOP", qx, 1.45, qw);
     [[I.cube, "Simulator page", "3D cell, timeline, Run"], [I.code, "Python bridge", "one script, sim or robot"],
      [I.plug, "TMflow Listen node", "moves arrive as scripts"], [I.robot, "TM5-900 + Hand-E", "gripper as TMflow nodes"]].forEach((r, i) => {
       const y = 1.85 + i * 1.1;
       iconDot(s, r[0], qx, y, 0.55, i === 3 ? C.accent1 : C.accent2, "loop " + i);
-      text(s, r[1], { x: qx + 0.72, y: y - 0.02, w: qw - 0.72, h: 0.34, fontSize: 15, bold: true });
-      text(s, r[2], { x: qx + 0.72, y: y + 0.3, w: qw - 0.72, h: 0.34, fontSize: 13, color: C.text2 });
+      text(s, r[1], { x: qx + 0.72, y: y + 0.08, w: qw - 0.72, h: 0.4, fontSize: 16, bold: true });
       if (i < 3) s.addShape(pres.shapes.LINE, { x: qx + 0.275, y: y + 0.62, w: 0, h: 0.4, line: { color: C.accent5, width: 1.5, endArrowType: "triangle" }, objectName: "loop arrow " + i });
     });
-    text(s, "Change a step on the page, save, and the program for the robot is rebuilt.", { x: qx, y: 6.15, w: qw, h: 0.6, fontSize: 12, color: C.text2, italic: true });
   }
   s.addNotes("Suggested speaker: Bjørge.\n\n" +
     "Our own simulator page. On the left is the TMflow project that runs on the robot: start, home, initialise the Hand-E, then the Listen node called Bridge, where our Python script takes over and sends every move. A gateway reads which gripper command comes next: grip, release, home or stop, and every branch comes back to the Bridge. We mocked that whole flow, so the robot's own logic is tested together with the motion, not only the path. On the right is the 3D cell.\n\n" +
@@ -307,8 +299,7 @@ function cadBench(slide, x, y, h, tag) {
      [I.check, "Checked before the lab", "Reach, collisions and every grip and release, on the timeline above the 3D view."]].forEach((r, i) => {
       const y = 1.5 + i * 1.7;
       iconDot(s, r[0], qx, y, 0.55, i === 1 ? C.accent1 : C.accent2, "overview point " + i);
-      text(s, r[1], { x: qx + 0.75, y: y - 0.03, w: qw - 0.75, h: 0.38, fontSize: 17, bold: true });
-      text(s, r[2], { x: qx + 0.75, y: y + 0.38, w: qw - 0.75, h: 1.2, fontSize: 14, color: C.text2 });
+      text(s, r[1], { x: qx + 0.75, y: y + 0.06, w: qw - 0.75, h: 0.42, fontSize: 19, bold: true });
     });
   }
   s.addNotes("Suggested speaker: Bjørge.\n\n" +
@@ -323,7 +314,7 @@ function cadBench(slide, x, y, h, tag) {
   const vwid = W - 2 * M, vh = vwid * 668 / 1884;
   const poster = fs.readFileSync(MEDIA("v9_full_sim_poster.jpg")).toString("base64");
   s.addMedia({ type: "video", path: MEDIA("v9_full_sim.mp4"), x: M, y: 1.15 + (5.65 - vh) / 2, w: vwid, h: vh, cover: "data:image/jpeg;base64," + poster, objectName: "simulation video" });
-  text(s, "Planks into frame 1 · guide on · flip into frame 2 · guide slides out · bench onto the AMR on its feet (4× real time)", { x: M, y: 6.95, w: W - 2 * M, h: 0.35, fontSize: 13, color: C.accent5, align: "center" });
+  text(s, "4× real time", { x: M, y: 6.95, w: W - 2 * M, h: 0.35, fontSize: 13, color: C.accent5, align: "center" });
   s.addNotes("Suggested speaker: Bjørge. Click the video to play (about 38 s, 4x real time).\n\n" +
     "The assembly: five planks from the rack into frame 1, the plank guide on, frame 1 with the planks flipped into frame 2, the guide halves slide out of the finished bench, and the bench is turned onto its feet on the mobile robot. These are the exact moves we send to the real robot.");
 
@@ -339,14 +330,14 @@ function cadBench(slide, x, y, h, tag) {
   [["Design the product and the cell together.", " One plank and straight-down assembly made a one-jig cell possible."],
    ["Fail in software first.", " Trapped guide, flip clearance, arm through the bench: all found before the lab."],
    ["Simulation and real robot from one program.", " What we tune on the robot goes straight back into the model."]].forEach((l, i) =>
-    text(s, [{ text: l[0], options: { bold: true, color: C.text1 } }, { text: l[1], options: { color: C.text2 } }], { x: M + 0.35, y: 2.7 + i * 1.3, w: colw - 0.7, h: 1.15, fontSize: 15 }));
+    text(s, l[0].replace(/\.$/, ""), { x: M + 0.35, y: 2.7 + i * 1.1, w: colw - 0.7, h: 0.8, fontSize: 19, bold: true, color: C.text1 }));
   const nx = M + colw + 0.4;
   iconDot(s, I.forward, nx + 0.35, 1.8, 0.6, C.accent2, "next");
   text(s, "Next", { x: nx + 1.15, y: 1.88, w: 4, h: 0.45, fontSize: 22, bold: true });
   [["Full cycle on the real robot,", " with the measured assembly time."],
    ["New guide split,", " so the guide slides out of the finished bench without force."],
    ["Two benches stacked on the AMR", " for compact delivery, and AMR docking."]].forEach((l, i) =>
-    text(s, [{ text: l[0], options: { bold: true, color: C.text1 } }, { text: l[1], options: { color: C.text2 } }], { x: nx + 0.35, y: 2.7 + i * 1.3, w: colw - 0.7, h: 1.15, fontSize: 15 }));
+    text(s, l[0].replace(/,$/, ""), { x: nx + 0.35, y: 2.7 + i * 1.1, w: colw - 0.7, h: 0.8, fontSize: 19, bold: true, color: C.text1 }));
   s.addNotes("Suggested speaker: both. John Isak takes 'learned', Bjørge 'next'.\n\n" +
     "Three lessons: design product and cell together; fail in software first, it is cheap; and keep the simulation and the robot on one program so tuning on the robot flows back into the model. Next: the full cycle on the real robot with a measured time, the new guide split so the guide comes out without force, and stacking two benches on the AMR.");
 
