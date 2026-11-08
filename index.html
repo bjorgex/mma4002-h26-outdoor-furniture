@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Outdoor Furniture</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -372,25 +373,75 @@ a { color: inherit; }
    scrolled the bench out of sight. It now pins to the top of the screen and
    the controls run underneath it. Loaded after the configurator's own CSS so
    these win. */
+/* The overlay controls that float over the model on a laptop pile up on a
+   phone, so there the pinned stage is a small grid instead:
+     row 1  the 3D view (--cvh tall), with the view buttons as one sideways-
+            scrolling row along its top and Allé/Studio + light along its bottom
+     row 2  a strip under the view: Interface | Lift | Explode
+   The badge and the gesture hint are left out (the selects below say the same).
+   The renderer sizes itself from the canvas box, not the stage, so the strip
+   does not stretch the picture. */
 @media (max-width: 760px) {
+  #cfg { padding-inline: 0; }   /* the page gutter is margin enough; the view gets the width */
   #cfg .stage {
+    --cvh: max(200px, 34svh);
     position: sticky;
     top: env(safe-area-inset-top, 0px);
     z-index: 5;
     aspect-ratio: auto;
-    height: 42vh;
-    height: 42svh;
-    min-height: 236px;
+    height: auto;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    grid-template-rows: var(--cvh) auto;
+    gap: 1px;
+    background:
+      linear-gradient(180deg, var(--stage-a), var(--stage-b)) top / 100% var(--cvh) no-repeat,
+      var(--line-soft);
     box-shadow: 0 12px 24px -20px rgba(0, 0, 0, .6);
   }
-  #cfg .hud { font-size: 10px; left: 10px; bottom: 8px; line-height: 1.35; }
-  #cfg .badge { right: 10px; top: 8px; }
+  #cfg .stage canvas { grid-row: 1; grid-column: 1 / -1; }
+  #cfg .badge, #cfg .hud { display: none; }
+
+  #cfg .viewtools { display: contents; }
+  #cfg .stage button { min-height: 36px; padding: 6px 10px; flex: none; }
+
+  /* view buttons: one row over the top of the model, scrolls sideways */
+  #cfg .viewtools .togrow:nth-child(1),
+  #cfg .viewtoggles {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #cfg .viewtools .togrow:nth-child(1) { top: 8px; }
+  #cfg .viewtools .togrow:nth-child(1)::-webkit-scrollbar,
+  #cfg .viewtoggles::-webkit-scrollbar { display: none; }
+
+  /* surroundings + light: one row over the bottom of the model */
+  #cfg .viewtoggles { top: var(--cvh); bottom: auto; translate: 0 calc(-100% - 8px); align-items: stretch; }
+  #cfg .viewtoggles .togrow { flex: none; }
+  #cfg .viewtoggles .togrow + .togrow { margin-left: 6px; }
+
+  /* the strip under the model */
+  #cfg .viewtools .togrow:nth-child(2) { grid-row: 2; grid-column: 1; display: flex; }
+  #cfg .viewtools .togrow:nth-child(2) button { flex: 1; border: 0; }
+  #cfg .viewtools .vtslider { grid-row: 2; border: 0; background: var(--surface); padding: 0 10px; min-width: 0; }
+  #cfg .viewtools .vtslider:nth-child(3) { grid-column: 2; }
+  #cfg .viewtools .vtslider:nth-child(4) { grid-column: 3; }
+  #cfg .viewtools .vtslider input { flex: 1; width: auto; min-width: 0; }
+
   /* the two notes and the bill of material are reading matter, not controls -
      let them sit below without fighting the pinned viewport */
   #cfg .note, #cfg section, #cfg footer { position: relative; z-index: 1; }
 }
 @media (max-width: 760px) and (orientation: landscape) {
-  #cfg .stage { height: 62vh; height: 62svh; }
+  #cfg .stage { --cvh: max(160px, 50svh); }
 }
 </style>
 
@@ -1310,12 +1361,17 @@ document.getElementById("b-three").addEventListener("click", resetView);
 document.getElementById("b-reset").addEventListener("click", resetView);
 
 /* ---------- loop ---------- */
+/* sized from the canvas's own box: on a laptop that is the whole stage, on a
+   phone the stage also holds the control strip under the view */
 function resize(){
-  const w = stage.clientWidth, h = stage.clientHeight;
+  const c = renderer.domElement;
+  const w = c.clientWidth || stage.clientWidth, h = c.clientHeight || stage.clientHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w/h; camera.updateProjectionMatrix();
 }
-new ResizeObserver(resize).observe(stage);
+const sizeWatch = new ResizeObserver(resize);
+sizeWatch.observe(stage);
+sizeWatch.observe(renderer.domElement);
 resize();
 renderOrders();
 build();
