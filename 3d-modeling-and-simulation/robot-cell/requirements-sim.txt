@@ -6,3 +6,4 @@ trimesh
 python-fcl      # collision checks (trimesh.collision); the sim also runs without it, without collisions
 matplotlib
 robodk          # only the API's maths helpers (robomath); no RoboDK install or licence
+opencv-contrib-python>=4.10,<5   # tests/vision_lab/ jig vision + calibration (5.0 has no calibrateHandEye in Python); the sim runs without it

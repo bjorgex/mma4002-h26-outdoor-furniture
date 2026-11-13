@@ -11,6 +11,9 @@
 // replays the spawn rows of manip_data (manipulability.py) like the GRIPs.
 // Collisions (collision_layer.js, data from collision.py via /sim/collisions.json): the objects of a colliding move
 // turn red while the 3D pane plays that move (the mock's numbered "move" events, applied at the pane's play time).
+// Tool camera (vision_layer.js): a camera on the flange looking along the tool, photos saved through POST /vision/snap.
+// Jig mover (jig_layer.js): jigs selected / locked together / moved in X/Y/Z/Rz on the page.
+// Objects marked userData.real are what the camera sees.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -33,12 +36,45 @@ export function createSim(el, { log = () => {} } = {}) {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   el.appendChild(renderer.domElement);
+  // a named mode (POST /vision/mode), e.g. "Camera calibration": a banner over the 3D view; empty -> jigs + parts hidden
+  const banner = document.createElement("div");
+  banner.style.cssText = "position:absolute;z-index:3;left:50%;top:10px;transform:translateX(-50%);display:none;" +
+    "font:600 15px system-ui,sans-serif;color:#fff;background:#c2410c;padding:6px 16px;border-radius:6px;" +
+    "box-shadow:0 2px 8px #0004;text-align:center;pointer-events:none";
+  el.appendChild(banner);
+  let mode = null;
+  const clock = t => { const s = Math.max(0, Math.floor(Date.now() / 1000 - t)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  function drawBanner() {
+    if (!mode) return;
+    banner.innerHTML = `${mode.name.toUpperCase()} MODE` + (mode.t0 ? ` &nbsp;·&nbsp; ${clock(mode.t0)}` : "") +
+      (mode.step ? `<div style="font-weight:400;font-size:13px">${mode.step}${mode.pt0 ? ` &nbsp;·&nbsp; ${clock(mode.pt0)}` : ""}</div>` : "");
+  }
+  setInterval(drawBanner, 1000);                     // the timers: the mode's and the step's (server start times)
+  function setMode(m) {
+    mode = m || null;
+    banner.style.display = mode ? "block" : "none";
+    drawBanner();
+    jigs?.setEmpty(!!mode?.empty);
+  }
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf4f5f6);     // TMflow has no dark theme: stay light
   THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
   const camera = new THREE.PerspectiveCamera(40, 1, 10, 20000);
   camera.up.set(0, 0, 1);
   const controls = new OrbitControls(camera, renderer.domElement);
+  // Own wheel zoom instead of OrbitControls': theirs zooms a fixed step per wheel event, and VS Code's Simple Browser
+  // sends many small events per scroll (zoomed in far too fast there). Here the zoom follows the scroll distance
+  // (deltaY in pixels; lines/pages converted), the same in Chrome and VS Code; ctrl+wheel (trackpad pinch) too.
+  controls.enableZoom = false;
+  renderer.domElement.addEventListener("wheel", e => {
+    e.preventDefault();
+    const px = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+    const step = Math.max(-0.5, Math.min(0.5, px * (e.ctrlKey ? 0.01 : 0.0015)));   // ~16 % per 100 px notch, capped
+    const off = camera.position.clone().sub(controls.target);
+    const d = Math.min(15000, Math.max(80, off.length() * Math.exp(step)));
+    camera.position.copy(controls.target).add(off.setLength(d));
+    controls.update();
+  }, { passive: false });
   const views = { iso: [[900, -1500, 1100], [-450, 0, 200]], top: [[-450, 0, 2600], [-450, 0, 0]],
                   side: [[-450, -2200, 400], [-450, 0, 300]] };
   function setView(v) { camera.position.set(...views[v][0]); controls.target.set(...views[v][1]); controls.update(); }
@@ -113,11 +149,12 @@ export function createSim(el, { log = () => {} } = {}) {
       if (name !== cellName) return;                 // another cell asked for meanwhile
       if (cell) { held.forEach(([o]) => o.removeFromParent()); held = []; cell.removeFromParent(); }
       start.clear(); spawnable.clear();
-      shade(g.scene, { flat: true }); scene.add(g.scene); cell = g.scene;
+      shade(g.scene, { flat: true }); scene.add(g.scene); cell = g.scene; cell.userData.real = true;
       cell.traverse(o => { if (o !== cell && PARTS.test(o.name))
         start.set(o, { parent: o.parent, pos: o.position.clone(), quat: o.quaternion.clone(), scale: o.scale.clone() }); });
       start.forEach((_, o) => { if (SPAWNED.test(o.name)) spawnable.add(o); });
       hideSpawned(); loadedName = name;
+      jigs?.onCell(name);
       log("ev", `3D: cell ${name}.glb`);
     },
       undefined, e => log("err", `${name}.glb not loaded: ` + e.message));
@@ -171,7 +208,7 @@ export function createSim(el, { log = () => {} } = {}) {
   loader.load(BASE + "tm5_links.glb", g => {         // link_0 on the base, link_i on joint i
     for (let i = 0; i <= 6; i++) {
       const n = g.scene.getObjectByName("link_" + i);
-      if (n) { shade(n); (i === 0 ? scene : joints[i - 1]).add(n); }
+      if (n) { shade(n); (i === 0 ? scene : joints[i - 1]).add(n); if (i === 0) n.userData.real = true; }
     }
     simple.forEach(m => m.removeFromParent());
   }, undefined, e => log("err", "tm5_links.glb not loaded (simple shapes instead): " + e.message));
@@ -186,6 +223,7 @@ export function createSim(el, { log = () => {} } = {}) {
   const moveLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
     new THREE.LineBasicMaterial({ color: 0xe60012 }));
   moveLine.visible = false; scene.add(moveLine);
+  scene.children.forEach(o => { if (o !== axes.base && o !== grid && o !== moveLine) o.userData.real = true; });   // what a camera sees
 
   // parts follow the gripper
   let held = [], carry = null;                       // held: [[part, parent before]]; carry: names for the next GRIP
@@ -298,6 +336,11 @@ export function createSim(el, { log = () => {} } = {}) {
         hideSpawned();
         animateGrip(GAP_OPEN, .2); moveLine.visible = false;
         break;
+      case "snap_request": vis?.snapRequest(ev); break;   // POST /vision/request (a script wants a photo)
+      case "jig_set": jigs?.setJigs(ev); break;           // POST /vision/jigs/set (a script moves jigs)
+      case "markers": jigs?.setMarkers(ev.on); break;     // POST /vision/markers
+      case "board": vis?.setBoard(ev); break;             // POST /vision/board (ChArUco calibration board)
+      case "mode": setMode(ev.mode); break;               // POST /vision/mode (e.g. camera calibration: banner, empty plate)
       case "move":
         moveLine.geometry.setFromPoints([new THREE.Vector3(...ev.frm), new THREE.Vector3(...ev.to)]);
         moveLine.visible = true;
@@ -374,13 +417,21 @@ export function createSim(el, { log = () => {} } = {}) {
     preview = q ? q.slice() : null;
     previewGap = q && closed !== null ? (closed ? GAP_CLOSED : GAP_OPEN) : null;
   }
+  // /all?renderer (tests/vision_lab/renderer.py, a headless browser for test photos): no live view, only the photos -
+  // software WebGL would spend all its time drawing the 3D pane. Joints and grips still update (4 times a second).
+  const PHOTO_ONLY = new URLSearchParams(location.search).has("renderer");
+  let lastTick = 0;
   renderer.setAnimationLoop(() => {
+    if (PHOTO_ONLY) { const t = performance.now(); if (t - lastTick < 250) return; lastTick = t; }
     shown = playback();
     playMoves();
     (preview || shown).forEach((a, i) => joints[i].rotation.z = a * deg);
     const u = Math.min(1, (performance.now() - gapT0) / gapDur);
     gap = gapFrom + (gapTo - gapFrom) * u; setGap(previewGap ?? gap);
-    controls.update(); renderer.render(scene, camera);
+    controls.update();
+    if (PHOTO_ONLY) return;
+    renderer.render(scene, camera);
+    vis?.afterRender();
     if (frameCb) try { frameCb(renderer.domElement); } catch (e) { frameCb = null; log("err", "frame hook: " + e.message); }
   });
   let frameCb = null;                                // onFrame: called right after each render (the video export)
@@ -394,6 +445,19 @@ export function createSim(el, { log = () => {} } = {}) {
     extra: { EGP: [egpBody, ...fingers] } }))
     .then(m => { coll = m; coll.setCell(cellName); coll.onPick = n => manip?.jump(n - 1); })   // a hit clicked: the timeline jumps to that move
     .catch(e => log("err", "collision layer not loaded: " + e.message));
+  // jig mover (jig_layer.js): own panel, bottom left; optional
+  let jigs = null;
+  import(BASE + "jig_layer.js").then(m => m.addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
+    cell: () => cell, cellName: () => cellName, start }))
+    .then(j => { jigs = j; if (loadedName) jigs.onCell(loadedName);
+                 fetch("/vision/mode").then(r => r.json()).then(st => { setMode(st.mode); if (st.board?.on) vis?.setBoard(st.board); }).catch(() => {}); })
+    .catch(e => log("err", "jig mover not loaded: " + e.message));
+  // tool camera (vision_layer.js): own panel, bottom right; optional
+  let vis = null;
+  import(BASE + "vision_layer.js").then(m => m.addVisionLayer({ THREE, scene, camera, renderer, controls, el, L6, log,
+    axes, cell: () => cell, cellName: () => cellName, settle, truth: () => jigs?.truth() ?? {}, model: () => jigs?.model() ?? null, setAxes }))
+    .then(v => { vis = v; })
+    .catch(e => log("err", "vision layer not loaded: " + e.message));
   // a preset's cell for the 3D view without a run (the video export): resolves once its .glb is in the scene
   function useCell(c) {
     c = c || "cell";
@@ -406,5 +470,5 @@ export function createSim(el, { log = () => {} } = {}) {
     });
   }
   return { handle, setView, camera, controls, setAxes, useCell, onFrame(cb) { frameCb = cb; }, get canvas() { return renderer.domElement; }, axesOn: w => axes[w].visible, scene, joints, get held() { return heldName(); }, get delay() { return delay; },
-           get manip() { return manip; }, get collisions() { return coll; } };
+           get manip() { return manip; }, get collisions() { return coll; }, get vision() { return vis; }, get jigs() { return jigs; } };
 }

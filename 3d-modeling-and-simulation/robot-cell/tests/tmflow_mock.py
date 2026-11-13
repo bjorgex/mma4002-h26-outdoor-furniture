@@ -832,6 +832,8 @@ class View:
                     return view._json(self, 200, {"scenarios": lst, **view.scenarios.status()})
                 if path == "/hold":                     # a script waiting for the page's Resume (Steps.hold)
                     return view._json(self, 200, {"hold": view.hold})
+                if path.startswith("/vision/"):          # tool camera photos (robot_sim/vision_api.py)
+                    return view._vision(self, "GET")
                 if path == "/sim" or path.startswith("/sim/"):  # 3D view + meshes (robot_sim/), also for /all
                     sys.path.insert(0, str(HERE / "robot_sim"))
                     from sim_http import sim_get
@@ -862,6 +864,10 @@ class View:
                     if path == "/teach/save" and out.get("ok"):
                         emit("program_changed", version=body.get("version", "v8"), move=body.get("move"))
                     return view._json(self, code, out)
+                if path.startswith("/vision/"):          # tool camera photos, jig offsets (robot_sim/vision_api.py)
+                    if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
+                        return self.send_error(415)
+                    return view._vision(self, "POST")
                 if path == "/hold/resume":              # the page's Resume on a script's hold (e.g. reload the jig);
                     if self.headers.get("Content-Type", "").split(";")[0] != "application/json":   # mock AND real robot
                         return self.send_error(415)
@@ -915,6 +921,20 @@ class View:
         self.hold = None                                # a script's hold ({"msg", "id", ...}) until the page's Resume
         self.httpd = ThreadingHTTPServer((HOST, port), Handler)
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+
+    def _vision(self, h, method):
+        import urllib.parse
+        sys.path.insert(0, str(HERE / "robot_sim"))
+        import vision_api
+        u = urllib.parse.urlsplit(h.path)
+        body = {}
+        if method == "POST":
+            body = json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0))) or b"{}")
+        try:
+            code, out = vision_api.handle(method, u.path, urllib.parse.parse_qs(u.query), body, emit)
+        except Exception as e:
+            code, out = 500, {"ok": False, "msg": f"{type(e).__name__}: {e}"}
+        return self._json(h, code, out)
 
     def _json(self, h, code, obj):
         body = json.dumps(obj).encode()

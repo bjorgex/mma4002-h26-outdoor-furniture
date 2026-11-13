@@ -106,6 +106,15 @@ THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 const camera = new THREE.PerspectiveCamera(40, 1, 10, 20000);
 camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableZoom = false;                         // own wheel zoom (as sim_scene.js): follows the scroll distance,
+renderer.domElement.addEventListener("wheel", e => { // also in VS Code's Simple Browser (many small wheel events)
+  e.preventDefault();
+  const px = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+  const step = Math.max(-0.5, Math.min(0.5, px * (e.ctrlKey ? 0.01 : 0.0015)));
+  const off = camera.position.clone().sub(controls.target);
+  camera.position.copy(controls.target).add(off.setLength(Math.min(15000, Math.max(80, off.length() * Math.exp(step)))));
+  controls.update();
+}, { passive: false });
 const views = { iso: [[900, -1500, 1100], [-450, 0, 200]], top: [[-450, 0, 2600], [-450, 0, 0]], side: [[-450, -2200, 400], [-450, 0, 300]] };
 function setView(v) { camera.position.set(...views[v][0]); controls.target.set(...views[v][1]); controls.update(); }
 setView("iso");

@@ -80,6 +80,8 @@ CELLS["v9"] = ("Bench V1 cell v9", ["planks_into_frame1", "small_half_to_finish"
 STEPS.update({f"bench_2_{k}": STEPS[k] for k in ("big_half_slide_out", "small_half_slide_out")})
 CELLS["v9x2"] = ("Bench V1 cell v9x2", CELLS["v9"][1] + ["reload_jig_for_bench_2"] +
                  [f"bench_2_{k}" for k in CELLS["v9"][1][:-1]] + ["bench_2_onto_bench_1"])
+# v10 (bench_cell_v10.py): v9 moved to where the camera found the jigs (v10_moves.json); same stages, same 3D cell
+CELLS["v10"] = ("Bench V1 cell v9", CELLS["v9"][1])
 CELL = MOVES = STATION = None                           # set by use(): --cell
 STAGE = []                                              # (stage, move name prefix)
 

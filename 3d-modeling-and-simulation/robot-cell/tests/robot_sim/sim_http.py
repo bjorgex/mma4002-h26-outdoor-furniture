@@ -17,7 +17,11 @@ FILES = {"": "sim_view.html", "sim_view.html": "sim_view.html", "cell.glb": "cel
          "cell_v9.glb": "cell_v9.glb", "cell_layout_v9.json": "cell_layout_v9.json",   # v9: Guide split V6
          "cell_v9x2.glb": "cell_v9x2.glb", "cell_layout_v9x2.json": "cell_layout_v9x2.json",   # v9x2: 2 benches
          "manip_layers.js": "manip_layers.js",                                     # manipulability layers (3D view)
-         "collision_layer.js": "collision_layer.js",                               # collisions panel (3D view)
+         "collision_layer.js": "collision_layer.js",
+         "vision_layer.js": "vision_layer.js",                                     # tool camera
+         "jig_layer.js": "jig_layer.js",                                           # jig mover
+         **{f"markers/aruco_{i}.png": f"markers/aruco_{i}.png" for i in range(1, 6)},   # ArUco 4x4_50 ids 1-5 (jig markers)
+         "markers/charuco_board.png": "markers/charuco_board.png",                 # ChArUco board (vision_lab/print_markers.py)                               # collisions panel (3D view)
          "manip_data.json": "manipulability/manip_data.json"}                      # manipulability.py all
 
 

@@ -2,6 +2,25 @@
 
 **Program:** [bench_cell_v8.py](bench_cell_v8.py) → [tests/v8_moves.json](tests/v8_moves.json) · **Jig:** [jig_v5.py](jig_v5.py), [Jig V5 assembly](<../jig-cad/Jig V5/JigAssembly_V5.STEP>) · **Own tools:** [tests/robot_sim/OWN_TOOL.md](tests/robot_sim/OWN_TOOL.md) · **TMflow:** [bench_tmflow/v8/AssembleBench.zip](bench_tmflow/v8/AssembleBench.zip)
 
+## 0g. 2026-11-13 night: jig vision tested; ready for the lab with a webcam
+- **Report (5 pages):** [vision report/jig_vision_report.pdf](<vision report/jig_vision_report.pdf>) (source `.tex`, figures from `make_figures.py`).
+- **Result: ArUco markers.** Median 0.14 mm, worst 0.5 mm, unaffected by darker, noisy or shadowed photos, 0.2–0.4 s per photo. Colour was worse (worst 4.3 mm; it merges the two blue bases). Features (SIFT) made gross errors from an oblique view (up to 232 mm).
+- **Plank rack:** the planks hide its marker from the overview photo. A second photo straight above the rack finds it (4/5 layouts, ≤ 0.8 mm).
+- **Real-robot tools,** tested end to end in the sim with known answers:
+  - [tests/vision_lab/README.md](tests/vision_lab/README.md): `print_markers.py`, `calibrate.py`, `real_capture.py`, `real_setup.py`, `jig_vision.py`
+  - result of that test: hand-eye 0.15 mm / 0.08°, jigs median 0.03 mm.
+- **Next (lab):**
+  1. Get a **USB webcam** and a mount. The TM5's own camera can't send images to our scripts.
+  2. Print the markers and the board.
+  3. Follow the report's §6 steps 1–5.
+  4. Then apply `T_move` to the taught points in `v4_replay.py` (not built yet).
+
+## 0f. 2026-11-12 night: tool camera, free move, jig mover in the sim (vision mock)
+- **Tool camera panel** (bottom right of the 3D view): a camera on the flange with a live view and **📷 Photo**, saved to `tests/vision_lab/sim_shots/` with the camera matrix and pose. **✥ Free move** jogs the arm without changing the program.
+- **Jigs panel** (bottom left, **Move jigs**): select several jigs, **🔗 lock** them together, move or turn them in X/Y/Z/Rz.
+- Details: [tests/robot_sim/OWN_TOOL.md](tests/robot_sim/OWN_TOOL.md) (last section). Scripts can do the same with `tests/vision_lab/sim_camera.py move|pose|snap`.
+- **Next:** OpenCV detection on these photos (ArUco markers on the jig model, or colour/contours), then pixels → robot mm from `K` + `T_base_cam`, checked against the true offsets in the JSON. After that, the same code on webcam photos in the lab.
+
 ## 0e. 2026-11-07 evening: back-end grip, guide split V6 proposal
 - **Stage 6 program now: the big half's free back end** (`BIG_GRIP_BACK = "end"`). It's the B-side leg's far corner, gripped across the 10 mm wall and leaning 55° away from the robot. It travels at 290 mm there, since 450 is out of reach. On B it's **let go 18 mm above the seat** (`END_DROP`) and falls onto its own bosses, so the fingers stay above the small half, which sits flush in that corner. **Whole program: no gripper or arm hit**; 2 hits left, both the loose guide passing the bench on the way out.
 - **Guide split V6 proposal** (Bjørge's idea), in [Jig V6 proposal](<../jig-cad/Jig V6 proposal>), made by [guide_split_v6.py](guide_split_v6.py). Jig V5 is untouched.

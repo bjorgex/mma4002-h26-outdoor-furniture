@@ -1,0 +1,126 @@
+scene,pose,markers,disturb,method,jig,found,pos_mm,rz_deg,ms,why
+0,top,1,clean,aruco,Base A,1,0.266,0.147,531,
+0,top,1,clean,aruco,Base B,1,0.277,0.107,531,
+0,top,1,clean,aruco,Plank rack,0,,,531,marker 3 (22 mm) not detected
+0,top,1,clean,aruco,Guide small,1,0.104,0.073,531,
+0,top,1,clean,aruco,Guide big,1,0.047,0.061,531,
+0,top,1,dark,aruco,Base A,1,0.268,0.148,374,
+0,top,1,dark,aruco,Base B,1,0.28,0.109,374,
+0,top,1,dark,aruco,Plank rack,0,,,374,marker 3 (22 mm) not detected
+0,top,1,dark,aruco,Guide small,1,0.104,0.073,374,
+0,top,1,dark,aruco,Guide big,1,0.046,0.06,374,
+0,top,1,noise,aruco,Base A,1,0.229,0.128,282,
+0,top,1,noise,aruco,Base B,1,0.104,0.064,282,
+0,top,1,noise,aruco,Plank rack,0,,,282,marker 3 (22 mm) not detected
+0,top,1,noise,aruco,Guide small,1,0.106,0.084,282,
+0,top,1,noise,aruco,Guide big,1,0.12,0.111,282,
+0,top,1,shadow,aruco,Base A,1,0.271,0.151,345,
+0,top,1,shadow,aruco,Base B,1,0.327,0.136,345,
+0,top,1,shadow,aruco,Plank rack,0,,,345,marker 3 (22 mm) not detected
+0,top,1,shadow,aruco,Guide small,1,0.117,0.066,345,
+0,top,1,shadow,aruco,Guide big,1,0.064,0.07,345,
+0,rack,1,clean,aruco,Base A,1,0.167,0.059,218,
+0,rack,1,clean,aruco,Base B,1,0.143,0.037,218,
+0,rack,1,clean,aruco,Plank rack,1,0.796,0.114,218,
+0,rack,1,clean,aruco,Guide small,1,0.203,0.029,218,
+0,rack,1,clean,aruco,Guide big,1,0.143,0.174,218,
+1,top,1,clean,aruco,Base A,1,0.146,0.02,954,
+1,top,1,clean,aruco,Base B,1,0.122,0.084,954,
+1,top,1,clean,aruco,Plank rack,0,,,954,marker 3 (22 mm) not detected
+1,top,1,clean,aruco,Guide small,1,0.1,0.036,954,
+1,top,1,clean,aruco,Guide big,1,0.032,0.08,954,
+1,top,1,dark,aruco,Base A,1,0.149,0.016,124,
+1,top,1,dark,aruco,Base B,1,0.12,0.082,124,
+1,top,1,dark,aruco,Plank rack,0,,,124,marker 3 (22 mm) not detected
+1,top,1,dark,aruco,Guide small,1,0.1,0.035,124,
+1,top,1,dark,aruco,Guide big,1,0.033,0.083,124,
+1,top,1,noise,aruco,Base A,1,0.113,0.076,248,
+1,top,1,noise,aruco,Base B,1,0.088,0.068,248,
+1,top,1,noise,aruco,Plank rack,0,,,248,marker 3 (22 mm) not detected
+1,top,1,noise,aruco,Guide small,1,0.097,0.039,248,
+1,top,1,noise,aruco,Guide big,1,0.066,0.012,248,
+1,top,1,shadow,aruco,Base A,1,0.147,0.02,574,
+1,top,1,shadow,aruco,Base B,1,0.121,0.084,574,
+1,top,1,shadow,aruco,Plank rack,0,,,574,marker 3 (22 mm) not detected
+1,top,1,shadow,aruco,Guide small,1,0.098,0.033,574,
+1,top,1,shadow,aruco,Guide big,1,0.032,0.083,574,
+1,rack,1,clean,aruco,Base A,1,0.35,0.35,107,
+1,rack,1,clean,aruco,Base B,1,0.162,0.086,107,
+1,rack,1,clean,aruco,Plank rack,0,,,107,marker 3 (22 mm) not detected
+1,rack,1,clean,aruco,Guide small,0,,,107,marker 4 (22 mm) not detected
+1,rack,1,clean,aruco,Guide big,1,0.115,0.098,107,
+2,top,1,clean,aruco,Base A,1,0.075,0.068,542,
+2,top,1,clean,aruco,Base B,1,0.27,0.176,542,
+2,top,1,clean,aruco,Plank rack,0,,,542,marker 3 (22 mm) not detected
+2,top,1,clean,aruco,Guide small,1,0.316,0.148,542,
+2,top,1,clean,aruco,Guide big,1,0.029,0.001,542,
+2,top,1,dark,aruco,Base A,1,0.087,0.093,780,
+2,top,1,dark,aruco,Base B,1,0.273,0.178,780,
+2,top,1,dark,aruco,Plank rack,0,,,780,marker 3 (22 mm) not detected
+2,top,1,dark,aruco,Guide small,1,0.337,0.164,780,
+2,top,1,dark,aruco,Guide big,1,0.033,0.003,780,
+2,top,1,noise,aruco,Base A,1,0.129,0.044,152,
+2,top,1,noise,aruco,Base B,1,0.364,0.261,152,
+2,top,1,noise,aruco,Plank rack,0,,,152,marker 3 (22 mm) not detected
+2,top,1,noise,aruco,Guide small,1,0.13,0.001,152,
+2,top,1,noise,aruco,Guide big,1,0.01,0.008,152,
+2,top,1,shadow,aruco,Base A,1,0.075,0.068,252,
+2,top,1,shadow,aruco,Base B,1,0.274,0.179,252,
+2,top,1,shadow,aruco,Plank rack,0,,,252,marker 3 (22 mm) not detected
+2,top,1,shadow,aruco,Guide small,1,0.308,0.137,252,
+2,top,1,shadow,aruco,Guide big,1,0.043,0.005,252,
+2,rack,1,clean,aruco,Base A,1,0.077,0.017,162,
+2,rack,1,clean,aruco,Base B,1,0.24,0.127,162,
+2,rack,1,clean,aruco,Plank rack,1,0.1,0.636,162,
+2,rack,1,clean,aruco,Guide small,0,,,162,marker 4 (22 mm) not detected
+2,rack,1,clean,aruco,Guide big,1,0.183,0.112,162,
+3,top,1,clean,aruco,Base A,1,0.23,0.166,167,
+3,top,1,clean,aruco,Base B,1,0.03,0.001,167,
+3,top,1,clean,aruco,Plank rack,0,,,167,marker 3 (22 mm) not detected
+3,top,1,clean,aruco,Guide small,1,0.049,0.003,167,
+3,top,1,clean,aruco,Guide big,1,0.051,0.001,167,
+3,top,1,dark,aruco,Base A,1,0.243,0.175,344,
+3,top,1,dark,aruco,Base B,1,0.03,0.0,344,
+3,top,1,dark,aruco,Plank rack,0,,,344,marker 3 (22 mm) not detected
+3,top,1,dark,aruco,Guide small,1,0.047,0.005,344,
+3,top,1,dark,aruco,Guide big,1,0.051,0.0,344,
+3,top,1,noise,aruco,Base A,1,0.201,0.139,641,
+3,top,1,noise,aruco,Base B,1,0.158,0.113,641,
+3,top,1,noise,aruco,Plank rack,0,,,641,marker 3 (22 mm) not detected
+3,top,1,noise,aruco,Guide small,1,0.025,0.005,641,
+3,top,1,noise,aruco,Guide big,1,0.026,0.027,641,
+3,top,1,shadow,aruco,Base A,1,0.234,0.168,158,
+3,top,1,shadow,aruco,Base B,1,0.025,0.005,158,
+3,top,1,shadow,aruco,Plank rack,0,,,158,marker 3 (22 mm) not detected
+3,top,1,shadow,aruco,Guide small,1,0.06,0.001,158,
+3,top,1,shadow,aruco,Guide big,1,0.058,0.002,158,
+3,rack,1,clean,aruco,Base A,1,0.214,0.116,85,
+3,rack,1,clean,aruco,Base B,1,0.086,0.033,85,
+3,rack,1,clean,aruco,Plank rack,1,0.039,0.056,85,
+3,rack,1,clean,aruco,Guide small,1,0.116,0.019,85,
+3,rack,1,clean,aruco,Guide big,1,0.045,0.003,85,
+4,top,1,clean,aruco,Base A,1,0.297,0.1,114,
+4,top,1,clean,aruco,Base B,1,0.121,0.048,114,
+4,top,1,clean,aruco,Plank rack,0,,,114,marker 3 (22 mm) not detected
+4,top,1,clean,aruco,Guide small,1,0.227,0.123,114,
+4,top,1,clean,aruco,Guide big,1,0.047,0.04,114,
+4,top,1,dark,aruco,Base A,1,0.3,0.101,191,
+4,top,1,dark,aruco,Base B,1,0.133,0.065,191,
+4,top,1,dark,aruco,Plank rack,0,,,191,marker 3 (22 mm) not detected
+4,top,1,dark,aruco,Guide small,1,0.238,0.131,191,
+4,top,1,dark,aruco,Guide big,1,0.049,0.041,191,
+4,top,1,noise,aruco,Base A,1,0.288,0.082,149,
+4,top,1,noise,aruco,Base B,1,0.074,0.006,149,
+4,top,1,noise,aruco,Plank rack,0,,,149,marker 3 (22 mm) not detected
+4,top,1,noise,aruco,Guide small,1,0.136,0.064,149,
+4,top,1,noise,aruco,Guide big,1,0.072,0.054,149,
+4,top,1,shadow,aruco,Base A,1,0.298,0.101,137,
+4,top,1,shadow,aruco,Base B,1,0.158,0.088,137,
+4,top,1,shadow,aruco,Plank rack,0,,,137,marker 3 (22 mm) not detected
+4,top,1,shadow,aruco,Guide small,1,0.233,0.12,137,
+4,top,1,shadow,aruco,Guide big,1,0.043,0.038,137,
+4,rack,1,clean,aruco,Base A,1,0.291,0.119,489,
+4,rack,1,clean,aruco,Base B,1,0.221,0.059,489,
+4,rack,1,clean,aruco,Plank rack,1,0.03,0.264,489,
+4,rack,1,clean,aruco,Guide small,1,0.227,0.077,489,
+4,rack,1,clean,aruco,Guide big,1,0.091,0.049,489,

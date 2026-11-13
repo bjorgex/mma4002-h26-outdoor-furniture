@@ -14,3 +14,16 @@ __pycache__/
 
 # npm installs (e.g. the IRB deck builder in assignment-5-.../deck/)
 node_modules/
+
+# sim tool-camera photos (+ .xyz.f32 position passes, ~5 MB each), jig state and test runs: regenerate with
+# tests/vision_lab/sim_camera.py / jig_vision_test.py
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/sim_shots/
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/tm_camera.log
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/sim_jig_offsets.json
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/*/
+# ...except the runs the vision report uses (vision report/make_figures.py, calib_numbers.py), without their photos
+!3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/main_run_seed7/
+!3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/rack_pose_seed11/
+!3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/calib_20261113-024202/
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/calib_*/calib_shots/
+3d-modeling-and-simulation/robot-cell/tests/vision_lab/results/calib_*/real_shots/

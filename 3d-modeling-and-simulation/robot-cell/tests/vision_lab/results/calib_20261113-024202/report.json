@@ -1,0 +1,252 @@
+{
+ "intrinsics": {
+  "rms_px": 0.046701475882287985,
+  "fx_err_pct": 0.0364968851598535,
+  "fy_err_pct": 0.04009571979572968,
+  "cx_err_px": 1.291351020741331,
+  "cy_err_px": -0.37280068370250774,
+  "dist": [
+   -0.005186758952726073,
+   0.055637343947253746,
+   -3.618038579545453e-05,
+   0.0003115315343144236,
+   0.0
+  ]
+ },
+ "handeye": {
+  "pos_err_mm": 0.15482920761893632,
+  "rot_err_deg": 0.08389982640824845,
+  "found_offset_mm": [
+   0.02,
+   74.94,
+   52.86
+  ],
+  "true_offset_mm": [
+   0.0,
+   75.0,
+   53.0
+  ],
+  "spread_mm": 0.1314498742190323,
+  "table_err_mm": 0.9722404517480683
+ },
+ "fixed": {
+  "pos_err_mm": 2.3368420617003682,
+  "rot_err_deg": 0.4052638266418416,
+  "table_err_mm": 1.8422896047465185
+ },
+ "jigs": {
+  "found": "24/25",
+  "err_marker_mm_median": 0.03432557842185423,
+  "err_marker_mm_max": 1.1952265812709844,
+  "err_100mm_away_mm_median": 0.07412531312971668,
+  "err_100mm_away_mm_max": 0.9598514716410971,
+  "rz_err_deg_median": 0.040273690039541066,
+  "rz_err_deg_max": 0.30541797071461474,
+  "per_jig": {
+   "Base A": "5/5",
+   "Base B": "5/5",
+   "Plank rack": "4/5",
+   "Guide small": "5/5",
+   "Guide big": "5/5"
+  },
+  "rows": [
+   {
+    "layout": 0,
+    "jig": "Base A",
+    "found": true,
+    "err_marker_mm": 0.011050529362166168,
+    "err_100mm_away_mm": 0.02092829453183752,
+    "rz_err_deg": 0.017559023441151567
+   },
+   {
+    "layout": 0,
+    "jig": "Base B",
+    "found": true,
+    "err_marker_mm": 0.061402407446570675,
+    "err_100mm_away_mm": 0.25438355855723,
+    "rz_err_deg": 0.11080433784161414
+   },
+   {
+    "layout": 0,
+    "jig": "Plank rack",
+    "found": false
+   },
+   {
+    "layout": 0,
+    "jig": "Guide small",
+    "found": true,
+    "err_marker_mm": 0.0034226231921597326,
+    "err_100mm_away_mm": 0.1563436849599616,
+    "rz_err_deg": 0.0914077608450441
+   },
+   {
+    "layout": 0,
+    "jig": "Guide big",
+    "found": true,
+    "err_marker_mm": 0.04958528719852374,
+    "err_100mm_away_mm": 0.23279731033647924,
+    "rz_err_deg": 0.10539022172144996
+   },
+   {
+    "layout": 1,
+    "jig": "Base A",
+    "found": true,
+    "err_marker_mm": 0.06487053925636872,
+    "err_100mm_away_mm": 0.2424825032910377,
+    "rz_err_deg": 0.10698016753019601
+   },
+   {
+    "layout": 1,
+    "jig": "Base B",
+    "found": true,
+    "err_marker_mm": 0.03818962215766215,
+    "err_100mm_away_mm": 0.07584769238561573,
+    "rz_err_deg": 0.05593190030634787
+   },
+   {
+    "layout": 1,
+    "jig": "Plank rack",
+    "found": true,
+    "err_marker_mm": 1.1952265812709844,
+    "err_100mm_away_mm": 0.9598514716410971,
+    "rz_err_deg": 0.30541797071461474
+   },
+   {
+    "layout": 1,
+    "jig": "Guide small",
+    "found": true,
+    "err_marker_mm": 0.009103639347255546,
+    "err_100mm_away_mm": 0.07240293387381765,
+    "rz_err_deg": 0.039328536369652056
+   },
+   {
+    "layout": 1,
+    "jig": "Guide big",
+    "found": true,
+    "err_marker_mm": 0.021493989193629156,
+    "err_100mm_away_mm": 0.011513759690494313,
+    "rz_err_deg": 0.016818878144817972
+   },
+   {
+    "layout": 2,
+    "jig": "Base A",
+    "found": true,
+    "err_marker_mm": 0.062397817314271346,
+    "err_100mm_away_mm": 0.12827850693155,
+    "rz_err_deg": 0.05094871554061342
+   },
+   {
+    "layout": 2,
+    "jig": "Base B",
+    "found": true,
+    "err_marker_mm": 0.01384944849332108,
+    "err_100mm_away_mm": 0.1908390915481961,
+    "rz_err_deg": 0.11727513017473257
+   },
+   {
+    "layout": 2,
+    "jig": "Plank rack",
+    "found": true,
+    "err_marker_mm": 0.019118237490195707,
+    "err_100mm_away_mm": 0.03734406676255674,
+    "rz_err_deg": 0.01046635469725743
+   },
+   {
+    "layout": 2,
+    "jig": "Guide small",
+    "found": true,
+    "err_marker_mm": 0.02052545547865463,
+    "err_100mm_away_mm": 0.09473413329738042,
+    "rz_err_deg": 0.04792304706901973
+   },
+   {
+    "layout": 2,
+    "jig": "Guide big",
+    "found": true,
+    "err_marker_mm": 0.05444680474843396,
+    "err_100mm_away_mm": 0.0448943800717747,
+    "rz_err_deg": 0.04022521154837477
+   },
+   {
+    "layout": 3,
+    "jig": "Base A",
+    "found": true,
+    "err_marker_mm": 0.04136266102217747,
+    "err_100mm_away_mm": 0.27804885220975484,
+    "rz_err_deg": 0.1431539042234249
+   },
+   {
+    "layout": 3,
+    "jig": "Base B",
+    "found": true,
+    "err_marker_mm": 0.010221155118002949,
+    "err_100mm_away_mm": 0.03368325399007565,
+    "rz_err_deg": 0.01890206467598432
+   },
+   {
+    "layout": 3,
+    "jig": "Plank rack",
+    "found": true,
+    "err_marker_mm": 0.7226272164199952,
+    "err_100mm_away_mm": 0.7024968554531527,
+    "rz_err_deg": 0.02356829570308605
+   },
+   {
+    "layout": 3,
+    "jig": "Guide small",
+    "found": true,
+    "err_marker_mm": 0.016853701363153315,
+    "err_100mm_away_mm": 0.009775509532833342,
+    "rz_err_deg": 0.007001681743389554
+   },
+   {
+    "layout": 3,
+    "jig": "Guide big",
+    "found": true,
+    "err_marker_mm": 0.034610783087211265,
+    "err_100mm_away_mm": 0.01401994148180418,
+    "rz_err_deg": 0.021256252821871158
+   },
+   {
+    "layout": 4,
+    "jig": "Base A",
+    "found": true,
+    "err_marker_mm": 0.01962848855870808,
+    "err_100mm_away_mm": 0.23482435718614195,
+    "rz_err_deg": 0.1288234851862171
+   },
+   {
+    "layout": 4,
+    "jig": "Base B",
+    "found": true,
+    "err_marker_mm": 0.022009103843859575,
+    "err_100mm_away_mm": 0.030476685146735086,
+    "rz_err_deg": 0.0059590655799866
+   },
+   {
+    "layout": 4,
+    "jig": "Plank rack",
+    "found": true,
+    "err_marker_mm": 0.04811901382940413,
+    "err_100mm_away_mm": 0.05287315648127551,
+    "rz_err_deg": 0.004403881970546308
+   },
+   {
+    "layout": 4,
+    "jig": "Guide small",
+    "found": true,
+    "err_marker_mm": 0.03404037375649719,
+    "err_100mm_away_mm": 0.05059343302599511,
+    "rz_err_deg": 0.009663531606690867
+   },
+   {
+    "layout": 4,
+    "jig": "Guide big",
+    "found": true,
+    "err_marker_mm": 0.05331823674758118,
+    "err_100mm_away_mm": 0.027338728202345394,
+    "rz_err_deg": 0.04032216853070736
+   }
+  ]
+ }
+}
