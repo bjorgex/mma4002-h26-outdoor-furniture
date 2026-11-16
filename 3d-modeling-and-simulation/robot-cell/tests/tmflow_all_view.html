@@ -507,6 +507,7 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
           <option value="iso">📦 3D view</option><option value="top">⬆️ Top view</option><option value="side">➡️ Side view</option>
         </select>
         <button class="btn" data-axes="base" title="Show / hide the robot base frame's X Y Z (the Adjust panel's Base)">📐<span class="lbl"> Base XYZ</span></button><button class="btn" data-axes="tool" title="Show / hide the tool frame's X Y Z at the fingertips (Z along the gripper, X the closing direction; the Adjust panel's Tool)">🔧<span class="lbl"> Tool XYZ</span></button>
+        <button class="btn" id="qt-path" disabled title="Gripper path (μ1 per point) - full settings in the 📊 Manipulability tab">🛤️<span class="lbl"> Gripper path</span></button><button class="btn" id="qt-planes" disabled title="Manipulability map μ1 - full settings in the 📊 Manipulability tab">🗺️<span class="lbl"> Manip. map</span></button><button class="btn" id="qt-iso" disabled title="Near-singular zone - full settings in the 📊 Manipulability tab">⚠️<span class="lbl"> Singular zone</span></button>
         <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div id="sim"><div class="note" id="sim-note">loading the 3D view…</div>
@@ -1012,6 +1013,16 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
         panel.style.display = 'none';
         body.appendChild(panel);
         tabs[i].disabled = false;
+        if (t.sel === '.manip-panel') {                 // quick on/off for its 3 layer checkboxes, on the Simulator
+          [["path", "qt-path"], ["planes", "qt-planes"], ["iso", "qt-iso"]].forEach(([key, btnId]) => {
+            const cb = panel.querySelector(`[data-s="${key}"]`), btn = document.getElementById(btnId);
+            if (!cb || !btn) return;
+            btn.disabled = false;
+            btn.classList.toggle('on', cb.checked);
+            btn.onclick = () => cb.click();              // same checkbox, same state/save/apply as the full panel
+            cb.addEventListener('change', () => btn.classList.toggle('on', cb.checked));
+          });
+        }
       });
     }
   }).observe($('#sim'), { childList: true, subtree: true });
