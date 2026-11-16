@@ -350,6 +350,9 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
      together they swallow the 3D view. Shrink + cap so both still fit side by side with the view
      visible between them; they're still individually collapsible via their own ▾/▸ toggle. */
   .coll-panel, .manip-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; }
+  /* Configure mode's "Adjust step" overlay (manip_layers.js' .adj-step, bottom-right of the 3D pane):
+     same fixed-width-overlay problem, 262px inline. */
+  .adj-step { width: min(80vw, 262px) !important; font-size: 12px !important; }
   .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; }
   /* Configure mode's "Move robot" timeline (.tl-row #move-slot, built by manip_layers.js' .move-robot):
      .tl-row had width:100% but no min-width override, so flex's default min-width:auto let its legend
