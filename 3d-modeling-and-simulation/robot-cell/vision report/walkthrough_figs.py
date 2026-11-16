@@ -39,7 +39,7 @@ def coll_txt(v):
 
 
 asm = w.get("assembly") or {}
-vals = {"wtRun": run.name, "wtPhotos": w["calib_photos"], "wtRms": f"{c['rms_px']:.3f}",
+vals = {"wtRun": run.name.replace("_", r"\_"), "wtPhotos": w["calib_photos"], "wtRms": f"{c['rms_px']:.3f}",
         "wtHePos": f"{c['pos_err_mm']:.2f}", "wtHeFound": ", ".join(f"{v:.1f}" for v in c["found_offset_mm"]),
         "wtMeasMax": f"{max(e.values()):.2f}", "wtTipMax": f"{t['v10_max_mm']:.2f}", "wtTipMed": f"{t['v10_median_mm']:.2f}",
         "wtVnineMax": f"{t['v9_max_mm']:.0f}", "wtMoves": t["moves"],

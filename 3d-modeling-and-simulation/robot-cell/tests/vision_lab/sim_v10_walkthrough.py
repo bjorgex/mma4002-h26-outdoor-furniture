@@ -38,6 +38,7 @@ from jig_vision_test import POSES, follow  # noqa: E402
 # the test layout: jigs re-bolted a few mm off (translations only: the T-slots keep them square)
 LAYOUT = {"Base A": (10, 8, 0), "Base B": (-12, -9, 0), "Plank rack": (8, 10, 0)}    # x y mm, rz deg (about the pivot)
 CARRIERS = list(LAYOUT)
+PARK = [-200, 260, 600, 180, 0, 180]                  # the robot off to the side: a clear view of the plate
 REGION = ((-640, -150), (-300, 300))                  # x, y range (robot base, mm) a jig's footprint must stay inside
 ON_B = ["Guide small", "Guide big"]
 BOARD_C = [-365, 7, -1.4]                             # centre of the EMPTY T-slot plate (top z -4.4), board 3 mm thick
@@ -354,7 +355,7 @@ def main():
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 160, 0), 2, cv2.LINE_AA)
             tp.append(label(img, f"4  Taught layout: {name}", "markers found (green) -> where each jig was taught"))
         grid(tp, pics / "s4_taught.png", 2)
-        go(POSES["top"])
+        go(PARK)
         before = ov.shot(pics / "_before.png", *TOPV)
 
         # 5 move the jigs

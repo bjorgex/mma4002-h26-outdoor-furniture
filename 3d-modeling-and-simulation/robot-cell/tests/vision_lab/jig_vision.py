@@ -59,7 +59,9 @@ class Photo:
 
     def truth(self, name):
         o = self.meta.get("objects", {}).get(name)
-        return {"x": o["x"], "y": o["y"], "rz": o["rz"]} if o else {"x": 0.0, "y": 0.0, "rz": 0.0}
+        if not o:
+            return {"x": 0.0, "y": 0.0, "rz": 0.0, "T_move": np.eye(4).tolist()}
+        return {"x": o["x"], "y": o["y"], "rz": o["rz"], **({"T_move": o["T_move"]} if o.get("T_move") else {})}
 
 
 def move_from_rigid2d(Rm, t, pivot):
@@ -309,10 +311,14 @@ def outline(photo, name, mv):
     """The jig's CAD box top, moved by mv (x y rz about the pivot), as image points."""
     jm = photo.model[name]
     (x0, y0, _), (x1, y1, z) = jm["box_min"], jm["box_max"]
-    p = np.array(jm["pivot"][:2]); r = math.radians(mv["rz"])
-    Rm = np.array([[math.cos(r), -math.sin(r)], [math.sin(r), math.cos(r)]])
     Q = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]])
-    Q = (Rm @ (Q - p).T).T + p + [mv["x"], mv["y"]]
+    if mv.get("T_move") is not None:                  # the move itself: no pivot to agree on
+        T = np.array(mv["T_move"])
+        Q = (T[:2, :2] @ Q.T).T + T[:2, 3]
+    else:
+        p = np.array(jm["pivot"][:2]); r = math.radians(mv["rz"])
+        Rm = np.array([[math.cos(r), -math.sin(r)], [math.sin(r), math.cos(r)]])
+        Q = (Rm @ (Q - p).T).T + p + [mv["x"], mv["y"]]
     return photo.project(np.c_[Q, np.full(4, z)])
 
 
