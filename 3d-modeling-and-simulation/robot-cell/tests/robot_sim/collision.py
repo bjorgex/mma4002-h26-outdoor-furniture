@@ -253,7 +253,12 @@ def check_program(moves, cell_layout="v7", step=2.0, parts=False, shift=None, eg
     for name, d in (shift or {}).items():
         kind, mesh = cell[name]
         mesh = mesh.copy()
-        mesh.apply_translation(d)
+        if len(d) > 3:                                   # dx,dy,dz,rz: T_move = Rz(rz) about the base z axis, then +d
+            import math
+            c, s_ = math.cos(math.radians(d[3])), math.sin(math.radians(d[3]))
+            mesh.apply_transform([[c, -s_, 0, d[0]], [s_, c, 0, d[1]], [0, 0, 1, d[2]], [0, 0, 0, 1]])
+        else:
+            mesh.apply_translation(d)
         cell[name] = (kind, mesh)
     names = [s.get("name", "") for s in moves["steps"] if "move" in s]
     # optional per-move finger gap (a moves file's "egp_gap", mm between the fingers' inner faces; v8: Hand-E
@@ -391,7 +396,8 @@ def main():
     ap.add_argument("--cell", required=True, help='"v6", "v7", a cell .glb or a cell_layout json')
     ap.add_argument("--step", type=float, default=2.0, help="sampling, mm (Line) / deg (PTP), default 2")
     ap.add_argument("--parts", action="store_true", help="also check against the parts")
-    ap.add_argument("--shift", action="append", default=[], help='"<object>:dx,dy,dz" (mm, robot base axes)')
+    ap.add_argument("--shift", action="append", default=[], help='"<object>:dx,dy,dz[,rz]" (mm, robot base axes; rz deg: '
+                    'x' = Rz x + d, a jig_vision T_move)')
     ap.add_argument("--list", action="store_true", help="every colliding move, not the first 20")
     ap.add_argument("--geometry", choices=list(K.GEOMETRY), default="robodk")
     a = ap.parse_args()

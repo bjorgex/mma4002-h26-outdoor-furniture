@@ -36,7 +36,9 @@ from calibrate_test import aim, go, post, snap  # noqa: E402
 from jig_vision_test import POSES, follow  # noqa: E402
 
 # the test layout: jigs re-bolted a few mm off (translations only: the T-slots keep them square)
-LAYOUT = {"Base A": (10, 8), "Base B": (-12, -9), "Plank rack": (8, 10)}
+LAYOUT = {"Base A": (10, 8, 0), "Base B": (-12, -9, 0), "Plank rack": (8, 10, 0)}    # x y mm, rz deg (about the pivot)
+CARRIERS = list(LAYOUT)
+REGION = ((-640, -150), (-300, 300))                  # x, y range (robot base, mm) a jig's footprint must stay inside
 ON_B = ["Guide small", "Guide big"]
 BOARD_C = [-365, 7, -1.4]                             # centre of the EMPTY T-slot plate (top z -4.4), board 3 mm thick
 TILTS = [(0, 0, 0), (15, 0, 0), (-15, 0, 0), (0, 15, 0), (0, -15, 0), (10, 10, 30), (-10, 10, -30), (10, -10, -30),
@@ -51,7 +53,7 @@ PHASES = [("calibration_board", "Calibration: jigs out, board flat on the empty 
           ("measure_jigs", "Measure: 2 photos -> jig moves (moves.json)"),
           ("build_v10", "Build V10 from the measured moves"),
           ("v9_vs_v10", "V9 vs V10 at the same grips"),
-          ("v10_stages", "V10: one pose per stage")]
+          ("v10_assembly", "V10: full assembly, a picture at every grab and release")]
 PH = {"k": 0}
 
 
@@ -137,6 +139,54 @@ TOPV = ([-380, 5, 900], [-380, 6, 0])                 # straight down on the pla
 CLOSE = lambda c: ([c[0] + 170, c[1] - 280, c[2] + 210], c)      # noqa: E731  a close-up of point c
 
 
+def move_about(pivot, x, y, rz):
+    """The world move (4x4) of a jig turned rz deg about its pivot and shifted x, y (as jig_layer's matrixOf)."""
+    c, s_ = np.cos(np.radians(rz)), np.sin(np.radians(rz))
+    p = np.array(pivot[:2], float)
+    T = np.eye(4); T[:2, :2] = [[c, -s_], [s_, c]]; T[:2, 3] = p + [x, y] - T[:2, :2] @ p
+    return T
+
+
+def footprint(box, T):
+    """The jig's CAD box (xy) moved by T, as a cv2 rotated rect ((cx, cy), (w, h), deg)."""
+    lo, hi = np.array(box["box_min"][:2]), np.array(box["box_max"][:2])
+    c = (T @ [*(lo + hi) / 2, 0, 1])[:2]
+    return (tuple(float(v) for v in c), tuple(float(v) for v in hi - lo), float(np.degrees(np.arctan2(T[1, 0], T[0, 0]))))
+
+
+def random_layout(rng, boxes, max_move, max_rot, tries=500):
+    """Jigs put down anywhere: each carrier shifted up to max_move mm and turned up to max_rot deg, footprints inside
+    REGION, apart by 10 mm, and every v10 target reachable (bench_cell_v10 with the true moves)."""
+    import bench_cell_v10
+    for _ in range(tries):
+        lay = {n: (round(rng.uniform(-max_move, max_move)), round(rng.uniform(-max_move, max_move)),
+                   round(rng.uniform(-max_rot, max_rot))) for n in CARRIERS}
+        T = {n: move_about(boxes[n]["pivot"], *lay[n]) for n in CARRIERS}
+        rects = {n: footprint(boxes[n], T[n]) for n in CARRIERS}
+        pts = {n: cv2.boxPoints(r) for n, r in rects.items()}
+        if any(not (REGION[0][0] <= q[0] <= REGION[0][1] and REGION[1][0] <= q[1] <= REGION[1][1])
+               for P in pts.values() for q in P):
+            continue
+        grown = {n: (r[0], (r[1][0] + 10, r[1][1] + 10), r[2]) for n, r in rects.items()}
+        if any(cv2.rotatedRectangleIntersection(grown[a], grown[b])[0] != cv2.INTERSECT_NONE
+               for i, a in enumerate(CARRIERS) for b in CARRIERS[i + 1:]):
+            continue
+        tmp = HERE / "_layout_try.json"
+        tmp.write_text(json.dumps({"moves": {n: {"T_move": T[n].tolist()} for n in CARRIERS}}))
+        out = bench_cell_v10.OUT
+        try:
+            bench_cell_v10.OUT = HERE / "_layout_try_v10.json"
+            bench_cell_v10.build(tmp)
+            return lay
+        except SystemExit:
+            continue
+        finally:
+            bench_cell_v10.OUT = out
+            for f in (tmp, HERE / "_layout_try_v10.json"):
+                f.unlink(missing_ok=True)
+    raise SystemExit("no reachable layout found")
+
+
 def label(img, text, sub=None):
     img = img.copy()
     cv2.rectangle(img, (0, 0), (img.shape[1], 44 if not sub else 74), (255, 255, 255), -1)
@@ -161,16 +211,59 @@ def grid(paths, out, cols, w=640):
     return out
 
 
+def assembly(ov, pics, log, speed):
+    """Step 9: the v10-full preset with the jigs where they are now, a picture at every grab and release (the part the
+    gripper holds changes). Needs this script NOT to run as a preset itself (the mock runs one at a time)."""
+    import sim_camera
+    sim = lambda m, p, b=None: sim_camera.http(m, p, b, timeout=30)   # noqa: E731
+    post("/vision/mode", {"name": None})
+    sim("POST", "/speed", {"fast": speed})
+    code, r = sim("POST", "/scenario/run", {"name": "v10-full"})
+    if code != 200:
+        print(f"assembly run not started ({code}: {r.get('msg') if isinstance(r, dict) else r}) - run preset v10-full yourself")
+        log["assembly"] = "not run"
+        return
+    ov.hide()
+    shots, held, t0, st = [], None, time.time(), "running"
+    while time.time() - t0 < 1800:
+        h = ov.js("window.__sim.held || null")
+        if h != held:
+            what = f"Grab {h}" if h else f"Release {held}"
+            k = len(shots) + 1
+            shots.append(label(cv2.imread(str(ov.shot(pics / f"_asm{k:02d}.png", *ISO, wait=0.2))), f"{k}  {what}"))
+            print(f"  {k}: {what}", flush=True)
+            held = h
+        st = sim("GET", "/scenarios")[1].get("state")
+        if st not in ("running", "starting"):
+            break
+        time.sleep(0.15)
+    shots.append(label(cv2.imread(str(ov.shot(pics / "_asm_end.png", *ISO))), f"{len(shots) + 1}  Finished: bench on the AMR"))
+    log["assembly"] = {"state": st, "events": len(shots) - 1, "secs": round(time.time() - t0)}
+    for i in range(0, len(shots), 12):
+        grid(shots[i:i + 12], pics / f"s9_assembly_{i // 12 + 1}.png", 3)
+    print("assembly:", log["assembly"])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--reset", action="store_true")
+    ap.add_argument("--seed", type=int, help="a random layout (jigs put down anywhere) instead of the fixed LAYOUT")
+    ap.add_argument("--max-move", type=float, default=60, help="random layout: shift up to this, mm (default 60)")
+    ap.add_argument("--max-rot", type=float, default=20, help="random layout: turn up to this, deg (default 20)")
+    ap.add_argument("--speed", type=float, default=2, help="robot speed for the v10 assembly run (default x2)")
+    ap.add_argument("--no-assembly", action="store_true", help="skip the v10 assembly run (step 9)")
     ap.add_argument("--collision", action="store_true", help="also collision.py for v9 and v10 (about 20 min each)")
     a = ap.parse_args()
     out = HERE / "results" / ("walkthrough_" + time.strftime("%Y%m%d-%H%M%S"))
     pics, shots, real = out / "pics", out / "he_shots", out / "real_shots"
     for d in (pics, shots, real):
         d.mkdir(parents=True)
-    log = {"layout": LAYOUT}
+    if a.seed is not None:
+        import random
+        boxes = json.loads((HERE / "jig_boxes_v9.json").read_text())["jigs"]
+        LAYOUT.clear(); LAYOUT.update(random_layout(random.Random(a.seed), boxes, a.max_move, a.max_rot))
+        print("random layout:", LAYOUT, flush=True)
+    log = {"layout": LAYOUT, "seed": a.seed}
     renderer.start()
     ov = Overview()
     try:
@@ -268,14 +361,15 @@ def main():
         phase(5)
         mode("Jig measuring", "5 &nbsp;Jigs moved (as if re-bolted a few mm off)")
         model = ref_meta["jig_model"]["jigs"]
-        offs = {n: {"x": x, "y": y, "z": 0, "rz": 0} for n, (x, y) in LAYOUT.items()}
+        offs = {n: {"x": x, "y": y, "z": 0, "rz": rz} for n, (x, y, rz) in LAYOUT.items()}
+        TRUE = {n: move_about(model[n]["pivot"], *LAYOUT[n]) for n in CARRIERS}
         for g in ON_B:
             offs[g] = follow(offs["Base B"], model["Base B"]["pivot"], model[g]["pivot"])
         post("/vision/jigs/set", {"reset": True, "offsets": offs})
         time.sleep(1.5)
         after = ov.shot(pics / "_after.png", *TOPV)
         grid([label(cv2.imread(str(before)), "Taught layout"),
-              label(cv2.imread(str(after)), "5  Jigs moved", "  ".join(f"{n} {x:+d}/{y:+d} mm" for n, (x, y) in LAYOUT.items()))],
+              label(cv2.imread(str(after)), "5  Jigs moved", "  ".join(f"{n} {x:+d}/{y:+d} mm {rz:+d} deg" for n, (x, y, rz) in LAYOUT.items()))],
              pics / "s5_moved.png", 2)
 
         phase(6)
@@ -291,8 +385,11 @@ def main():
               for p, w in zip(ovl, ("overview", "above the rack")) if p.exists()], pics / "s6_measured.png", 2)
         found = json.loads(moves.read_text())["moves"]
         log["measured"] = {n: {"x": round(v["x"], 2), "y": round(v["y"], 2), "rz": round(v["rz"], 3)} for n, v in found.items()}
-        log["measure_err_mm"] = {n: round(float(np.hypot(found[n]["x"] - LAYOUT[n][0], found[n]["y"] - LAYOUT[n][1])), 3)
-                                 for n in LAYOUT if n in found}
+        log["measure_err_mm"] = {}                       # at the marker centre: found move vs true move
+        for n in CARRIERS:
+            if n in found:
+                c = np.array([*model[n]["marker"]["centre"], 1.0])
+                log["measure_err_mm"][n] = round(float(np.linalg.norm((np.array(found[n]["T_move"]) @ c - TRUE[n] @ c)[:3])), 3)
         print("measured:", log["measured"], "error:", log["measure_err_mm"])
 
         # 7 v10
@@ -311,11 +408,11 @@ def main():
         for s9, s10 in zip(v9, v10["steps"]):
             if "move" not in s9 or not s10.get("jig"):
                 continue
-            want = np.array([*LAYOUT[s10["jig"]], 0])
             F9, F10 = (np.array(tm5_kin.pose_to_mat(s["flange"])) for s in (s9, s10))
             p9, p10 = ((F @ [0, 0, tip, 1])[:3] for F in (F9, F10))
-            rows.append({"name": s9["name"], "jig": s10["jig"], "v9_err_mm": float(np.linalg.norm(want)),   # v9 stays put
-                         "v10_err_mm": float(np.linalg.norm(p10 - (p9 + want)))})
+            want = (TRUE[s10["jig"]] @ [*p9, 1])[:3]                       # the taught tip, moved with its jig
+            rows.append({"name": s9["name"], "jig": s10["jig"], "v9_err_mm": float(np.linalg.norm(want - p9)),
+                         "v10_err_mm": float(np.linalg.norm(p10 - want))})
         log["tip_err"] = {"moves": len(rows), "v9_max_mm": max(r["v9_err_mm"] for r in rows),
                           "v10_max_mm": max(r["v10_err_mm"] for r in rows),
                           "v10_median_mm": float(np.median([r["v10_err_mm"] for r in rows]))}
@@ -323,8 +420,9 @@ def main():
         shift = []
         for n, o in json.loads(snap()[0].read_text())["objects"].items():   # every moved object, parts included
             T_m = np.array(o["T_move"])
-            if np.linalg.norm(T_m[:3, 3]) > 0.01:
-                shift += ["--shift", f"{n}:{T_m[0, 3]:.2f},{T_m[1, 3]:.2f},{T_m[2, 3]:.2f}"]
+            if np.linalg.norm(T_m[:3, 3]) > 0.01 or abs(T_m[1, 0]) > 1e-6:
+                rz = np.degrees(np.arctan2(T_m[1, 0], T_m[0, 0]))
+                shift += ["--shift", f"{n}:{T_m[0, 3]:.3f},{T_m[1, 3]:.3f},{T_m[2, 3]:.3f},{rz:.4f}"]
         log["collisions"] = {}
         for v in (("v9", "v10") if a.collision else ()):
             r = subprocess.run([PY, str(HERE.parent / "robot_sim" / "collision.py"), str(HERE.parent / f"{v}_moves.json"),
@@ -347,22 +445,16 @@ def main():
                 F = np.array(tm5_kin.pose_to_mat(st["flange"]))
                 c = (F @ [0, 0, tip, 1])[:3]
                 jig = next(s for s in v10["steps"] if s.get("name") == nm)["jig"]
-                ok = "on target" if v == "v10" else f"{np.linalg.norm(LAYOUT[jig]):.0f} mm off ({jig} was moved)"
+                off = next(r["v9_err_mm"] for r in rows if r["name"] == nm)
+                ok = "on target" if v == "v10" else f"{off:.0f} mm off ({jig} was moved)"
                 cmp_.append(label(cv2.imread(str(ov.shot(pics / f"_{v}_{nm}.png", *CLOSE(c)))), f"{v.upper()}  {nm}", ok))
                 go(above)
         grid(cmp_, pics / "s8_v9_vs_v10.png", 2)
 
         phase(9)
-        mode("V10", "9 &nbsp;One pose per stage")
-        # robot movements of v10: one picture per stage (its first grip), whole cell
-        stage_pics = []
-        for stage in sorted({s["stage"] for s in v10["steps"] if "move" in s}):
-            sts = [s for s in v10["steps"] if s.get("stage") == stage and "move" in s]
-            st = next((s for s in sts if s["name"].endswith(("pick", "grip"))), sts[len(sts) // 2])
-            go(st["flange"])
-            stage_pics.append(label(cv2.imread(str(ov.shot(pics / f"_stage{stage}.png", *ISO))), f"Stage {stage}: {st['name']}"))
-        grid(stage_pics, pics / "s9_v10_stages.png", 3)
         go(POSES["top"])
+        if not a.no_assembly:
+            assembly(ov, pics, log, a.speed)
         phase(0)
     finally:
         try:

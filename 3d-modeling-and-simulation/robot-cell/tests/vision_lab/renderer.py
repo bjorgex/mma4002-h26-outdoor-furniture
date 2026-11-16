@@ -17,7 +17,7 @@ from pathlib import Path
 PORT = 9333
 PROFILE = Path(tempfile.gettempdir()) / "sim-renderer-profile"
 BROWSERS = [r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe"]
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe", "/usr/bin/chromium", "/usr/bin/google-chrome"]
 URL = "http://127.0.0.1:8090/all?renderer"
 
 
@@ -82,6 +82,8 @@ def stop():
                         "Get-CimInstance Win32_Process -Filter \"Name='msedge.exe' or Name='chrome.exe'\" | "
                         f"Where-Object {{ $_.CommandLine -like '*{PROFILE.name}*' }} | "
                         "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"])
+    else:
+        subprocess.run(["pkill", "-f", PROFILE.name])
 
 
 if __name__ == "__main__":

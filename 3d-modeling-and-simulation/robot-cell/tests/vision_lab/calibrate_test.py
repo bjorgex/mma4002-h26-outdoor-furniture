@@ -45,7 +45,7 @@ def snap():
 
 
 def go(pose):
-    code, r = sim_camera.http("POST", "/vision/jog", {"to": [float(v) for v in pose], "speed": 100})
+    code, r = sim_camera.http("POST", "/vision/jog", {"to": [float(v) for v in pose], "speed": 100}, timeout=180)
     time.sleep(1.0)
     return code == 200
 

@@ -19,12 +19,12 @@ from pathlib import Path
 HOST = "127.0.0.1"
 
 
-def http(method, path, body=None, port=8090):
+def http(method, path, body=None, port=8090, timeout=10):
     req = urllib.request.Request(f"http://{HOST}:{port}{path}", method=method,
                                  data=None if body is None else json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, json.loads(r.read() or b"{}")
     except urllib.error.HTTPError as e:
         return e.code, json.loads(e.read() or b"{}")
