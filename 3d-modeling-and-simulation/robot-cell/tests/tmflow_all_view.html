@@ -321,14 +321,21 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
 .tm-skin.demo .talk { font-size: 15px; max-height: none; }
 @media (max-width: 1000px) {
   body { overflow: auto; }
-  .tm-skin.page { height: auto; }
+  /* root cause of every overflow above: .tm-skin.page is a grid with no grid-template-columns, so its
+     one implicit column auto-sizes to the header's max-content width (408px here) instead of capping
+     to the viewport - the header (and everything else) then rendered in a wider-than-screen track. */
+  .tm-skin.page { height: auto; grid-template-columns: minmax(0, 1fr); }
   .panes, .panes.cols, .demo .panes, .demo .panes.cols { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "tm" "py" "sim"; }
   /* let tm/py panes size to their content instead of a blanket 85vh (which left huge blank
      space below a short log); #sim still needs a real height, its canvas is absolutely positioned */
   .tm-skin .pane { height: auto; max-height: 75vh; }
   #p-sim { height: 60vh; max-height: 60vh; }
   .pane.max { height: auto !important; max-height: none !important; }
-  /* header controls: let each group wrap instead of forcing one long unbreakable line */
+  /* header controls: let each group wrap instead of forcing one long unbreakable line.
+     flex-wrap alone isn't enough - these are flex items with the default min-width:auto, so
+     without min-width:0 each one still refuses to shrink below ITS OWN content's natural width
+     (e.g. .scen wouldn't shrink below the width needed to show the scenario <select> unwrapped) */
+  .top .right, .top .right > * { min-width: 0; }
   .top .right { row-gap: 10px; }
   .env, .scen, .show-panes { flex-wrap: wrap; row-gap: 6px; }
   .sliders .srow { flex-wrap: wrap; row-gap: 4px; }
@@ -344,6 +351,13 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
      visible between them; they're still individually collapsible via their own ▾/▸ toggle. */
   .coll-panel, .manip-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; }
   .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; }
+  /* Configure mode's "Move robot" timeline (.tl-row #move-slot, built by manip_layers.js' .move-robot):
+     .tl-row had width:100% but no min-width override, so flex's default min-width:auto let its legend
+     row's unwrapped content (grip/release/stiff/collision chips) force the WHOLE page ~18px wider than
+     the screen. Let it shrink, and let the legend wrap instead of demanding one unbroken line. */
+  .tl-row { min-width: 0; }
+  .move-robot .tlhead { flex-wrap: wrap !important; row-gap: 4px !important; }
+  .move-robot .tl { min-width: 0 !important; }
 }
 </style>
 <script type="importmap">
