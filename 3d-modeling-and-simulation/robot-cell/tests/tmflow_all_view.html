@@ -214,6 +214,20 @@ body { padding: 0; overflow: hidden; }
    mobile-only caps below (vw-based, #sim there ≈ full viewport width) shrink them further for a phone. */
 .coll-panel, .manip-panel, .jig-panel { max-width: 38% !important; }
 .vis-panel { max-width: min(38%, 330px) !important; }
+/* ...but in practice all four get reparented into one dock (below) the moment they're created, so this
+   cap only matters for the one paint frame before that happens - belt and suspenders. */
+/* Single dock for the 3D view's 4 tool panels (see the script using TOOLS/slots below): one tab row,
+   emoji per tool, and a body that holds whichever tool's own (unmodified) panel node is currently picked. */
+.sim-dock { position: absolute; z-index: 6; right: 10px; top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: min(70%, 320px); }
+.sim-dock-tabs { display: flex; gap: 2px; background: #10232ae8; border-radius: 7px; padding: 3px; box-shadow: 0 2px 8px #0003; }
+.sim-dock-tabs button { font-size: 17px; line-height: 1; padding: 4px 8px; border-radius: 5px; border: none; background: transparent; cursor: pointer; opacity: .55; }
+.sim-dock-tabs button:hover:not(:disabled) { opacity: .85; }
+.sim-dock-tabs button:disabled { opacity: .2; cursor: default; }
+.sim-dock-tabs button.on { background: #2c6fbf; opacity: 1; }
+.sim-dock-tabs button.x { opacity: .55; font-size: 13px; }
+.sim-dock.empty .sim-dock-tabs button.x { display: none; }
+.sim-dock-body { width: 100%; }
+.sim-dock.empty .sim-dock-body { display: none; }
 /* demo_run.py steps, as compact TMflow node chips */
 #steps { display: flex; flex-wrap: wrap; gap: 5px 4px; padding: 8px 10px; margin: 10px 10px 0; border: 1px solid var(--tm-frame); }
 #steps[hidden] { display: none; }
@@ -950,22 +964,56 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   window.__sim = sim;                                    // for checks from the console
 }).catch(e => { $('#sim-note').textContent = '3D view not loaded: ' + e.message; });
 
-// On a phone, start the Collisions/Manipulability overlay panels collapsed (just their header bar) so the
-// 3D view underneath isn't mostly covered the moment they appear; they're built async (collision_layer.js /
-// manip_layers.js, imported from inside sim_scene.js) so watch for them instead of a fixed delay. Each still
-// opens normally with its own ▾/▸ toggle - this only changes the default a narrow screen starts with.
-if (matchMedia('(max-width: 1000px)').matches) {
-  const collapsedOnce = new WeakSet();
+// The 3D view used to get 4 independent floating panels (collision_layer.js' .coll-panel, manip_layers.js'
+// .manip-panel, jig_layer.js' .jig-panel, vision_layer.js' .vis-panel), one per corner. Opening any one of
+// them to actually look at it fights the others and the view underneath for space. Replace that with one
+// small dock in a single corner: an emoji tab per tool: tapping one reparents that tool's own panel node
+// into the dock body (nothing lost - its own internal controls/toggles still work exactly as before) and
+// hides whichever tool was showing; tapping the same tab again, or the ✕, clears the dock back to just the
+// tab row. Default: nothing open, full 3D view. The 4 panels still load async, so watch for them instead
+// of a fixed delay.
+{
+  const TOOLS = [
+    { sel: '.coll-panel', emoji: '💥', title: 'Collisions' },
+    { sel: '.manip-panel', emoji: '📊', title: 'Manipulability' },
+    { sel: '.jig-panel', emoji: '🧩', title: 'Jigs' },
+    { sel: '.vis-panel', emoji: '🎥', title: 'Camera' },
+  ];
+  const dock = document.createElement('div');
+  dock.className = 'sim-dock empty';
+  dock.innerHTML = `<div class="sim-dock-tabs">${TOOLS.map((t, i) =>
+    `<button data-i="${i}" title="${t.title}" disabled>${t.emoji}</button>`).join('')}<button class="x" title="Close">✕</button></div>` +
+    `<div class="sim-dock-body"></div>`;
+  $('#sim').appendChild(dock);
+  const tabs = [...dock.querySelectorAll('[data-i]')];
+  const slots = TOOLS.map(() => null);                   // each tool's own panel element, once it exists
+  const body = dock.querySelector('.sim-dock-body');
+  let active = -1;
+  function show(i) {
+    active = active === i ? -1 : i;
+    slots.forEach((el, j) => { if (el) el.style.display = j === active ? '' : 'none'; });
+    tabs.forEach((b, j) => b.classList.toggle('on', j === active));
+    dock.classList.toggle('empty', active === -1);
+  }
+  tabs.forEach((b, i) => b.onclick = () => show(i));
+  dock.querySelector('.x').onclick = () => show(-1);
   new MutationObserver(muts => {
     for (const m of muts) for (const node of m.addedNodes) {
       if (!(node instanceof HTMLElement)) continue;
-      const panel = node.matches?.('.coll-panel, .manip-panel') ? node : node.querySelector?.('.coll-panel, .manip-panel');
-      if (panel && !collapsedOnce.has(panel)) {
-        collapsedOnce.add(panel);
-        const toggle = panel.querySelector('[data-k="toggle"]');
-        const body = panel.querySelector('[data-k="body"]');
-        if (toggle && body && body.style.display !== 'none') toggle.click();
-      }
+      TOOLS.forEach((t, i) => {
+        if (slots[i]) return;
+        const panel = node.matches?.(t.sel) ? node : node.querySelector?.(t.sel);
+        if (!panel) return;
+        slots[i] = panel;
+        // !important: the per-panel CSS caps added earlier (width: min(Nvw, Npx) !important, for the one
+        // paint frame before this runs) would otherwise keep beating a plain inline override here too.
+        panel.style.setProperty('position', 'static', 'important');
+        panel.style.setProperty('width', '100%', 'important');
+        panel.style.setProperty('max-width', 'none', 'important');
+        panel.style.display = 'none';
+        body.appendChild(panel);
+        tabs[i].disabled = false;
+      });
     }
   }).observe($('#sim'), { childList: true, subtree: true });
 }
