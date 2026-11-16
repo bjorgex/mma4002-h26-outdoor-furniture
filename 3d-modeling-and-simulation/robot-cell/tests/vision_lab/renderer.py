@@ -63,7 +63,7 @@ def start(wait=40):
         sys.exit("no Edge/Chrome found")
     subprocess.Popen([exe, "--headless=new", "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
                       "--ignore-gpu-blocklist", "--window-size=1600,1000", f"--user-data-dir={PROFILE}",
-                      f"--remote-debugging-port={PORT}", URL],
+                      f"--remote-debugging-port={PORT}", f"--remote-allow-origins=http://127.0.0.1:{PORT}", URL],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     t0 = time.time()
     while time.time() - t0 < wait:                      # until the 3D view, jigs and camera layers are up

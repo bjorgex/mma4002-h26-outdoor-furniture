@@ -42,8 +42,8 @@
 \begin{itemize}[leftmargin=4mm]
 \item \textbf{Use ArUco markers}, one per jig: median \textbf{0.14\,mm}, worst 0.5\,mm. Colour and feature matching are worse.
 \item \textbf{Calibrate on the empty plate}, then put the jigs back: the camera finds them wherever they are.
-\item \textbf{V10} = V9 moved to where the camera found the jigs. Jigs moved by up to \wtVnineMax\,mm: V10 lands within
-\textbf{\wtTipMax\,mm} of every grip and place; V9 misses by up to \wtVnineMax\,mm.
+\item \textbf{Jigs put down anywhere} (moved and turned): the camera measures them, \textbf{V10} = V9 moved with them.
+V10 lands within \textbf{\wtTipMax\,mm} of every grip and place; V9 misses by up to \wtVnineMax\,mm.
 \end{itemize}
 \end{tcolorbox}
 
@@ -93,25 +93,26 @@ shadowed photos.}
 \captionof{figure}{Overview + straight above the rack (the planks hide its marker from the side). Every marker found
 $\rightarrow$ \code{real\_jigs.json}.}
 
-\step{Step 5 -- the jigs are moved (as if re-bolted a few mm off)}
+\step{Step 5 -- the jigs are put down somewhere else (moved and turned)}
 \includegraphics[width=\linewidth]{figures/wt_s5_moved.jpg}
 \captionof{figure}{Before / after, seen from above.}
 
 \step{Step 6 -- measure: the same two photos again}
 \includegraphics[width=\linewidth]{figures/wt_s6_measured.jpg}
-\captionof{figure}{Red = true place, green = found (they overlap). Set vs measured, mm (x/y): Base A \wtSetA{} vs
-\wtGotA, Base B \wtSetB{} vs \wtGotB, rack \wtSetR{} vs \wtGotR{} -- error $\le$\wtMeasMax\,mm.}
+\captionof{figure}{Red = true place, green = found (they overlap). Set vs measured (x/y about the jig's pivot, rz):
+Base A \wtSetA{} vs \wtGotA; Base B \wtSetB{} vs \wtGotB; rack \wtSetR{} vs \wtGotR. Error at the markers
+$\le$\wtMeasMax\,mm.}
 
 \newpage
 \step{Steps 7--8 -- V10: every taught point moved with its jig}
 \includegraphics[width=\linewidth]{figures/wt_s8_v9_vs_v10.jpg}
 \captionof{figure}{The same grip and place on the moved jigs. V9 (taught points) misses; V10 is on target. Over all
-\wtMoves{} moves above a jig: V10 within \wtTipMax\,mm (median \wtTipMed), V9 up to \wtVnineMax\,mm off.}
+\wtMoves{} moves above a jig: V10 within \wtTipMax\,mm (median \wtTipMed), V9 up to \wtVnineMax\,mm off.
+Collision check with the jigs where they are now -- V9: \wtCollNine; V10: \wtCollTen.}
 
-\step{Step 9 -- V10, one pose per stage}
-\includegraphics[width=\linewidth]{figures/wt_s9_v10_stages.jpg}
-\captionof{figure}{The 7 stages of V10 with the moved jigs (preset \emph{v10 $\cdot$ v9 moved to the jigs the camera
-found}).}
+\newpage
+\step{Step 9 -- V10 assembles the bench on the moved jigs (\wtAsmEvents{} grabs and releases, run: \wtAsmState)}
+\input{wt_assembly.tex}
 
 \newpage
 \step{In the lab -- checklist}
