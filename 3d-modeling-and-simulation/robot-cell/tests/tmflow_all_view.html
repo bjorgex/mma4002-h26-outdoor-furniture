@@ -206,6 +206,14 @@ body { padding: 0; overflow: hidden; }
   font: 12.5px/1.45 var(--tm-font); padding: 5px 10px; pointer-events: none; max-width: calc(100% - 40px); }
 #sim .hud b { font-weight: 600; }
 #sim .note { position: absolute; inset: 0; display: grid; place-items: center; color: #555; font: 14px var(--tm-font); }
+/* The 3D view's own overlay panels (collision_layer.js' .coll-panel, manip_layers.js' .manip-panel,
+   jig_layer.js' .jig-panel, vision_layer.js' .vis-panel) each hardcode a 265-330px width meant for a
+   large desktop pane. Two share each corner pair (top: coll+manip, bottom: jig+vis) - cap each to a
+   share of #sim's OWN width (not the viewport: #sim can be much narrower than the window too, e.g. a
+   3-column desktop layout) so the pair can't exceed it between them, on any pane size. The tighter
+   mobile-only caps below (vw-based, #sim there ≈ full viewport width) shrink them further for a phone. */
+.coll-panel, .manip-panel, .jig-panel { max-width: 38% !important; }
+.vis-panel { max-width: min(38%, 330px) !important; }
 /* demo_run.py steps, as compact TMflow node chips */
 #steps { display: flex; flex-wrap: wrap; gap: 5px 4px; padding: 8px 10px; margin: 10px 10px 0; border: 1px solid var(--tm-frame); }
 #steps[hidden] { display: none; }
@@ -357,6 +365,11 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   /* the live-status HUD (#sim .hud, top-left) had no width limit accounting for the Collisions panel
      (top-right): a long status line ran full-width and straight under it. Leave the panel's corner clear. */
   #sim .hud { max-width: 54vw !important; }
+  /* same fixed-width-overlay problem, bottom corners this time: jig_layer.js' .jig-panel (bottom-left,
+     300px) and vision_layer.js' .vis-panel (bottom-right, max-width 330px) - same treatment as the top pair. */
+  .jig-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; max-height: 40vh !important; overflow-y: auto !important; }
+  .vis-panel { max-width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; max-height: 40vh !important; overflow-y: auto !important; }
+  .vis-panel .pad { grid-template-columns: repeat(3, 30px) !important; grid-auto-rows: 28px !important; }
   /* Configure mode's "Adjust step" overlay (manip_layers.js' .adj-step, bottom-right of the 3D pane):
      same fixed-width-overlay problem, 262px inline. */
   .adj-step { width: min(80vw, 262px) !important; font-size: 12px !important; }

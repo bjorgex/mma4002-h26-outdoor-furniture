@@ -295,8 +295,8 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
   panel.className = "jig-panel";
   panel.innerHTML = `
     <div class="row" style="margin-top:0"><b>Jigs</b><span class="muted" data-k="sum"></span><span style="flex:1"></span>
-      <button data-k="markers" title="Show / hide the ArUco markers on the jigs (for marker-based vision)">Markers</button>
-      <button data-k="open" title="Move jigs: select, lock together, move / turn">Move jigs</button></div>
+      <button data-k="markers" title="Show / hide the ArUco markers on the jigs (for marker-based vision)">🏷️<span class="lbl"> Markers</span></button>
+      <button data-k="open" title="Move jigs: select, lock together, move / turn">✋<span class="lbl"> Move jigs</span></button></div>
     <div class="body">
       <div class="list" data-k="list"></div>
       <div class="row"><button data-k="lock" title="The selected jigs become one group: they are always selected and moved together">🔗 Lock together</button>

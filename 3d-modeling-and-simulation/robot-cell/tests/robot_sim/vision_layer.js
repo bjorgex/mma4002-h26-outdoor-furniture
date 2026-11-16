@@ -209,9 +209,9 @@ export function addVisionLayer({ THREE, scene, camera, renderer, controls, el, L
   panel.className = "vis-panel";
   panel.innerHTML = `
     <div class="row" style="margin-top:0"><b>Camera</b><span style="flex:1"></span>
-      <button data-k="pip" title="Show the tool camera's live view (bottom right)">Camera view</button>
-      <button data-k="snap" title="Save a photo from the tool camera (tests/vision_lab/sim_shots/)">📷 Photo</button>
-      <button data-k="jog" title="Free move: jog the arm (and so the camera) - the program and the taught points are not changed">✥ Free move</button>
+      <button data-k="pip" title="Show the tool camera's live view (bottom right)">🎥<span class="lbl"> Camera view</span></button>
+      <button data-k="snap" title="Save a photo from the tool camera (tests/vision_lab/sim_shots/)">📷<span class="lbl"> Photo</span></button>
+      <button data-k="jog" title="Free move: jog the arm (and so the camera) - the program and the taught points are not changed">✥<span class="lbl"> Free move</span></button>
       <button data-k="open" title="Camera settings: where it sits on the flange, field of view">⚙</button></div>
     <div class="jog" title="Moves only the sim arm (Listen node), not the program or the taught points. Needs the mock idle at its Listen node.">
       <div class="row pad-row">
