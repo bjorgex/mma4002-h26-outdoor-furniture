@@ -349,7 +349,14 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
      style sets a fixed 300px/265px width each, wider than the whole phone screen on their own and
      together they swallow the 3D view. Shrink + cap so both still fit side by side with the view
      visible between them; they're still individually collapsible via their own ▾/▸ toggle. */
-  .coll-panel, .manip-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; }
+  .coll-panel, .manip-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; max-height: 40vh !important; }
+  /* .coll-panel has no "more info" icon like .manip-panel does - its static how-this-works paragraph
+     (always the body's last child) is always inline, so opening it on mobile fills most of the 3D view
+     with text that never changes. Mobile doesn't need it every time; drop it. */
+  .coll-panel [data-k="body"] > div:last-child { display: none !important; }
+  /* the live-status HUD (#sim .hud, top-left) had no width limit accounting for the Collisions panel
+     (top-right): a long status line ran full-width and straight under it. Leave the panel's corner clear. */
+  #sim .hud { max-width: 54vw !important; }
   /* Configure mode's "Adjust step" overlay (manip_layers.js' .adj-step, bottom-right of the 3D pane):
      same fixed-width-overlay problem, 262px inline. */
   .adj-step { width: min(80vw, 262px) !important; font-size: 12px !important; }
