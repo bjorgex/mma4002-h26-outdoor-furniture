@@ -329,7 +329,7 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   /* let tm/py panes size to their content instead of a blanket 85vh (which left huge blank
      space below a short log); #sim still needs a real height, its canvas is absolutely positioned */
   .tm-skin .pane { height: auto; max-height: 75vh; }
-  #p-sim { height: 60vh; max-height: 60vh; }
+  #p-sim { height: 68vh; max-height: 68vh; }
   .pane.max { height: auto !important; max-height: none !important; }
   /* header controls: let each group wrap instead of forcing one long unbreakable line.
      flex-wrap alone isn't enough - these are flex items with the default min-width:auto, so
@@ -361,6 +361,20 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   .tl-row { min-width: 0; }
   .move-robot .tlhead { flex-wrap: wrap !important; row-gap: 4px !important; }
   .move-robot .tl { min-width: 0 !important; }
+
+  /* --- compact mode: smaller/icon-only controls so the header takes less screen before the 3D view --- */
+  .lbl { display: none; }                                /* hide the text half of icon+label buttons */
+  .top .btn, .tm-skin .pane .btn { font-size: 15px; padding: 3px 7px; line-height: 1.3; }
+  .top { padding: 5px 10px; }
+  .top .eyebrow { display: none; }                        /* redundant with the <h1> right below it */
+  .top h1 { font-size: 0.95rem; }
+  .scen .state, .scen .sctime { font-size: 11px; }
+  .sliders .slab { width: auto; }
+  .sliders input[type=range] { width: 100px; }
+  /* camera view: 3D/Top/Side buttons -> one dropdown (keeps Base XYZ/Tool XYZ as toggle chips - those
+     aren't mutually exclusive, so a single-select dropdown doesn't fit them) */
+  .cam-btns { display: none; }
+  .cam-sel { display: inline-block !important; font-size: 16px; padding: 3px 4px; max-width: 40vw; }  /* 16px: iOS zoom-on-focus */
 }
 </style>
 <script type="importmap">
@@ -378,25 +392,25 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
     </div>
     <div class="right">
       <span class="env" id="env" title="Same page, same presets, same scripts - Mock runs them against the simulated TMflow + robot on this PC, Real robot against the TM5-900 (10.0.12.101)">
-        <a id="env-mock" class="btn">Mock (sim)</a><a id="env-real" class="btn">Real robot <span class="dot" id="env-dot"></span></a><a id="env-cfg" class="btn"
-          title="Configure mode: shows the 'Adjust step' panel (pause the 3D preview on a step, nudge x y z / rx ry rz, Save = new taught pose for that step). Works with Mock and Real robot; off = the panel is hidden">⚙ Configure</a></span>
+        <a id="env-mock" class="btn" title="Mock (sim)">🖥️<span class="lbl"> Mock (sim)</span></a><a id="env-real" class="btn" title="Real robot">🤖<span class="lbl"> Real robot</span> <span class="dot" id="env-dot"></span></a><a id="env-cfg" class="btn"
+          title="Configure mode: shows the 'Adjust step' panel (pause the 3D preview on a step, nudge x y z / rx ry rz, Save = new taught pose for that step). Works with Mock and Real robot; off = the panel is hidden">⚙<span class="lbl"> Configure</span></a></span>
       <span class="scen" id="scen" hidden><select id="sc-sel" aria-label="Scenario"></select><span class="sctime" id="sc-time"></span>
         <button class="btn" id="sc-run">▶ Run</button><button class="btn" id="sc-pause" disabled
-          title="Pause the running program (the simulation's time stands still) - press again to continue">⏸ Pause</button><button class="btn" id="sc-stop" disabled>■ Stop</button><button class="btn" id="sc-reset"
-          title="Back to the start: stops a run, robot home, gripper open, every part (planks, frames, guide) at its start position, Move robot back to the start. On Real robot: only the 3D view">⟲ Reset</button><button class="btn" id="sc-video"
+          title="Pause the running program (the simulation's time stands still) - press again to continue">⏸ Pause</button><button class="btn" id="sc-stop" disabled title="Stop">■<span class="lbl"> Stop</span></button><button class="btn" id="sc-reset"
+          title="Back to the start: stops a run, robot home, gripper open, every part (planks, frames, guide) at its start position, Move robot back to the start. On Real robot: only the 3D view">⟲<span class="lbl"> Reset</span></button><button class="btn" id="sc-video"
           title="Export video: 6 s intro with the gripper path and manipulability map, then the chosen preset's program plays in the 3D view from start to end (no robot, no mock run, layers and axes hidden) at Robot speed, and is saved as a video file. Set the camera and Robot speed first; maximise the 3D pane for a sharper video. Click again to stop early">⏺ Export video</button>
         <span class="state" id="sc-state">idle</span><span class="err" id="sc-err"></span>
         <button class="btn" id="rdk-reset" hidden title="Close RoboDK's station WITHOUT saving, reload its .rdk from disk, robot to home">⟲ Reset RoboDK</button>
         <span class="state" id="rdk-state" hidden></span></span>
       <span class="sliders">                          <!-- two rows, one under the other, sliders lined up -->
         <label class="srow speed" title="× real time (0.25 to 50). Sets how fast a run plays, and how fast 'Move robot' may move the robot; applies at once">
-          <span class="slab">Robot speed</span>
+          <span class="slab">⏱<span class="lbl"> Robot speed</span></span>
           <input type="range" id="sp-range" min="0" max="8" step="1" value="2" aria-label="Robot speed">
           <input type="number" id="sp-num" min="0.25" max="50" step="any" value="1" aria-label="Robot speed, × real time"><b>×</b></label></span>
       <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
         <button class="btn" data-layout="cols">3 columns</button></span>
-      <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)">Show:
-        <button class="btn" data-pane="p-tm">TMflow</button><button class="btn" data-pane="p-py">Bridge</button><button class="btn" data-pane="p-sim">3D</button></span>
+      <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)"><span class="lbl">Show: </span>
+        <button class="btn" data-pane="p-tm" title="TMflow">📋<span class="lbl"> TMflow</span></button><button class="btn" data-pane="p-py" title="Bridge">🌉<span class="lbl"> Bridge</span></button><button class="btn" data-pane="p-sim" title="3D">🧊<span class="lbl"> 3D</span></button></span>
       <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
     </div>
     <div class="tl-row" id="move-slot" hidden></div>      <!-- "Move robot" timeline, its own full-width line -->
@@ -449,9 +463,12 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
 
     <div class="panel pane" id="p-sim">
       <div class="tm-bar"><b>Simulator</b><span id="sim-cellname">TM5-900 + cell (robot_sim)</span><span class="sp"></span>
-        <button class="btn" data-cam="iso">3D</button><button class="btn" data-cam="top">Top</button>
-        <button class="btn" data-cam="side">Side</button>
-        <button class="btn" data-axes="base" title="Show / hide the robot base frame's X Y Z (the Adjust panel's Base)">Base XYZ</button><button class="btn" data-axes="tool" title="Show / hide the tool frame's X Y Z at the fingertips (Z along the gripper, X the closing direction; the Adjust panel's Tool)">Tool XYZ</button>
+        <span class="cam-btns"><button class="btn" data-cam="iso" title="3D view">🧊<span class="lbl"> 3D</span></button><button class="btn" data-cam="top" title="Top view">⬆️<span class="lbl"> Top</span></button>
+        <button class="btn" data-cam="side" title="Side view">➡️<span class="lbl"> Side</span></button></span>
+        <select class="cam-sel" id="cam-sel" aria-label="Camera view" title="Camera view" hidden>
+          <option value="iso">🧊 3D view</option><option value="top">⬆️ Top view</option><option value="side">➡️ Side view</option>
+        </select>
+        <button class="btn" data-axes="base" title="Show / hide the robot base frame's X Y Z (the Adjust panel's Base)">📐<span class="lbl"> Base XYZ</span></button><button class="btn" data-axes="tool" title="Show / hide the tool frame's X Y Z at the fingertips (Z along the gripper, X the closing direction; the Adjust panel's Tool)">🔧<span class="lbl"> Tool XYZ</span></button>
         <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
         <button class="btn max" title="Maximise (Esc back)">□</button></div>
       <div id="sim"><div class="note" id="sim-note">loading the 3D view…</div>
@@ -902,10 +919,31 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   sim = m.createSim($('#sim'), { log: (cls, text) => addLog($('#tm-log'), cls, text, lastState && lastState.at) });
   $('#sim-note').remove();
   document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => sim.setView(b.dataset.cam));
+  $('#cam-sel').onchange = () => sim.setView($('#cam-sel').value);
   document.querySelectorAll('[data-axes]').forEach(b => { b.classList.toggle('on', sim.axesOn(b.dataset.axes));
     b.onclick = () => b.classList.toggle('on', sim.setAxes(b.dataset.axes, !sim.axesOn(b.dataset.axes))); });
   window.__sim = sim;                                    // for checks from the console
 }).catch(e => { $('#sim-note').textContent = '3D view not loaded: ' + e.message; });
+
+// On a phone, start the Collisions/Manipulability overlay panels collapsed (just their header bar) so the
+// 3D view underneath isn't mostly covered the moment they appear; they're built async (collision_layer.js /
+// manip_layers.js, imported from inside sim_scene.js) so watch for them instead of a fixed delay. Each still
+// opens normally with its own ▾/▸ toggle - this only changes the default a narrow screen starts with.
+if (matchMedia('(max-width: 1000px)').matches) {
+  const collapsedOnce = new WeakSet();
+  new MutationObserver(muts => {
+    for (const m of muts) for (const node of m.addedNodes) {
+      if (!(node instanceof HTMLElement)) continue;
+      const panel = node.matches?.('.coll-panel, .manip-panel') ? node : node.querySelector?.('.coll-panel, .manip-panel');
+      if (panel && !collapsedOnce.has(panel)) {
+        collapsedOnce.add(panel);
+        const toggle = panel.querySelector('[data-k="toggle"]');
+        const body = panel.querySelector('[data-k="body"]');
+        if (toggle && body && body.style.display !== 'none') toggle.click();
+      }
+    }
+  }).observe($('#sim'), { childList: true, subtree: true });
+}
 
 // ---- environment: Mock (tmflow_mock.py serve, port 8090) | Real robot (demo_viewer.py view, port 8092) ---------
 // The same page and presets on both; the server it is served from decides where Run goes.
