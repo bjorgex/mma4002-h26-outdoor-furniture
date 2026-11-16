@@ -4,10 +4,12 @@
     python bench_cell_v10.py                                 no moves file: v10 = v9 (all jigs where they were taught)
     then in the mock page: scenario "v10-full"
 
-Every move's tool tip (flange + 160 mm along tool z) is looked up in the jigs' CAD footprints
-(tests/vision_lab/jig_boxes_v9.json, plus MARGIN): over Base A, Base B or the plank rack, the move gets that jig's
-measured move, new flange = T_move @ flange; over none of them (free air between jigs) it stays as it is. The guide
-halves sit in Base B at the start and are moved with it; the planks and frames sit in the rack and the bases. Joints
+Each grab and release belongs to the jig under the tool tip there (flange + 160 mm along tool z, in the jigs' CAD
+footprints tests/vision_lab/jig_boxes_v9.json + MARGIN): the jig the part is taken from or put into. Every move follows
+the jig of its NEAREST grab/release in the program: the first half of the moves after an event go with that event's
+jig, the second half with the next event's (approach, insert, slide-out and lift all stay with the part's jig, even
+where the tool leaves the footprint). new flange = T_move @ flange. The guide halves sit in Base B at the start and
+are moved with it; the planks and frames sit in the rack and the bases. Home and the turn point never move. Joints
 are solved again (tm5_kin.ik, seeded with v9's joints). A target that can't be reached stops the build: no program
 with a gap in it.
 """
@@ -50,13 +52,29 @@ def build(moves_file=None):
             d = np.linalg.norm((np.array(found[g]["T_move"]) @ p)[:3] - (T["Base B"] @ p)[:3])
             if d > 2:
                 print(f"WARNING: {g} is {d:.1f} mm from where Base B's move puts it - is it seated in the base?")
+    seq = src["steps"]
+    tips = [(np.array(tm5_kin.pose_to_mat(x["flange"])) @ [0, 0, TIP, 1])[:3] if "move" in x else None for x in seq]
+    anchors = []                                        # (step index, jig) of every grab / release
+    for i, x in enumerate(seq):
+        if x.get("gripper") in ("grip", "release"):
+            last = next((k for k in range(i - 1, -1, -1) if tips[k] is not None), None)
+            anchors.append((i, jig_of(tips[last], boxes) if last is not None else None))
+
+    def jig_for(i):
+        before = [a for a in anchors if a[0] < i]
+        after = [a for a in anchors if a[0] > i]
+        if not before or not after:
+            return (after or before)[0 if after else -1][1]
+        a, b = before[-1], after[0]
+        moves = [k for k in range(a[0] + 1, b[0]) if tips[k] is not None]
+        return a[1] if moves.index(i) < len(moves) / 2 else b[1]
+
     steps, prev, used, worst = [], None, {}, 0.0
-    for st in src["steps"]:
+    for i, st in enumerate(seq):
         st = dict(st)
         if "move" in st:
             F = np.array(tm5_kin.pose_to_mat(st["flange"]))
-            tip = (F @ [0, 0, TIP, 1])[:3]
-            j = None if st["name"].startswith(FREE) else jig_of(tip, boxes)
+            j = None if st["name"].startswith(FREE) else (jig_for(i) or jig_of(tips[i], boxes))
             if j is not None and not np.allclose(T[j], np.eye(4)):
                 F2 = T[j] @ F
                 pose = [float(v) for v in tm5_kin.mat_to_pose(F2.tolist())]
