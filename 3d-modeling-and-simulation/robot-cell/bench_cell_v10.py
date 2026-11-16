@@ -6,9 +6,10 @@
 
 Each grab and release belongs to the jig under the tool tip there (flange + 160 mm along tool z, in the jigs' CAD
 footprints tests/vision_lab/jig_boxes_v9.json + MARGIN): the jig the part is taken from or put into. Every move follows
-the jig of its NEAREST grab/release in the program: the first half of the moves after an event go with that event's
-jig, the second half with the next event's (approach, insert, slide-out and lift all stay with the part's jig, even
-where the tool leaves the footprint). new flange = T_move @ flange. The guide halves sit in Base B at the start and
+the jig of a grab/release next to it in the program, split at the HIGHEST point between two events: up to it with
+the previous event's jig, from it on (travel, over, approach, down) with the next one's - so the robot goes up, travels
+high and comes straight down onto the new jig; slide-outs and lifts stay with the part's jig, even where the tool
+leaves the footprint. new flange = T_move @ flange. The guide halves sit in Base B at the start and
 are moved with it; the planks and frames sit in the rack and the bases. Home and the turn point never move. Joints
 are solved again (tm5_kin.ik, seeded with v9's joints). A target that can't be reached stops the build: no program
 with a gap in it.
@@ -67,7 +68,8 @@ def build(moves_file=None):
             return (after or before)[0 if after else -1][1]
         a, b = before[-1], after[0]
         moves = [k for k in range(a[0] + 1, b[0]) if tips[k] is not None]
-        return a[1] if moves.index(i) < len(moves) / 2 else b[1]
+        peak = max(moves, key=lambda k: tips[k][2])          # the highest point between the two: up with the old
+        return a[1] if i < peak else b[1]                    # jig, travel + straight down with the new one
 
     steps, prev, used, worst = [], None, {}, 0.0
     for i, st in enumerate(seq):
