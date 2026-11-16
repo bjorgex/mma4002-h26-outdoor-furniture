@@ -202,8 +202,10 @@ body { padding: 0; overflow: hidden; }
 /* 3D pane */
 #sim { position: relative; flex: 1; min-height: 0; background: #f4f5f6; }
 #sim canvas { display: block; position: absolute; inset: 0; }
+/* Half the pane each for the HUD (left) and the tool dock (right), minus enough to leave a small gap
+   between them - not mobile-only, a narrow desktop pane can have the same two-things-up-top problem. */
 #sim .hud { position: absolute; z-index: 1; left: 10px; top: 10px; background: #ffffffe0; border: 1px solid var(--tm-frame);
-  font: 12.5px/1.45 var(--tm-font); padding: 5px 10px; pointer-events: none; max-width: calc(100% - 40px); }
+  font: 12.5px/1.45 var(--tm-font); padding: 5px 10px; pointer-events: none; max-width: calc(50% - 15px); }
 #sim .hud b { font-weight: 600; }
 #sim .note { position: absolute; inset: 0; display: grid; place-items: center; color: #555; font: 14px var(--tm-font); }
 /* The 3D view's own overlay panels (collision_layer.js' .coll-panel, manip_layers.js' .manip-panel,
@@ -218,7 +220,7 @@ body { padding: 0; overflow: hidden; }
    cap only matters for the one paint frame before that happens - belt and suspenders. */
 /* Single dock for the 3D view's 4 tool panels (see the script using TOOLS/slots below): one tab row,
    emoji per tool, and a body that holds whichever tool's own (unmodified) panel node is currently picked. */
-.sim-dock { position: absolute; z-index: 6; right: 10px; top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: min(70%, 320px); }
+.sim-dock { position: absolute; z-index: 6; right: 10px; top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: calc(50% - 15px); }
 .sim-dock-tabs { display: flex; gap: 2px; background: #10232ae8; border-radius: 7px; padding: 3px; box-shadow: 0 2px 8px #0003; }
 .sim-dock-tabs button { font-size: 17px; line-height: 1; padding: 4px 8px; border-radius: 5px; border: none; background: transparent; cursor: pointer; opacity: .55; }
 .sim-dock-tabs button:hover:not(:disabled) { opacity: .85; }
@@ -376,9 +378,6 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
      (always the body's last child) is always inline, so opening it on mobile fills most of the 3D view
      with text that never changes. Mobile doesn't need it every time; drop it. */
   .coll-panel [data-k="body"] > div:last-child { display: none !important; }
-  /* the live-status HUD (#sim .hud, top-left) had no width limit accounting for the Collisions panel
-     (top-right): a long status line ran full-width and straight under it. Leave the panel's corner clear. */
-  #sim .hud { max-width: 54vw !important; }
   /* same fixed-width-overlay problem, bottom corners this time: jig_layer.js' .jig-panel (bottom-left,
      300px) and vision_layer.js' .vis-panel (bottom-right, max-width 330px) - same treatment as the top pair. */
   .jig-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; max-height: 40vh !important; overflow-y: auto !important; }
