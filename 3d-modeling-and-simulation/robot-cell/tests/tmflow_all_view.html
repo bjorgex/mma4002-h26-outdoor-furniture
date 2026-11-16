@@ -324,6 +324,16 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   .tm-skin.page { height: auto; }
   .panes, .panes.cols, .demo .panes, .demo .panes.cols { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "tm" "py" "sim"; }
   .tm-skin .pane { height: 85vh; }
+  /* header controls: let each group wrap instead of forcing one long unbreakable line */
+  .top .right { row-gap: 10px; }
+  .env, .scen, .show-panes { flex-wrap: wrap; row-gap: 6px; }
+  .sliders .srow { flex-wrap: wrap; row-gap: 4px; }
+  .sliders input[type=range] { width: 140px; }
+  .tm-skin .scen select { max-width: 100%; }
+  .scen .err { max-width: 70vw; }
+  /* pane-layout switch is moot once panes are force-stacked */
+  [data-layout] { display: none !important; }
+  .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; }
 }
 </style>
 <script type="importmap">
