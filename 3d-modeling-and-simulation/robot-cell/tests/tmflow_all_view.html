@@ -333,10 +333,16 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   .env, .scen, .show-panes { flex-wrap: wrap; row-gap: 6px; }
   .sliders .srow { flex-wrap: wrap; row-gap: 4px; }
   .sliders input[type=range] { width: 140px; }
-  .tm-skin .scen select { max-width: 100%; }
+  .tm-skin .scen select { max-width: 100%; font-size: 16px; }
   .scen .err { max-width: 70vw; }
+  .tm-skin .speed input[type=number] { font-size: 16px; }   /* <16px makes iOS Safari auto-zoom on focus */
   /* pane-layout switch is moot once panes are force-stacked */
   [data-layout] { display: none !important; }
+  /* 3D view overlays (collision_layer.js' .coll-panel, manip_layers.js' .manip-panel): their inline
+     style sets a fixed 300px/265px width each, wider than the whole phone screen on their own and
+     together they swallow the 3D view. Shrink + cap so both still fit side by side with the view
+     visible between them; they're still individually collapsible via their own ▾/▸ toggle. */
+  .coll-panel, .manip-panel { width: min(42vw, 190px) !important; font-size: 11px !important; padding: 6px 7px !important; }
   .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; }
 }
 </style>
