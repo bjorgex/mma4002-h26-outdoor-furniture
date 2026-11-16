@@ -360,7 +360,12 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
   /* Configure mode's "Adjust step" overlay (manip_layers.js' .adj-step, bottom-right of the 3D pane):
      same fixed-width-overlay problem, 262px inline. */
   .adj-step { width: min(80vw, 262px) !important; font-size: 12px !important; }
-  .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; }
+  .tm-skin .pane .tm-bar { flex-wrap: wrap; row-gap: 2px; font-size: 11px; padding: 5px 8px; }
+  /* "Display Board / Flow / TMflow + robot (mock)" breadcrumb on the TMflow pane only: purely decorative
+     (mimics the TMflow pendant's own screen tabs), not a control - drop it on mobile, it cost a full text
+     row. #p-py/#p-sim's own tm-bar labels ("Bridge", "Simulator", ...) are left alone - those identify
+     which pane you're looking at, worth keeping. */
+  #p-tm > .tm-bar > span, #p-tm > .tm-bar > b { display: none; }
   /* Configure mode's "Move robot" timeline (.tl-row #move-slot, built by manip_layers.js' .move-robot):
      .tl-row had width:100% but no min-width override, so flex's default min-width:auto let its legend
      row's unwrapped content (grip/release/stiff/collision chips) force the WHOLE page ~18px wider than
@@ -411,13 +416,13 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
         <span class="state" id="rdk-state" hidden></span></span>
       <span class="sliders">                          <!-- two rows, one under the other, sliders lined up -->
         <label class="srow speed" title="× real time (0.25 to 50). Sets how fast a run plays, and how fast 'Move robot' may move the robot; applies at once">
-          <span class="slab">⏱<span class="lbl"> Robot speed</span></span>
+          <span class="slab">⚡<span class="lbl"> Robot speed</span></span>
           <input type="range" id="sp-range" min="0" max="8" step="1" value="2" aria-label="Robot speed">
           <input type="number" id="sp-num" min="0.25" max="50" step="any" value="1" aria-label="Robot speed, × real time"><b>×</b></label></span>
       <span><button class="btn" data-layout="auto">Auto</button> <button class="btn" data-layout="stack">TMflow | Python / 3D</button>
         <button class="btn" data-layout="cols">3 columns</button></span>
-      <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)"><span class="lbl">Show: </span>
-        <button class="btn" data-pane="p-tm" title="TMflow">📋<span class="lbl"> TMflow</span></button><button class="btn" data-pane="p-py" title="Bridge">🌉<span class="lbl"> Bridge</span></button><button class="btn" data-pane="p-sim" title="3D">🧊<span class="lbl"> 3D</span></button></span>
+      <span class="show-panes" id="show-panes" title="Show or hide a pane (at least one stays)">👁<span class="lbl">Show: </span>
+        <button class="btn" data-pane="p-tm" title="TMflow">📋<span class="lbl"> TMflow</span></button><button class="btn" data-pane="p-py" title="Bridge">🌉<span class="lbl"> Bridge</span></button><button class="btn" data-pane="p-sim" title="3D">📦<span class="lbl"> 3D</span></button></span>
       <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting to the mock…</span></span>
     </div>
     <div class="tl-row" id="move-slot" hidden></div>      <!-- "Move robot" timeline, its own full-width line -->
@@ -470,10 +475,10 @@ body:not(.cfg) .adj-step { display: none !important; }   /* the Adjust step pane
 
     <div class="panel pane" id="p-sim">
       <div class="tm-bar"><b>Simulator</b><span id="sim-cellname">TM5-900 + cell (robot_sim)</span><span class="sp"></span>
-        <span class="cam-btns"><button class="btn" data-cam="iso" title="3D view">🧊<span class="lbl"> 3D</span></button><button class="btn" data-cam="top" title="Top view">⬆️<span class="lbl"> Top</span></button>
+        <span class="cam-btns"><button class="btn" data-cam="iso" title="3D view">📦<span class="lbl"> 3D</span></button><button class="btn" data-cam="top" title="Top view">⬆️<span class="lbl"> Top</span></button>
         <button class="btn" data-cam="side" title="Side view">➡️<span class="lbl"> Side</span></button></span>
         <select class="cam-sel" id="cam-sel" aria-label="Camera view" title="Camera view" hidden>
-          <option value="iso">🧊 3D view</option><option value="top">⬆️ Top view</option><option value="side">➡️ Side view</option>
+          <option value="iso">📦 3D view</option><option value="top">⬆️ Top view</option><option value="side">➡️ Side view</option>
         </select>
         <button class="btn" data-axes="base" title="Show / hide the robot base frame's X Y Z (the Adjust panel's Base)">📐<span class="lbl"> Base XYZ</span></button><button class="btn" data-axes="tool" title="Show / hide the tool frame's X Y Z at the fingertips (Z along the gripper, X the closing direction; the Adjust panel's Tool)">🔧<span class="lbl"> Tool XYZ</span></button>
         <button class="btn min" title="Hide this pane (bring it back from Show: in the header)">—</button>
