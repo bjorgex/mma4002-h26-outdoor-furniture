@@ -294,7 +294,13 @@ def errors(photo, res):
             out[name] = None
             continue
         da = (r["rz"] - t["rz"] + 180) % 360 - 180
-        out[name] = {"pos_mm": math.hypot(r["x"] - t["x"], r["y"] - t["y"]), "rz_deg": abs(da)}
+        o = photo.meta.get("objects", {}).get(name)
+        if r.get("T_move") and name in photo.model:     # both moves at the same point (the model's pivot): x/y
+            q = np.array([*photo.model[name]["pivot"][:3], 1.0])   # about different pivots can't be compared
+            Tt = np.array(o["T_move"]) if o and o.get("T_move") else np.eye(4)
+            out[name] = {"pos_mm": float(np.linalg.norm((np.array(r["T_move"]) @ q - Tt @ q)[:2])), "rz_deg": abs(da)}
+        else:
+            out[name] = {"pos_mm": math.hypot(r["x"] - t["x"], r["y"] - t["y"]), "rz_deg": abs(da)}
     return out
 
 

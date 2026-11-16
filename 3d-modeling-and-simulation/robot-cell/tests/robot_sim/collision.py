@@ -397,7 +397,7 @@ def main():
     ap.add_argument("--step", type=float, default=2.0, help="sampling, mm (Line) / deg (PTP), default 2")
     ap.add_argument("--parts", action="store_true", help="also check against the parts")
     ap.add_argument("--shift", action="append", default=[], help='"<object>:dx,dy,dz[,rz]" (mm, robot base axes; rz deg: '
-                    'x' = Rz x + d, a jig_vision T_move)')
+                    'new = Rz(rz) @ old + d, as a jig_vision T_move)')
     ap.add_argument("--list", action="store_true", help="every colliding move, not the first 20")
     ap.add_argument("--geometry", choices=list(K.GEOMETRY), default="robodk")
     a = ap.parse_args()
