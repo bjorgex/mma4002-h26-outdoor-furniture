@@ -14,6 +14,10 @@ POST /vision/jog      {d: [dx dy dz drx dry drz], frame: "tool"|"base"} | {to: [
       frame "tool": d along / about the tool's own axes (flange frame); "base" (default): robot base axes.
       Free move: one Line("CAP") through the mock's Listen node (5890), like tests/vision_lab/sim_camera.py.
       Only the arm moves - the program, the taught points and the sim's files are not touched.
+POST /vision/history  {title, body, result: "ok"|"issue"}  -> appends one entry to config_history.md
+GET  /vision/history                                       -> {md: the whole file's text}
+      Written by the Spotlight Guide's "Review" step (tests/tmflow_all_view.html); a plain markdown log,
+      newest entry first, so it reads like Next steps.md - not a database, just append + read the whole file.
 """
 import base64
 import json
@@ -26,6 +30,8 @@ HERE = Path(__file__).resolve().parent
 LAB = HERE.parent / "vision_lab"
 SHOTS = LAB / "sim_shots"
 JIGS = LAB / "sim_jig_offsets.json"
+HISTORY = LAB / "config_history.md"
+_history_lock = threading.Lock()
 _done, _lock = {}, threading.Lock()                     # request id -> saved paths
 _jog = threading.Lock()
 _state = {"mode": None, "board": {"on": False}}          # what a page loaded later must show
@@ -130,4 +136,19 @@ def handle(method, path, query, body, emit):
                 return 409, {"ok": False, "msg": f"move refused: {e}"}
         cur = sim_camera.current()
         return 200, {"ok": True, "joints": cur[0] if cur else None, "flange": cur[1] if cur else target}
+    if method == "GET" and path == "/vision/history":
+        return 200, {"ok": True, "md": HISTORY.read_text(encoding="utf-8") if HISTORY.exists() else ""}
+    if method == "POST" and path == "/vision/history":
+        title = str(body.get("title") or "Configuration attempt").strip()
+        entry_body = str(body.get("body") or "").strip()
+        result = "✅ ok" if body.get("result") != "issue" else "⚠️ issue"
+        stamp = time.strftime("%Y-%m-%d %H:%M")
+        entry = f"### {title}  ({stamp})\n**Result:** {result}\n\n{entry_body}\n\n---\n"
+        with _history_lock:
+            text = HISTORY.read_text(encoding="utf-8") if HISTORY.exists() else "# Vision/assembly configuration history\n\n---\n"
+            marker = "---\n"
+            i = text.find(marker)
+            text = (text[:i + len(marker)] + "\n" + entry + text[i + len(marker):]) if i != -1 else text + "\n" + entry
+            HISTORY.write_text(text, encoding="utf-8")
+        return 200, {"ok": True}
     return 404, {"ok": False, "msg": f"no {method} {path}"}

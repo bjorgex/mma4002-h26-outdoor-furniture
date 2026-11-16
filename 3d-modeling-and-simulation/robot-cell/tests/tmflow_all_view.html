@@ -229,6 +229,11 @@ body { padding: 0; overflow: hidden; }
 .sim-dock-tabs button.x { opacity: .55; font-size: 13px; }
 .sim-dock.empty .sim-dock-tabs button.x { display: none; }
 .sim-dock-body { width: 100%; }
+/* Spotlight Guide: highlights the live control a step is talking about */
+.spotlit { outline: 3px solid #ffd23a !important; outline-offset: 2px; position: relative; z-index: 50;
+  animation: spotlight-pulse 1s ease-in-out infinite alternate; }
+@keyframes spotlight-pulse { from { box-shadow: 0 0 0 0 #ffd23a99; } to { box-shadow: 0 0 14px 6px #ffd23a99; } }
+@media (prefers-reduced-motion: reduce) { .spotlit { animation: none; box-shadow: 0 0 10px 4px #ffd23a99; } }
 .sim-dock.empty .sim-dock-body { display: none; }
 /* demo_run.py steps, as compact TMflow node chips */
 #steps { display: flex; flex-wrap: wrap; gap: 5px 4px; padding: 8px 10px; margin: 10px 10px 0; border: 1px solid var(--tm-frame); }
@@ -979,14 +984,17 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
     { sel: '.jig-panel', emoji: '🧩', title: 'Jigs' },
     { sel: '.vis-panel', emoji: '🎥', title: 'Camera' },
   ];
+  const GUIDE_I = TOOLS.length;                          // the Guide tab: static content, not an async panel
   const dock = document.createElement('div');
   dock.className = 'sim-dock empty';
   dock.innerHTML = `<div class="sim-dock-tabs">${TOOLS.map((t, i) =>
-    `<button data-i="${i}" title="${t.title}" disabled>${t.emoji}</button>`).join('')}<button class="x" title="Close">✕</button></div>` +
+    `<button data-i="${i}" title="${t.title}" disabled>${t.emoji}</button>`).join('')}` +
+    `<button data-i="${GUIDE_I}" title="Spotlight guide: configure a new assembly">🔦</button>` +
+    `<button class="x" title="Close">✕</button></div>` +
     `<div class="sim-dock-body"></div>`;
   $('#sim').appendChild(dock);
   const tabs = [...dock.querySelectorAll('[data-i]')];
-  const slots = TOOLS.map(() => null);                   // each tool's own panel element, once it exists
+  const slots = [...TOOLS.map(() => null), null];        // each tool's own panel element, once it exists
   const body = dock.querySelector('.sim-dock-body');
   let active = -1;
   function show(i) {
@@ -997,6 +1005,101 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   }
   tabs.forEach((b, i) => b.onclick = () => show(i));
   dock.querySelector('.x').onclick = () => show(-1);
+
+  // ---- Spotlight Guide: step-by-step walkthrough for configuring vision on a new assembly ------------------
+  // Steps are freely clickable in any order (not a locked wizard) - "spotlight" just highlights the live
+  // control for that step and scrolls to it; "Do it" runs the step itself where that is safe to automate.
+  function spotlight(sel) {
+    document.querySelectorAll('.spotlit').forEach(e => e.classList.remove('spotlit'));
+    if (!sel) return;
+    const el = document.querySelector(sel);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('spotlit');
+    setTimeout(() => el.classList.remove('spotlit'), 4000);
+  }
+  const GUIDE_STEPS = [
+    { title: '1. Rearrange the jigs', sel: null,
+      text: 'Open the 🧩 Jigs tab, tick the jigs to move, then nudge/turn them to the new layout. ' +
+        'This is your call to make - the AI will not guess where you want them.',
+      doIt: () => show(2) },
+    { title: '2. Turn the markers on', sel: '.jig-panel [data-k="markers"]',
+      text: 'The ArUco markers need to be visible before a measuring photo.',
+      doIt: () => { show(2); document.querySelector('.jig-panel [data-k="markers"]')?.click(); } },
+    { title: '3. Pick the vision-calibration scenario', sel: '#sc-sel',
+      text: 'Runs the whole pipeline: camera calibration -> jig measuring -> builds v10 from what it finds.',
+      doIt: () => { const sel = document.getElementById('sc-sel'); if (!sel) return;
+        sel.value = 'vision-calibration'; sel.dispatchEvent(new Event('change')); } },
+    { title: '4. Run it', sel: '#sc-run',
+      text: 'Watch the Display Board above the 3D view for progress through each phase.',
+      doIt: () => document.getElementById('sc-run')?.click() },
+    { title: '5. Review & log the result', sel: '#sc-state', review: true,
+      text: 'Check the Display Board / log for errors, then save a note so the next attempt (yours or anyone’s) can see what happened here.' },
+    { title: '6. Take it to the real robot', sel: null,
+      text: 'v10 is now built from this run’s measured jig poses. Place the real jigs the same way, ' +
+        're-run the real measuring step, and expect to adjust only the last few mm / degrees by hand - ' +
+        'see tests/vision_lab/README.md for the lab procedure.' },
+  ];
+  const guide = document.createElement('div');
+  guide.className = 'guide-panel';
+  guide.innerHTML = `<style>
+      .guide-panel .gstep { border: 1px solid #ddd; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; cursor: pointer; }
+      .guide-panel .gstep:hover { background: #f3f6fc; }
+      .guide-panel .gstep b { display: block; margin-bottom: 2px; }
+      .guide-panel .gtext { font-size: 12px; color: #444; }
+      .guide-panel .gdo { margin-top: 5px; }
+      .guide-panel .greview { display: none; margin-top: 6px; }
+      .guide-panel .greview.open { display: block; }
+      .guide-panel textarea { width: 100%; box-sizing: border-box; font: inherit; margin-top: 4px; }
+      .guide-panel .ghist { margin-top: 8px; border-top: 1px solid #ddd; padding-top: 6px; }
+      .guide-panel .ghist pre { white-space: pre-wrap; font-size: 11px; max-height: 160px; overflow: auto;
+        background: #f7f7f7; padding: 6px; border-radius: 4px; }
+    </style>
+    ${GUIDE_STEPS.map((s, i) => `<div class="gstep" data-gi="${i}">
+        <b>${s.title}</b><div class="gtext">${s.text}</div>
+        ${s.doIt ? `<button class="btn gdo" data-gi="${i}">Do it</button>` : ''}
+        ${s.review ? `<div class="greview" data-gi="${i}">
+          <label>Result: <select class="gres"><option value="ok">✅ ok</option><option value="issue">⚠️ issue</option></select></label>
+          <textarea rows="3" placeholder="What happened (jig layout tried, any errors, anything to remember)"></textarea>
+          <button class="btn gsave">Save to history</button>
+        </div>` : ''}
+      </div>`).join('')}
+    <div class="ghist"><button class="btn" id="g-history">📖 View history</button><pre id="g-history-view" hidden></pre></div>`;
+  guide.querySelectorAll('.gstep').forEach(div => {
+    const i = +div.dataset.gi, s = GUIDE_STEPS[i];
+    div.addEventListener('click', e => { if (!e.target.closest('button, select, textarea')) spotlight(s.sel); });
+  });
+  guide.querySelectorAll('.gdo').forEach(b => b.onclick = e => { e.stopPropagation(); GUIDE_STEPS[+b.dataset.gi].doIt(); spotlight(GUIDE_STEPS[+b.dataset.gi].sel); });
+  const rev = guide.querySelector('.greview');
+  if (rev) rev.classList.add('open');                     // the review step's form is the point of that step - show it open
+  const saveBtn = guide.querySelector('.gsave');
+  if (saveBtn) saveBtn.onclick = async () => {
+    const box = saveBtn.closest('.greview');
+    const title = `Scenario: ${document.getElementById('sc-sel')?.value || '?'}`;
+    const body = box.querySelector('textarea').value || '(no notes)';
+    const result = box.querySelector('.gres').value;
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+    try {
+      const r = await fetch('/vision/history', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, result }) });
+      saveBtn.textContent = r.ok ? 'Saved' : 'Failed - try again';
+    } catch (e) { saveBtn.textContent = 'Failed - try again'; }
+    setTimeout(() => { saveBtn.disabled = false; saveBtn.textContent = 'Save to history'; }, 1500);
+  };
+  const histBtn = guide.querySelector('#g-history'), histView = guide.querySelector('#g-history-view');
+  histBtn.onclick = async () => {
+    if (!histView.hidden) { histView.hidden = true; return; }
+    histView.hidden = false; histView.textContent = 'loading...';
+    try {
+      const r = await fetch('/vision/history'); const j = await r.json();
+      histView.textContent = j.md || '(empty)';
+    } catch (e) { histView.textContent = 'could not load: ' + e.message; }
+  };
+  slots[GUIDE_I] = guide;
+  guide.style.display = 'none';
+  body.appendChild(guide);
+  tabs[GUIDE_I].disabled = false;
+
   new MutationObserver(muts => {
     for (const m of muts) for (const node of m.addedNodes) {
       if (!(node instanceof HTMLElement)) continue;
