@@ -23,7 +23,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-JIGS = ["Base A", "Base B", "Plank rack", "Guide small", "Guide big"]
+JIGS = ["Base A", "Base B", "Guide small"]            # 3 markers only (2026-11-17) - matches jig_layer.js' MARKER_IDS
 HALF = 0.5   # OpenCV puts a pixel's centre at whole numbers, the camera model (K, three.js) at +0.5: add HALF to OpenCV points
 
 

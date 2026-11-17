@@ -5,8 +5,9 @@
 Print at 100 % ("actual size", no "fit to page"), then measure the 100 mm scale bar: it must be 100 mm (+-0.5).
 Glue the board on something flat and stiff (a bent board ruins the calibration).
 
-Jig markers: ArUco DICT_4X4_50, ids 1-5 = Base A, Base B, Plank rack, Guide small, Guide big (as in the sim), 6-10
-spare. The size is the black square; keep the white margin around it when cutting.
+Jig markers: ArUco DICT_4X4_50, ids 1-3 = Base A, Base B, Guide (as in the sim, 3 only - 2026-11-17: not
+Plank rack, not a second one for Guide big), 4-10 spare. The size is the black square; keep the white
+margin around it when cutting.
 Board: ChArUco 7 x 5 squares of 30 mm, markers 22 mm, DICT_5X5_100 (a different dictionary, so it is never taken
 for a jig marker). These numbers are in BOARD below and used by calibrate.py - change both or neither.
 """
@@ -21,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "print"
 PX = 10                                                  # px per mm (254 dpi)
 A4 = (210 * PX, 297 * PX)
-JIG_IDS = {1: "Base A", 2: "Base B", 3: "Plank rack", 4: "Guide small", 5: "Guide big"}
+JIG_IDS = {1: "Base A", 2: "Base B", 3: "Guide"}
 BOARD = {"squares": (7, 5), "square_mm": 30.0, "marker_mm": 22.0, "dict": "DICT_5X5_100"}
 
 

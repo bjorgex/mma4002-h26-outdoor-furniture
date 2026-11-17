@@ -15,7 +15,11 @@ const FIXED = /^(Table|T-slot plate|AMR)/;           // never moved, never "on" 
 const JIG = /^(Base|Plank rack|Guide)/;              // listed first
 // ArUco markers (DICT_4X4_50, /sim/markers/aruco_<id>.png: 6 black/white cells + a 1-cell white margin), one per jig, on
 // a flat spot of its top found by casting rays down at the CAD start; the biggest size that fits (black square, mm).
-const MARKER_IDS = { "Base A": 1, "Base B": 2, "Plank rack": 3, "Guide small": 4, "Guide big": 5 };
+// 3 markers only (Bjorge, 2026-11-17): Base A, Base B, and one on Guide small standing in for the whole
+// guide - not Plank rack, not Guide big. The rack's and the guide's own mounting solutions (marker plate /
+// tab, see rack_marker_plate.py and guide_marker_tab_test.py) are built and collision-verified but unused
+// for now; re-add their entries here if that changes.
+const MARKER_IDS = { "Base A": 1, "Base B": 2, "Guide small": 3 };
 const MARKER_SIZES = [40, 30, 22, 16, 12, 10];
 const MARKER_TAB = 22;                               // smaller than this fits: glue a 22 mm marker on a 1 mm tab instead
 // Lift a marker on a post above taller things close by (only for the jigs listed: the test showed the plank rack would
