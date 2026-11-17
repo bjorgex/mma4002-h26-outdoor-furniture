@@ -31,6 +31,8 @@ TIP = json.loads((HERE / "bench_layout.json").read_text(encoding="utf-8"))["tip_
 CARRIERS = ("Plank rack", "Base A", "Base B")          # what parts sit in; the guides ride on Base B
 FREE = ("Home", "back to middle")                     # never moved: the start/end pose and the turn point
 MARGIN = 15.0                                          # mm around a footprint that still counts as on it
+SAFE_Z = 596.0                                         # flange z for travel between two jigs (v9's "place out up")
+LOW_Z = 450.0                                          # a transfer between two jigs with both ends below this goes up
 
 
 def jig_of(tip, boxes):
@@ -90,13 +92,36 @@ def build(moves_file=None):
             used[j] = used.get(j, 0) + 1
             prev = st["joints"]
         steps.append(st)
+    # travel high between jigs: a level transfer from one jig to another below LOW_Z (the jigs now sit differently to
+    # each other than in v9, so v9's low transfer can cross a part) goes straight up, across at SAFE_Z, then down
+    high, k_prev = [], None
+    for st in steps:
+        if "move" in st and k_prev is not None:
+            a = high[k_prev]
+            ja, jb = a.get("jig"), st.get("jig")
+            low = max(a["flange"][2], st["flange"][2]) < LOW_Z                  # a level transfer close over the parts
+            turning = "turn" in a["name"] or "turn" in st["name"]                # never lift a part in the middle of a flip
+            if ja and jb and ja != jb and not np.allclose(T[ja], T[jb]) and low and not turning:
+                for base, name in ((a, f"{a['name']} - up (v10)"), (st, f"{st['name']} - over (v10)")):
+                    pose = list(base["flange"]); pose[2] = max(pose[2], SAFE_Z)
+                    q = tm5_kin.ik(pose, base["joints"])
+                    if q is None:
+                        raise SystemExit(f"'{name}' at z {SAFE_Z:.0f} can't be reached")
+                    high.append({**base, "name": name, "move": "line", "flange": [round(v, 4) for v in pose],
+                                 "joints": [round(v, 4) for v in q]})
+        high.append(st)
+        if "move" in st:
+            k_prev = len(high) - 1
+    added = len(high) - len(steps)
+    steps = high
     out = {**{k: v for k, v in src.items() if k != "steps"}, "cell": "v10",
            "source": f"bench_cell_v10.py: v9_moves.json + {Path(moves_file).name if moves_file else 'no jig moves'}",
            "jig_moves": {n: {"x": round(float(T[n][0, 3]), 3), "y": round(float(T[n][1, 3]), 3),
                              "rz_deg": round(float(np.degrees(np.arctan2(T[n][1, 0], T[n][0, 0]))), 3)} for n in CARRIERS},
            "steps": steps}
     OUT.write_text(json.dumps(out, indent=1))
-    print(f"{OUT.name}: {sum('move' in s for s in steps)} moves; per jig {used}; largest joint change {worst:.2f} deg")
+    print(f"{OUT.name}: {sum('move' in s for s in steps)} moves ({added} added to travel high between jigs); per jig {used};"
+          f" largest joint change {worst:.2f} deg")
     if missing and moves_file:
         print(f"not in the moves file (left where taught): {', '.join(missing)}")
     return out
