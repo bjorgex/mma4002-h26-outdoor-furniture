@@ -242,6 +242,8 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
   gizmo.setSize(0.9); gizmo.setSpace("world");
   const proxy = new THREE.Object3D(); scene.add(proxy, gizmo);
   const boxes = new THREE.Group(); scene.add(boxes);  // a yellow box around each selected object (not in photos)
+  const hoverBox = new THREE.Group(); scene.add(hoverBox);   // a blue box around the one under the pointer, not yet selected
+  let hovered = null;
   let drag = null;                                   // at drag start: proxy matrix, names, their matrices
   gizmo.addEventListener("dragging-changed", e => {
     controls.enabled = !e.value;
@@ -272,6 +274,7 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
     const g = groupOf(n);
     if (add) { const on = sel.has(n); g.forEach(x => on ? sel.delete(x) : sel.add(x)); }
     else sel = new Set(g);
+    hoverBox.clear(); hovered = null;                 // about to get the yellow selected outline instead
     attach();
   }
 
@@ -302,11 +305,11 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
       <div class="row"><button data-k="lock" title="The selected jigs become one group: they are always selected and moved together">🔗 Lock together</button>
         <button data-k="unlock" title="Take the selected jigs out of their groups">Unlock</button>
         <button data-k="none" title="Select nothing">Clear</button></div>
-      <div class="row"><button data-k="mode" title="Arrows = move X/Y/Z, ring = turn about Z">Move XYZ</button>
+      <div class="row"><button data-k="mode" title="Arrows = move X/Y (jigs stay flat on the plate, no Z), ring = turn about Z">Move XY</button>
         <label title="Also move the parts that sit on a moved jig"><input type="checkbox" data-k="along" checked> take along what's on it</label></div>
       <div class="row"><span class="muted" data-k="first">offset of —</span></div>
       <div class="row"><label>X <input type="number" step="5" data-f="x"></label><label>Y <input type="number" step="5" data-f="y"></label>
-        <label>Z <input type="number" step="5" data-f="z"></label><label>Rz° <input type="number" step="5" data-f="rz"></label></div>
+        <label>Rz° <input type="number" step="5" data-f="rz"></label></div>
       <div class="row"><button data-k="reset" title="The selected back to their CAD positions">Reset selected</button>
         <button data-k="resetall" title="Everything back (locks stay)">Reset all</button></div>
       <div class="row muted">mm / deg from the CAD start, robot base frame. Click in 3D = select (Ctrl-click = add).
@@ -352,12 +355,15 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
   });
   ui.open.onclick = () => { open = !open; panel.classList.toggle("open", open); ui.open.classList.toggle("on", open); attach(); };
   let mode = "move";
-  ui.mode.onclick = () => {
-    mode = mode === "move" ? "turn" : "move";
-    gizmo.setMode(mode === "turn" ? "rotate" : "translate");
-    gizmo.showX = gizmo.showY = mode !== "turn";
-    ui.mode.textContent = mode === "turn" ? "Turn Rz" : "Move XYZ"; ui.mode.classList.toggle("on", mode === "turn");
-  };
+  function applyMode() {                              // jigs sit flat on the plate - never lift them (no Z arrow);
+    gizmo.setMode(mode === "turn" ? "rotate" : "translate");   // "Turn Rz" only turns about Z, that stays
+    const translating = mode !== "turn";
+    gizmo.showX = translating; gizmo.showY = translating; gizmo.showZ = !translating;
+    ui.mode.textContent = mode === "turn" ? "Turn Rz" : "Move XY"; ui.mode.classList.toggle("on", mode === "turn");
+  }
+  applyMode();                                        // was only ever called from the click below - Z stayed
+                                                        // on (TransformControls' own default) until first toggled
+  ui.mode.onclick = () => { mode = mode === "move" ? "turn" : "move"; applyMode(); };
   q('[data-k="lock"]').onclick = () => {
     const g = new Set(sel);                          // merge with the groups they were in
     locks = locks.filter(x => { if (x.some(n => g.has(n))) { x.forEach(n => g.add(n)); return false; } return true; });
@@ -378,15 +384,29 @@ export function addJigLayer({ THREE, scene, camera, renderer, controls, el, log,
 
   // click in 3D (panel open): the top-level cell object under the pointer
   const ray = new THREE.Raycaster(); let down = null;
-  renderer.domElement.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; });
-  renderer.domElement.addEventListener("pointerup", e => {
-    if (!open || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4 || gizmo.dragging) return;
+  function topAt(e) {                                   // the top-level cell object under the pointer, or null
     const r = renderer.domElement.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
     const hit = ray.intersectObjects(tops(), true)[0];
-    if (!hit) { if (!(e.ctrlKey || e.shiftKey)) { sel = new Set(); attach(); } return; }
+    if (!hit) return null;
     let o = hit.object; while (o.parent && o.parent !== cell()) o = o.parent;
-    if (o.parent === cell()) select(pretty(o), e.ctrlKey || e.shiftKey || e.metaKey);
+    return o.parent === cell() ? o : null;
+  }
+  renderer.domElement.addEventListener("pointermove", e => {   // hover: a blue box before you click, like the
+    if (!open || gizmo.dragging) return;                        // yellow one you get after - only while picking jigs
+    const o = topAt(e), name = o ? pretty(o) : null;
+    if (name === hovered) return;
+    hovered = name; hoverBox.clear();
+    if (name && !sel.has(name)) hoverBox.add(new THREE.BoxHelper(o, 0x3a6fd8));
+    renderer.domElement.style.cursor = name ? "pointer" : "";
+  });
+  renderer.domElement.addEventListener("pointerleave", () => { hovered = null; hoverBox.clear(); renderer.domElement.style.cursor = ""; });
+  renderer.domElement.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener("pointerup", e => {
+    if (!open || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4 || gizmo.dragging) return;
+    const o = topAt(e);
+    if (!o) { if (!(e.ctrlKey || e.shiftKey)) { sel = new Set(); attach(); } return; }
+    select(pretty(o), e.ctrlKey || e.shiftKey || e.metaKey);
   });
   showFields();
   // another tab of this page changed the jigs: take its state (same browser = same localStorage)
