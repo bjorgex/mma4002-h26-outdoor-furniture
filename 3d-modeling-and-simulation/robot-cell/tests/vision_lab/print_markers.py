@@ -23,6 +23,8 @@ OUT = HERE / "print"
 PX = 10                                                  # px per mm (254 dpi)
 A4 = (210 * PX, 297 * PX)
 JIG_IDS = {1: "Base A", 2: "Base B", 3: "Guide"}
+JIG_MODEL = {1: "Base A", 2: "Base B", 3: "Guide small"}    # the same ids by the names jig_vision.JIGS and the sim use
+                                                           # (the guide marker sits on Guide small: printed "Guide")
 BOARD = {"squares": (7, 5), "square_mm": 30.0, "marker_mm": 22.0, "dict": "DICT_5X5_100"}
 
 

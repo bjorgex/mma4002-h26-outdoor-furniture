@@ -326,6 +326,8 @@ def overlay(photo, res, method, path):
     img = photo.img.copy()
     err = errors(photo, res)
     for k, name in enumerate(JIGS):
+        if name not in photo.model:                     # no marker model for it (e.g. real_setup didn't see it)
+            continue
         t = photo.truth(name)
         cv2.polylines(img, [np.round(outline(photo, name, t) - HALF).astype(np.int32)], True, (60, 60, 230), 2)        # truth: red
         r = res.get(name, {})

@@ -201,6 +201,9 @@ def label(img, text, sub=None):
 
 
 def grid(paths, out, cols, w=640):
+    if not paths:
+        print(f"  no pictures for {Path(out).name}", flush=True)
+        return out
     ims = []
     for p in paths:
         im = cv2.imread(str(p)) if not isinstance(p, np.ndarray) else p

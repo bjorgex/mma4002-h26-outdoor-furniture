@@ -40,7 +40,8 @@
 \begin{tcolorbox}[colback=rowlt,colframe=hdrblue,boxsep=1mm,top=1mm,bottom=1mm]
 \small
 \begin{itemize}[leftmargin=4mm]
-\item \textbf{Use ArUco markers}, one per jig: median \textbf{0.14\,mm}, worst 0.5\,mm. Colour and feature matching are worse.
+\item \textbf{Use ArUco markers}: median \textbf{0.14\,mm}, worst 0.5\,mm. Colour and feature matching are worse.
+\textbf{3 markers}: Base A, Base B and the guide. The plank rack has none, so it stays where it was taught.
 \item \textbf{Calibrate on the empty plate}, then put the jigs back: the camera finds them wherever they are.
 \item \textbf{Jigs put down anywhere} (moved and turned): the camera measures them, \textbf{V10} = V9 moved with them.
 V10 lands within \textbf{\wtTipMax\,mm} of every grip and place; V9 misses by up to \wtVnineMax\,mm.
@@ -93,7 +94,7 @@ shadowed photos.}
 \captionof{figure}{Overview + straight above the rack (the planks hide its marker from the side). Every marker found
 $\rightarrow$ \code{real\_jigs.json}.}
 
-\step{Step 5 -- the jigs are put down somewhere else (moved and turned)}
+\step{Step 5 -- the bases are put down somewhere else (moved and turned; the rack stays)}
 \includegraphics[width=\linewidth]{figures/wt_s5_moved.jpg}
 \captionof{figure}{Before / after, seen from above.}
 
@@ -117,7 +118,8 @@ Collision check with the jigs where they are now -- V9: \wtCollNine; V10: \wtCol
 \newpage
 \step{In the lab -- checklist}
 \begin{enumerate}[leftmargin=6mm,itemsep=2pt]
-\item Print \code{print\_markers.py}: jig markers + ChArUco board, 100\,\% scale, matte paper. Check the 100\,mm bar.
+\item Print \code{print\_markers.py}: 3 jig markers (Base A, Base B, guide) + ChArUco board, 100\,\% scale, matte
+paper. Check the 100\,mm bar. The plank rack stays bolted where it was taught.
 \item TM camera: TMflow vision job $\rightarrow$ \emph{External Detection} $\rightarrow$ \code{http://<laptop>:6189};
 run \code{tm\_camera.py calib}; see \code{tm\_camera.log}. (No such step? Use a USB webcam + \code{real\_capture.py}.)
 \item \textbf{Jigs off.} Board glued on a stiff plate, flat on the empty T-slot plate.
@@ -133,7 +135,8 @@ robot at low speed.
 
 \medskip
 \textbf{Limits.} The sim camera is ideal: expect real errors a few times larger (still well under the grip tolerance if
-near 1\,mm). Only plane moves (x, y, rz) are measured. The frame flip in stage 4 is the one big rotation in the program:
+near 1\,mm). Only plane moves (x, y, rz) are measured; the rack (no marker) must not move.
+Each new layout gets a collision check (\code{collision\_for\_run.py}) before the robot runs it. The frame flip in stage 4 is the one big rotation in the program:
 its wrist is near a singularity, so check V10's flip in the sim before the robot.
 All numbers: \code{jig\_vision\_report\_detailed.pdf}; run: \code{\wtRun}.
 \end{document}

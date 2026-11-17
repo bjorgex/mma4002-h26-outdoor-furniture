@@ -27,7 +27,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import jig_vision as jv  # noqa: E402
-from print_markers import JIG_IDS  # noqa: E402
+from print_markers import JIG_MODEL  # noqa: E402
 
 
 def parse_kv(items, n):
@@ -58,7 +58,7 @@ def main():
         if ids is None:
             continue
         for mid, c in zip(ids.ravel(), corners):
-            name = JIG_IDS.get(int(mid))
+            name = JIG_MODEL.get(int(mid))
             if not name or name in jigs:
                 continue                                  # unknown id, or already found in an earlier photo
             px = c.reshape(4, 2) + jv.HALF
@@ -76,7 +76,7 @@ def main():
                           "marker": {"id": int(mid), "size": a.size, "corners": cor.tolist(), "centre": ctr.tolist(),
                                      "z_source": src}, "photo": Path(pj).name}
             print(f"{name:12s} marker {mid} at x {ctr[0]:8.2f} y {ctr[1]:8.2f} z {z:7.2f}  ({src})")
-    missing = [n for n in JIG_IDS.values() if n not in jigs]
+    missing = [n for n in JIG_MODEL.values() if n not in jigs]
     if missing:
         print("NOT seen:", ", ".join(missing), "- take another photo where they are visible and add it")
     out = {"jigs": jigs, "markers_visible": True, "marker_dict": "DICT_4X4_50", "set_up": time.strftime("%Y-%m-%d %H:%M"),
