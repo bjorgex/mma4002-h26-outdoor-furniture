@@ -71,11 +71,13 @@ def build(moves_file=None):
         a, b = before[-1], after[0]
         moves = [k for k in range(a[0] + 1, b[0]) if tips[k] is not None]
         top = max(tips[k][2] for k in moves)                 # the first point at the top between the two: the lift
+        over_new = lambda k: b[1] != a[1] and jig_of(tips[k], boxes) == b[1]     # noqa: E731  above the next jig
         j = next(n for n, k in enumerate(moves) if tips[k][2] >= top - 1.0)
-        while j + 1 < len(moves) and tips[moves[j + 1]][2] >= top - 1.0:
+        while j + 1 < len(moves) and tips[moves[j + 1]][2] >= top - 1.0 and not over_new(moves[j + 1]):
             j += 1                                           # a level run at the top stays with the old jig too (it
-        peak = moves[j]                                      # leaves the part's jig the way v9 does), then the switch
-        return a[1] if i <= peak else b[1]
+        if over_new(moves[j]):                               # leaves the part's jig the way v9 does), until a point
+            j -= 1                                           # is above the next jig: from there on the next jig's move
+        return a[1] if j >= 0 and i <= moves[j] else b[1]
 
     steps, prev, used, worst = [], None, {}, 0.0
     for i, st in enumerate(seq):
