@@ -442,7 +442,7 @@ def main():
         v9 = json.loads(bench_cell_v10.SRC.read_text())["steps"]
         tip = bench_cell_v10.TIP
         rows = []
-        for s9, s10 in zip(v9, v10["steps"]):
+        for s9, s10 in zip(v9, [s for s in v10["steps"] if "(v10)" not in s.get("name", "")]):   # v10's added moves aside
             if "move" not in s9 or not s10.get("jig"):
                 continue
             F9, F10 = (np.array(tm5_kin.pose_to_mat(s["flange"])) for s in (s9, s10))
