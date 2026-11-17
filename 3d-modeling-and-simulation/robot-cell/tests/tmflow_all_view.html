@@ -229,11 +229,15 @@ body { padding: 0; overflow: hidden; }
 .sim-dock-tabs button.x { opacity: .55; font-size: 13px; }
 .sim-dock.empty .sim-dock-tabs button.x { display: none; }
 .sim-dock-body { width: 100%; }
-/* Spotlight Guide: highlights the live control a step is talking about */
-.spotlit { outline: 3px solid #ffd23a !important; outline-offset: 2px; position: relative; z-index: 50;
-  animation: spotlight-pulse 1s ease-in-out infinite alternate; }
-@keyframes spotlight-pulse { from { box-shadow: 0 0 0 0 #ffd23a99; } to { box-shadow: 0 0 14px 6px #ffd23a99; } }
-@media (prefers-reduced-motion: reduce) { .spotlit { animation: none; box-shadow: 0 0 10px 4px #ffd23a99; } }
+/* Spotlight Guide tour: #spot-hole is the "dimmed except here" cutout (a small box whose huge box-shadow
+   paints the darkness - box-shadow never affects hit-testing, so pointer-events:none just lets every click
+   fall straight through to the real page underneath, hole or not); #spot-tip is the instruction card. */
+#spot-tip { position: fixed; z-index: 9999; max-width: 320px; background: #fff; color: #222; border-radius: 8px;
+  padding: 12px 14px; font: 13px/1.4 system-ui, sans-serif; box-shadow: 0 6px 24px #0006; }
+#spot-tip b { display: block; font-size: 14px; margin-bottom: 4px; }
+#spot-tip .spot-text { margin-bottom: 9px; color: #444; }
+#spot-tip .spot-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+#spot-tip .spot-actions .btn { color: #222; border-color: #999; }
 .sim-dock.empty .sim-dock-body { display: none; }
 /* demo_run.py steps, as compact TMflow node chips */
 #steps { display: flex; flex-wrap: wrap; gap: 5px 4px; padding: 8px 10px; margin: 10px 10px 0; border: 1px solid var(--tm-frame); }
@@ -1007,20 +1011,65 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   dock.querySelector('.x').onclick = () => show(-1);
 
   // ---- Spotlight Guide: step-by-step walkthrough for configuring vision on a new assembly ------------------
-  // Steps are freely clickable in any order (not a locked wizard) - "spotlight" just highlights the live
-  // control for that step and scrolls to it; "Do it" runs the step itself where that is safe to automate.
-  function spotlight(sel) {
-    document.querySelectorAll('.spotlit').forEach(e => e.classList.remove('spotlit'));
-    if (!sel) return;
-    const el = document.querySelector(sel);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.add('spotlit');
-    setTimeout(() => el.classList.remove('spotlit'), 4000);
+  // Steps are freely clickable in any order (not a locked wizard). Each one dims the whole page except the
+  // live control it is talking about (a box-shadow "hole", not a second full-screen element - so clicks
+  // still pass straight through to the real control underneath) and shows a tooltip with the instruction,
+  // Do it / Prev / Next / Close - like a classic product-tour spotlight.
+  let spotI = null;
+  function closeSpot() {
+    document.getElementById('spot-hole')?.remove();
+    document.getElementById('spot-tip')?.remove();
+    window.removeEventListener('scroll', repositionSpot, true);
+    window.removeEventListener('resize', repositionSpot);
+    spotI = null;
+  }
+  function repositionSpot() {
+    if (spotI == null) return;
+    const s = GUIDE_STEPS[spotI], hole = document.getElementById('spot-hole'), tip = document.getElementById('spot-tip');
+    if (!hole || !tip) return;
+    const el = s.sel && document.querySelector(s.sel);
+    if (el) {
+      const r = el.getBoundingClientRect(), pad = 6;
+      hole.style.cssText = `position:fixed;left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;` +
+        `height:${r.height + pad * 2}px;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.72);z-index:9998;` +
+        `pointer-events:none;transition:all .2s ease;`;
+      const tipH = tip.offsetHeight || 150, tipW = tip.offsetWidth || 300;
+      let top = r.bottom + pad + 10;
+      if (top + tipH > innerHeight) top = Math.max(10, r.top - pad - tipH - 10);
+      const left = Math.min(Math.max(10, r.left), innerWidth - tipW - 10);
+      tip.style.top = top + 'px'; tip.style.left = left + 'px'; tip.style.transform = 'none';
+    } else {
+      hole.style.display = 'none';
+      tip.style.top = '50%'; tip.style.left = '50%'; tip.style.transform = 'translate(-50%,-50%)';
+    }
+  }
+  function openSpot(i) {
+    closeSpot();
+    spotI = i;
+    const s = GUIDE_STEPS[i];
+    const hole = document.createElement('div'); hole.id = 'spot-hole'; document.body.appendChild(hole);
+    const tip = document.createElement('div'); tip.id = 'spot-tip';
+    tip.innerHTML = `<b>${s.title}</b><div class="spot-text">${s.text}</div>
+      <div class="spot-actions">
+        ${s.doIt ? '<button class="btn spot-do">Do it</button>' : ''}
+        <button class="btn spot-prev" ${i === 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="btn spot-next" ${i === GUIDE_STEPS.length - 1 ? 'disabled' : ''}>Next →</button>
+        <button class="btn spot-close">✕ Close</button>
+      </div>`;
+    document.body.appendChild(tip);
+    tip.querySelector('.spot-do')?.addEventListener('click', () => { s.doIt(); setTimeout(repositionSpot, 150); });
+    tip.querySelector('.spot-prev')?.addEventListener('click', () => openSpot(i - 1));
+    tip.querySelector('.spot-next')?.addEventListener('click', () => openSpot(i + 1));
+    tip.querySelector('.spot-close').addEventListener('click', closeSpot);
+    document.querySelector(s.sel)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.addEventListener('scroll', repositionSpot, true);
+    window.addEventListener('resize', repositionSpot);
+    repositionSpot();
+    setTimeout(repositionSpot, 300);                     // again once the scrollIntoView settles
   }
   const GUIDE_STEPS = [
-    { title: '1. Rearrange the jigs', sel: null,
-      text: 'Open the 🧩 Jigs tab, tick the jigs to move, then nudge/turn them to the new layout. ' +
+    { title: '1. Rearrange the jigs', sel: '.sim-dock-tabs [data-i="2"]',
+      text: 'Open the 🧩 Jigs tab, tick the jigs to move, then Move jigs to nudge/turn them to the new layout. ' +
         'This is your call to make - the AI will not guess where you want them.',
       doIt: () => show(2) },
     { title: '2. Turn the markers on', sel: '.jig-panel [data-k="markers"]',
@@ -1033,7 +1082,7 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
     { title: '4. Run it', sel: '#sc-run',
       text: 'Watch the Display Board above the 3D view for progress through each phase.',
       doIt: () => document.getElementById('sc-run')?.click() },
-    { title: '5. Review & log the result', sel: '#sc-state', review: true,
+    { title: '5. Review & log the result', sel: '.greview textarea', review: true,
       text: 'Check the Display Board / log for errors, then save a note so the next attempt (yours or anyone’s) can see what happened here.' },
     { title: '6. Take it to the real robot', sel: null,
       text: 'v10 is now built from this run’s measured jig poses. Place the real jigs the same way, ' +
@@ -1055,6 +1104,7 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
       .guide-panel .ghist pre { white-space: pre-wrap; font-size: 11px; max-height: 160px; overflow: auto;
         background: #f7f7f7; padding: 6px; border-radius: 4px; }
     </style>
+    <button class="btn" id="g-start" style="margin-bottom:8px">▶ Start the tour</button>
     ${GUIDE_STEPS.map((s, i) => `<div class="gstep" data-gi="${i}">
         <b>${s.title}</b><div class="gtext">${s.text}</div>
         ${s.doIt ? `<button class="btn gdo" data-gi="${i}">Do it</button>` : ''}
@@ -1065,11 +1115,12 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
         </div>` : ''}
       </div>`).join('')}
     <div class="ghist"><button class="btn" id="g-history">📖 View history</button><pre id="g-history-view" hidden></pre></div>`;
+  guide.querySelector('#g-start').onclick = () => openSpot(0);
   guide.querySelectorAll('.gstep').forEach(div => {
-    const i = +div.dataset.gi, s = GUIDE_STEPS[i];
-    div.addEventListener('click', e => { if (!e.target.closest('button, select, textarea')) spotlight(s.sel); });
+    const i = +div.dataset.gi;
+    div.addEventListener('click', e => { if (!e.target.closest('button, select, textarea')) openSpot(i); });
   });
-  guide.querySelectorAll('.gdo').forEach(b => b.onclick = e => { e.stopPropagation(); GUIDE_STEPS[+b.dataset.gi].doIt(); spotlight(GUIDE_STEPS[+b.dataset.gi].sel); });
+  guide.querySelectorAll('.gdo').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.gi; openSpot(i); GUIDE_STEPS[i].doIt(); setTimeout(repositionSpot, 150); });
   const rev = guide.querySelector('.greview');
   if (rev) rev.classList.add('open');                     // the review step's form is the point of that step - show it open
   const saveBtn = guide.querySelector('.gsave');
