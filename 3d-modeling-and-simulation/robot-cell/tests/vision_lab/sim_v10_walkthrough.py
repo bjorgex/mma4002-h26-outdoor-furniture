@@ -38,6 +38,9 @@ from jig_vision_test import POSES, follow  # noqa: E402
 # the test layout: jigs re-bolted a few mm off (translations only: the T-slots keep them square)
 LAYOUT = {"Base A": (10, 8, 0), "Base B": (-12, -9, 0), "Plank rack": (8, 10, 0)}    # x y mm, rz deg (about the pivot)
 CARRIERS = list(LAYOUT)
+MOVABLE = [n for n in CARRIERS if n in jv.JIGS]       # jigs with a marker (2026-11-17: Base A, Base B; the plank rack
+                                                      # has none, so it stays where it was taught)
+BOXES = json.loads((HERE / "jig_boxes_v9.json").read_text())["jigs"]   # CAD pivots + footprints of every jig
 PARK = [-200, 260, 600, 180, 0, 180]                  # the robot off to the side: a clear view of the plate
 REGION = ((-640, -150), (-300, 300))                  # x, y range (robot base, mm) a jig's footprint must stay inside
 ON_B = ["Guide small", "Guide big"]
@@ -161,7 +164,7 @@ def random_layout(rng, boxes, max_move, max_rot, tries=500):
     import bench_cell_v10
     for _ in range(tries):
         lay = {n: (round(rng.uniform(-max_move, max_move)), round(rng.uniform(-max_move, max_move)),
-                   round(rng.uniform(-max_rot, max_rot))) for n in CARRIERS}
+                   round(rng.uniform(-max_rot, max_rot))) if n in MOVABLE else (0, 0, 0) for n in CARRIERS}
         T = {n: move_about(boxes[n]["pivot"], *lay[n]) for n in CARRIERS}
         rects = {n: footprint(boxes[n], T[n]) for n in CARRIERS}
         pts = {n: cv2.boxPoints(r) for n, r in rects.items()}
@@ -393,9 +396,9 @@ def main():
         mode("Jig measuring", "5 &nbsp;Jigs moved (as if re-bolted a few mm off)")
         model = ref_meta["jig_model"]["jigs"]
         offs = {n: {"x": x, "y": y, "z": 0, "rz": rz} for n, (x, y, rz) in LAYOUT.items()}
-        TRUE = {n: move_about(model[n]["pivot"], *LAYOUT[n]) for n in CARRIERS}
+        TRUE = {n: move_about(BOXES[n]["pivot"], *LAYOUT[n]) for n in CARRIERS}
         for g in ON_B:
-            offs[g] = follow(offs["Base B"], model["Base B"]["pivot"], model[g]["pivot"])
+            offs[g] = follow(offs["Base B"], BOXES["Base B"]["pivot"], BOXES[g]["pivot"])
         post("/vision/jigs/set", {"reset": True, "offsets": offs})
         time.sleep(1.5)
         after = ov.shot(pics / "_after.png", *TOPV)
@@ -418,7 +421,7 @@ def main():
         log["measured"] = {n: {"x": round(v["x"], 2), "y": round(v["y"], 2), "rz": round(v["rz"], 3)} for n, v in found.items()}
         log["measure_err_mm"] = {}                       # at the marker centre: found move vs true move
         for n in CARRIERS:
-            if n in found:
+            if n in found and n in model and model[n].get("marker"):
                 c = np.array([*model[n]["marker"]["centre"], 1.0])
                 log["measure_err_mm"][n] = round(float(np.linalg.norm((np.array(found[n]["T_move"]) @ c - TRUE[n] @ c)[:3])), 3)
         print("measured:", log["measured"], "error:", log["measure_err_mm"])
