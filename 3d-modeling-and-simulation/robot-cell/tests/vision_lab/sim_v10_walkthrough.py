@@ -245,10 +245,33 @@ def assembly(ov, pics, log, speed):
     print("assembly:", log["assembly"])
 
 
+def captured_layout():
+    """Whatever's actually sitting in the Jigs panel right now (tests/vision_lab/sim_jig_offsets.json,
+    written by jig_layer.js's save() on every move - so this is a live snapshot, not stale). None if
+    nothing's been moved there, so the caller falls back to the built-in test LAYOUT. Returns an offset
+    for every one of CARRIERS, defaulting an untouched one to (0, 0, 0) - LAYOUT[n] is indexed for all of
+    them later (TRUE = ... for n in CARRIERS), a partial dict would KeyError there."""
+    f = HERE / "sim_jig_offsets.json"
+    if not f.exists():
+        return None
+    try:
+        data = json.loads(f.read_text())
+    except (OSError, ValueError):
+        return None
+    for cell_data in data.values():
+        offs = cell_data.get("offsets", {})
+        if not any(n in offs and (offs[n]["x"] or offs[n]["y"] or offs[n]["rz"]) for n in CARRIERS):
+            continue                                   # nothing moved in this cell - maybe another one has
+        return {n: (offs.get(n, {}).get("x", 0), offs.get(n, {}).get("y", 0), offs.get(n, {}).get("rz", 0))
+                for n in CARRIERS}
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--reset", action="store_true")
-    ap.add_argument("--seed", type=int, help="a random layout (jigs put down anywhere) instead of the fixed LAYOUT")
+    ap.add_argument("--seed", type=int, help="a random layout (jigs put down anywhere) instead of the Jigs panel's "
+                     "current positions / the fixed LAYOUT")
     ap.add_argument("--max-move", type=float, default=60, help="random layout: shift up to this, mm (default 60)")
     ap.add_argument("--max-rot", type=float, default=20, help="random layout: turn up to this, deg (default 20)")
     ap.add_argument("--speed", type=float, default=2, help="robot speed for the v10 assembly run (default x2)")
@@ -264,6 +287,13 @@ def main():
         boxes = json.loads((HERE / "jig_boxes_v9.json").read_text())["jigs"]
         LAYOUT.clear(); LAYOUT.update(random_layout(random.Random(a.seed), boxes, a.max_move, a.max_rot))
         print("random layout:", LAYOUT, flush=True)
+    else:
+        current = captured_layout()                     # read BEFORE phase 1 resets the jigs to CAD below
+        if current:
+            LAYOUT.clear(); LAYOUT.update(current)
+            print("using the Jigs panel's current positions:", LAYOUT, flush=True)
+        else:
+            print("Jigs panel has nothing moved - using the built-in test layout:", LAYOUT, flush=True)
     log = {"layout": LAYOUT, "seed": a.seed}
     renderer.start()
     ov = Overview()
