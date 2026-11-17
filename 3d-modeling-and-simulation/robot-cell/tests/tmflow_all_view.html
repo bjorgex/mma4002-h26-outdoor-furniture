@@ -1092,6 +1092,16 @@ if (!DEMO) import('/sim/sim_scene.js').then(m => {
   const guide = document.createElement('div');
   guide.className = 'guide-panel';
   guide.innerHTML = `<style>
+      /* unlike the other 4 tool panels (collision_layer.js etc.), this one is built here with no background/
+         sizing of its own - it was rendering fully transparent (the 3D scene showing straight through the
+         text) and with no height cap, so a 6-step list ran most of the way down the screen. */
+      .guide-panel { display: block; background: #ffffffeb; color: #222; border: 1px solid #c9ccd1; border-radius: 8px;
+        padding: 8px 10px; font: 12px/1.4 system-ui, sans-serif; box-sizing: border-box; max-height: 70vh; overflow-y: auto; }
+      /* the page's global .btn is styled for the dark header bars (white text, transparent) - invisible on this
+         panel's light background. jig-panel/vis-panel etc. avoid this by not using .btn at all; override it here
+         instead, since the Spotlight Guide's own buttons (and its tooltip's, #spot-tip) do use that class. */
+      .guide-panel .btn, #spot-tip .btn { color: #222; background: #f6f7f8; border: 1px solid #b8bcc3; }
+      .guide-panel .btn:hover, #spot-tip .btn:hover { border-color: #3a6fd8; }
       .guide-panel .gstep { border: 1px solid #ddd; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; cursor: pointer; }
       .guide-panel .gstep:hover { background: #f3f6fc; }
       .guide-panel .gstep b { display: block; margin-bottom: 2px; }
