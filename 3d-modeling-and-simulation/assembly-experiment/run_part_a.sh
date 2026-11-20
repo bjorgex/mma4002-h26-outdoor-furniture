@@ -11,5 +11,5 @@ rm -f results/versions.csv                      # one clean table per Part A run
 status=$?
 git add results/versions.csv results/runs results/part_a.log 2>/dev/null
 git commit -m "assembly-experiment Part A: every version scored on bj-hserver (exit $status)" || true
-git pull --rebase && git push
+git pull --rebase --autostash && git push
 echo "DONE exit $status"
