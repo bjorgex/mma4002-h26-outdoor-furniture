@@ -59,5 +59,32 @@ python score_run.py <program> <cell.glb> --label try1 any program + cell (Part B
 | Assembly | grips, regrasps, part flips, jig parts (count), jig volume |
 | Process (Part B) | iteration, wall time, kept/rejected, tool changes |
 
+## Part B: how it is built (2026-11-20)
+- **Judge** (`judge/`, frozen; copied read-only into the sandbox with a SHA-256 list): the own tools trimmed to what
+  scoring needs, no RoboDK package anywhere (`tm5_kin` link lengths "station" = the v3 program's, same numbers as
+  Part A's "robodk"; `program_io.py` instead of the TMflow exporter). `score.py` = `score_run.py`'s metrics + the
+  hard-rule columns (`rule_violations`, `r1`..`r8`, `r_fixed`, see its docstring) incl. **rule 6** (a released part,
+  moved 2 mm down, must hit something; collision.py `rest`) and **rule 8** (bench parts unchanged and assembled
+  within 2 mm at the end). `shots.py`: headless matplotlib renders (iso + top) at the start, after every release
+  and at the end, plus `topview.png` with the TCP path. `iterate.py`: score / decide / status, the keep rule
+  `(fails a rule?, rule_violations, cycle_s, joint_travel_deg)`, `iterations.csv`, `run.jsonl`, best/ snapshot.
+- **Judge re-check** (`rescore_check.py` -> `results/judge_check.csv`): v3 and v10 re-scored with the judge, every
+  Part A column unchanged (phases now named by grips: v3 "other" -> "guide"). v3: 28 violations (5 part
+  collisions, 18 approach, 1 PTP near, 4 clearance < 10 mm). v10's rule columns are not comparable (other gripper
+  with `egp_gap`, other plate and frame model).
+- **Sandbox** (`make_sandbox.py` -> `~/dev/assembly-blind/`): `AGENT.md` (`sandbox_src/AGENT.md`), `judge/`,
+  `design/` (v3 program, `build_cell.py` = the v3 cell from constants with numpy, identical to `cell_v3.glb`,
+  jig/bench STLs, `cad/` jig_parts / jig_guide / bench_parts + STEP inputs), `toolbox/`, `log/`, `best/`. Leak check
+  (later ideas, v4+ names, RoboDK, repo paths) must pass, also at every runner start.
+- **Runner** `run_part_b.sh`: baseline (iter 00), then one headless `claude -p` session per iteration
+  (`--permission-mode dontAsk` + `~/dev/assembly-blind.settings.json` from outside the sandbox: Read/Edit/Write/
+  Glob/Grep + `./py`, ls, cp, mv, mkdir, diff; no web, no git; editing judge/, best/ and the judge's logs and reading
+  the repo denied), `stream_filter.py` writes `log/run.jsonl` as it happens, a watchdog puts
+  back changed judge files, at the end `log/` + `best/` go to `results/part_b/` (raw claude streams gzipped, shots of
+  kept iterations only) and are committed + pushed from the server. Watch: `watch_server.ps1`.
+
 ## Status
 - 2026-11-20: plan written. Next: v3 cell builder + `score_run.py` (Part A), then the sandbox.
+- 2026-11-20: Part A done (`results/versions.csv`). Part B built: judge with rule 6 + screenshots, judge re-check OK
+  (v3, v10), sandbox + leak check PASS, harness smoke test, then the blind run launched on bj-hserver
+  (`results/part_b.log`; stop: `kill $(cat ~/dev/assembly-blind/log/runner.pid)`). Next: `plots.py` from the logs.
