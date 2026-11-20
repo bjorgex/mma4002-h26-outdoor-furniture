@@ -69,7 +69,68 @@ def main_v8(version="v8"):
           f"cell_layout_{version}.json")
 
 
+def main_v3():
+    """v3 (bench_cell_v3.py build(), constants only): the one double-sided guide on base B, ground_base.stl (not
+    split), no parking pad, the AMR past the far edge. Out: cell_v3.glb + cell_layout_v3.json."""
+    import bench_cell_v3 as v3
+    asm = {p["name"]: Mat(p["pose"]) for p in json.loads((v3.PARTS / "assembly.json").read_text())["parts"]}
+    gb = Mat(v3.LAYOUT["work_frame"]) * v3.GROUND_IN_WORK
+    sx, sy, st = v3.GROUND_SIZE
+    scene, info = trimesh.Scene(), []
+
+    def add(name, kind, mesh, pose, colour):
+        mesh = mesh.copy()
+        mesh.apply_transform(to_np(gb * pose))
+        mesh.visual = trimesh.visual.TextureVisuals(material=trimesh.visual.material.PBRMaterial(
+            baseColorFactor=colour, metallicFactor=0.0, roughnessFactor=0.8))
+        scene.add_geometry(mesh, node_name=name, geom_name=name)
+        m = gb * pose
+        info.append({"name": name, "kind": kind, "colour": colour,
+                     "pose": [[round(m[i, j], 4) for j in range(4)] for i in range(4)]})
+
+    def box(lo, hi):
+        b = trimesh.creation.box(extents=[h - l for l, h in zip(lo, hi)])
+        b.apply_translation([(l + h) / 2 for l, h in zip(lo, hi)])
+        return b
+
+    stl = trimesh.load_mesh
+    grey, wood, frame_c, red = [0.6, 0.6, 0.62, 1], [0.75, 0.55, 0.3, 1], [0.55, 0.62, 0.75, 1], [0.85, 0.1, 0.1, 1]
+    jig_c, guide_c = [0.35, 0.55, 0.85, 1], [0.95, 0.75, 0.2, 1]
+    add("Table", "table", box((-350, -60, -v3.TABLE_H), (sx + 10, sy + 60, -st)), eye(4), [0.78, 0.74, 0.68, 1])
+    add("Ground base plate", "plate", stl(v3.JIG / "ground_base.stl"), eye(4), [0.82, 0.8, 0.74, 1])
+    for i, (qx, qy) in enumerate(((3, 3), (sx - 28, 3), (3, sy - 28), (sx - 28, sy - 28)), 1):
+        add(f"Vision square {i}", "marker", stl(v3.JIG / "vision_square.stl"), transl(qx, qy, 0), red)
+    for name, base, f, riser in (("Base A", v3.BASE_A, "base_a", v3.RISER_A), ("Base B", v3.BASE_B, "base_b", v3.RISER_B)):
+        add(f"{name} riser", "jig", box((-90, -90, -riser), (90, 90, 0)), base, grey)
+        add(name, "jig", stl(v3.JIG / f"{f}.stl"), base, jig_c)
+    add("Plank jig", "jig", stl(v3.JIG / "plank_jig.stl"), v3.PLANK_JIG, jig_c)
+    amr = transl(sx + v3.AMR_GAP, sy / 2 - v3.AMR_PLATE[1] / 2, 0)
+    add("AMR plate", "amr", box((0, 0, -10), (v3.AMR_PLATE[0], v3.AMR_PLATE[1], 0)), amr, [0.4, 0.75, 0.45, 1])
+    add("AMR top module", "amr", box((40, 40, 383 - v3.TABLE_H - st), (v3.AMR_PLATE[0] - 40, v3.AMR_PLATE[1] - 40, -10)),
+        amr, [0.85, 0.85, 0.88, 1])
+    frame, piece, plank = stl(v3.PARTS / "frame.stl"), stl(v3.PARTS / "interface_piece.stl"), stl(v3.PARTS / "plank_body.stl")
+    add("frame1", "frame", frame, v3.BASE_A * v3.T_IN * asm["frame1"], frame_c)
+    add("frame2", "frame", frame, v3.BASE_B * v3.FLIP * v3.T_IN * asm["frame2"], frame_c)
+    for k in range(1, 7):
+        P = v3.T_IN * asm[f"plank{k}"]
+        add(f"piece A{k}", "piece", piece, v3.BASE_A * P, red)
+        add(f"piece B{k}", "piece", piece, v3.BASE_B * v3.FLIP * P * rotz(pi), red)
+        row, col = divmod(k - 1, 3)
+        start = v3.PLANK_JIG * transl(v3.PITCH * (col + 0.5), v3.PITCH * (row + 0.5) + 2.5, 125) * rotx(pi / 2)
+        add(f"plank{k}", "plank", plank, start, wood)
+    add("Guide", "guide", stl(v3.JIG / "guide.stl"), v3.BASE_B * v3.GUIDE_ON_B, guide_c)
+    (HERE / "cell_v3.glb").write_bytes(scene.export(file_type="glb"))
+    (HERE / "cell_layout_v3.json").write_text(json.dumps(
+        {"source": "bench_cell_v3.py build() poses (constants only, no RoboDK) + bench_layout.json work frame; "
+                   "meshes jig_parts/, benchV1_parts/",
+         "station": v3.STATION, "units": "mm, robot base frame (z up)", "tip_mm": v3.TIP, "egp": v3.EGP,
+         "table_h": v3.TABLE_H, "objects": info}, indent=1))
+    print(f"{len(info)} objects -> cell_v3.glb ({(HERE / 'cell_v3.glb').stat().st_size / 1e3:.0f} kB), cell_layout_v3.json")
+
+
 def main(cell="v4"):
+    if cell == "v3":
+        return main_v3()
     if cell in ("v8", "v8x2", "v9", "v9x2"):                       # v9: bench_cell_v9.py (Guide split V6)
         return main_v8(cell)
     v = {"v4": v4, "v5": v5, "v6": v6}[cell]
@@ -139,7 +200,7 @@ def main(cell="v4"):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--cell", choices=["v4", "v5", "v6", "v8", "v8x2", "v9", "v9x2"], default="v4",
-                    help="v4 (default): guide on base B; v5: on base A; v6: on base A, no parking pad; "
+    ap.add_argument("--cell", choices=["v3", "v4", "v5", "v6", "v8", "v8x2", "v9", "v9x2"], default="v4",
+                    help="v3: one double-sided guide on base B (bench_cell_v3.py); v4 (default): guide on base B; v5: on base A; v6: on base A, no parking pad; "
                          "v8: Jig V5 on the T-slot plate (bench_cell_v8.py); v8x2: 2 benches (bench_cell_v8x2.py); v9 / v9x2: Guide split V6 (bench_cell_v9*.py)")
     main(ap.parse_args().cell)
