@@ -1,0 +1,1446 @@
+{
+ "row": {
+  "label": "v7",
+  "version": "v7",
+  "scored_at": "2026-11-20T12:55:49",
+  "program": "robot-cell/tests/robot_sim/ref/v7_program.json",
+  "cell": "v7",
+  "geometry": "robodk",
+  "note": "Jig V2 on the work plate, rack outside, guide arms",
+  "cycle_s": 340.7,
+  "cycle_ramps_s": 376.9,
+  "phases_s": "{\"planks\": 126.4, \"guide to B\": 28.1, \"frame 1 + planks\": 26.5, \"outer half out\": 69.2, \"inner half out\": 43.7, \"bench to AMR\": 33.7, \"home\": 13.0}",
+  "tcp_path_m": 18.61,
+  "line_path_m": 12.34,
+  "joint_travel_deg": 9990.0,
+  "j1_travel_deg": 779.0,
+  "j2_travel_deg": 1279.0,
+  "j3_travel_deg": 2245.0,
+  "j4_travel_deg": 1813.0,
+  "j5_travel_deg": 380.0,
+  "j6_travel_deg": 3494.0,
+  "n_moves": 133,
+  "n_ptp": 24,
+  "n_line": 109,
+  "wrist_flips": 0,
+  "collisions_fixtures": 29,
+  "collisions_parts": 25,
+  "min_clearance_mm": 3.2,
+  "ptp_near_parts": 1,
+  "low_traverses": 3,
+  "ik_failures": 0,
+  "line_failures": 2,
+  "limit_hits": 0,
+  "max_mu1_vfix": 14.59,
+  "min_mu3_vfix": 0.0071,
+  "near_singular": 36,
+  "grips": 11,
+  "regrasps": 4,
+  "part_flips": 10,
+  "jig_parts": 5,
+  "jig_volume_l": 3.15,
+  "iteration": "",
+  "wall_time_s": "",
+  "kept": "",
+  "tool_changes": "",
+  "score_seconds": 41.8
+ },
+ "shift": {},
+ "hits": [
+  {
+   "move": 19,
+   "name": "Point15",
+   "check": "parts",
+   "pairs": [
+    [
+     "plank2",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach plank6', before 'release plank6'"
+  },
+  {
+   "move": 31,
+   "name": "Point24",
+   "check": "parts",
+   "pairs": [
+    [
+     "plank1",
+     "plank2"
+    ]
+   ],
+   "context": "after 'attach plank2', before 'release plank2'"
+  },
+  {
+   "move": 43,
+   "name": "Point33",
+   "check": "parts",
+   "pairs": [
+    [
+     "plank1",
+     "plank5"
+    ]
+   ],
+   "context": "after 'attach plank5', before 'release plank5'"
+  },
+  {
+   "move": 55,
+   "name": "Point42",
+   "check": "parts",
+   "pairs": [
+    [
+     "plank1",
+     "plank2"
+    ]
+   ],
+   "context": "after 'attach plank1', before 'release plank1'"
+  },
+  {
+   "move": 75,
+   "name": "Point57",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release plank4', before 'attach Guide inner, Guide outer'"
+  },
+  {
+   "move": 76,
+   "name": "Point58",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release plank4', before 'attach Guide inner, Guide outer'"
+  },
+  {
+   "move": 77,
+   "name": "Point59",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 78,
+   "name": "Point60",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 78,
+   "name": "Point60",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_3"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 79,
+   "name": "Point61",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_3"
+    ],
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 80,
+   "name": "Point62",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_2"
+    ],
+    [
+     "Guide inner",
+     "link_3"
+    ],
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 81,
+   "name": "Point63",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 81,
+   "name": "Point63",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 82,
+   "name": "Point64",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner, Guide outer', before 'release guide A-B'"
+  },
+  {
+   "move": 83,
+   "name": "Point65",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release guide A-B', before 'attach frame1, plank1 +11'"
+  },
+  {
+   "move": 84,
+   "name": "Point66",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release guide A-B', before 'attach frame1, plank1 +11'"
+  },
+  {
+   "move": 86,
+   "name": "Point68",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Base B",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release guide A-B', before 'attach frame1, plank1 +11'"
+  },
+  {
+   "move": 87,
+   "name": "Point69",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Base B",
+     "EGP"
+    ],
+    [
+     "Base B",
+     "link_6"
+    ],
+    [
+     "Ground base plate",
+     "link_6"
+    ],
+    [
+     "Table",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release guide A-B', before 'attach frame1, plank1 +11'"
+  },
+  {
+   "move": 87,
+   "name": "Point69",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "frame2"
+    ],
+    [
+     "EGP",
+     "piece B3"
+    ],
+    [
+     "EGP",
+     "piece B4"
+    ],
+    [
+     "frame2",
+     "link_6"
+    ],
+    [
+     "link_6",
+     "piece B5"
+    ],
+    [
+     "link_6",
+     "piece B6"
+    ]
+   ],
+   "context": "after 'release guide A-B', before 'attach frame1, plank1 +11'"
+  },
+  {
+   "move": 88,
+   "name": "Point68",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Base B",
+     "EGP"
+    ],
+    [
+     "Base B",
+     "link_6"
+    ],
+    [
+     "Ground base plate",
+     "link_6"
+    ],
+    [
+     "Table",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach frame1, plank1 +11', before 'release frame 1 with the planks'"
+  },
+  {
+   "move": 88,
+   "name": "Point68",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "Guide inner"
+    ],
+    [
+     "EGP",
+     "Guide outer"
+    ],
+    [
+     "EGP",
+     "frame2"
+    ],
+    [
+     "EGP",
+     "piece B3"
+    ],
+    [
+     "EGP",
+     "piece B4"
+    ],
+    [
+     "Guide inner",
+     "link_6"
+    ],
+    [
+     "Guide outer",
+     "link_6"
+    ],
+    [
+     "frame2",
+     "link_6"
+    ],
+    [
+     "link_6",
+     "piece B5"
+    ],
+    [
+     "link_6",
+     "piece B6"
+    ]
+   ],
+   "context": "after 'attach frame1, plank1 +11', before 'release frame 1 with the planks'"
+  },
+  {
+   "move": 89,
+   "name": "Point70",
+   "check": "parts",
+   "pairs": [
+    [
+     "EGP",
+     "Guide inner"
+    ],
+    [
+     "EGP",
+     "Guide outer"
+    ],
+    [
+     "Guide inner",
+     "link_6"
+    ],
+    [
+     "Guide outer",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach frame1, plank1 +11', before 'release frame 1 with the planks'"
+  },
+  {
+   "move": 90,
+   "name": "Point71",
+   "check": "parts",
+   "pairs": [
+    [
+     "frame1",
+     "link_2"
+    ],
+    [
+     "link_1",
+     "plank5"
+    ],
+    [
+     "link_1",
+     "plank6"
+    ],
+    [
+     "link_2",
+     "piece A1"
+    ],
+    [
+     "link_2",
+     "piece A2"
+    ],
+    [
+     "link_2",
+     "piece A3"
+    ],
+    [
+     "link_2",
+     "piece A4"
+    ],
+    [
+     "link_2",
+     "piece A5"
+    ],
+    [
+     "link_2",
+     "piece A6"
+    ],
+    [
+     "link_2",
+     "plank1"
+    ],
+    [
+     "link_2",
+     "plank2"
+    ],
+    [
+     "link_2",
+     "plank3"
+    ],
+    [
+     "link_2",
+     "plank4"
+    ],
+    [
+     "link_2",
+     "plank5"
+    ],
+    [
+     "link_2",
+     "plank6"
+    ]
+   ],
+   "context": "after 'attach frame1, plank1 +11', before 'release frame 1 with the planks'"
+  },
+  {
+   "move": 98,
+   "name": "Point79",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release frame 1 with the planks', before 'attach Guide outer'"
+  },
+  {
+   "move": 99,
+   "name": "Point80",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release frame 1 with the planks', before 'attach Guide outer'"
+  },
+  {
+   "move": 100,
+   "name": "Point81",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 101,
+   "name": "Point82",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 102,
+   "name": "Point83",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 103,
+   "name": "Point84",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 104,
+   "name": "Point85",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 105,
+   "name": "Point86",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide outer",
+     "link_2"
+    ],
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 106,
+   "name": "Point87",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 106,
+   "name": "Point87",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide outer",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 107,
+   "name": "Point88",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide outer', before 'release outer'"
+  },
+  {
+   "move": 108,
+   "name": "Point89",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 108,
+   "name": "Point89",
+   "check": "parts",
+   "pairs": [
+    [
+     "frame1",
+     "link_2"
+    ],
+    [
+     "link_2",
+     "piece A3"
+    ],
+    [
+     "link_2",
+     "piece A4"
+    ],
+    [
+     "link_2",
+     "piece A5"
+    ],
+    [
+     "link_2",
+     "plank3"
+    ],
+    [
+     "link_2",
+     "plank4"
+    ],
+    [
+     "link_2",
+     "plank5"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 109,
+   "name": "Point90",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 109,
+   "name": "Point90",
+   "check": "parts",
+   "pairs": [
+    [
+     "frame1",
+     "link_2"
+    ],
+    [
+     "link_2",
+     "piece A3"
+    ],
+    [
+     "link_2",
+     "piece A4"
+    ],
+    [
+     "link_2",
+     "piece A5"
+    ],
+    [
+     "link_2",
+     "plank3"
+    ],
+    [
+     "link_2",
+     "plank4"
+    ],
+    [
+     "link_2",
+     "plank5"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 111,
+   "name": "Point92",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 111,
+   "name": "Point92",
+   "check": "parts",
+   "pairs": [
+    [
+     "frame1",
+     "link_2"
+    ],
+    [
+     "link_2",
+     "piece A4"
+    ],
+    [
+     "link_2",
+     "piece A5"
+    ],
+    [
+     "link_2",
+     "piece A6"
+    ],
+    [
+     "link_2",
+     "plank4"
+    ],
+    [
+     "link_2",
+     "plank5"
+    ],
+    [
+     "link_2",
+     "plank6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 112,
+   "name": "Point93",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 112,
+   "name": "Point93",
+   "check": "parts",
+   "pairs": [
+    [
+     "frame1",
+     "link_2"
+    ],
+    [
+     "link_2",
+     "piece A4"
+    ],
+    [
+     "link_2",
+     "piece A5"
+    ],
+    [
+     "link_2",
+     "plank4"
+    ],
+    [
+     "link_2",
+     "plank5"
+    ],
+    [
+     "link_2",
+     "plank6"
+    ]
+   ],
+   "context": "after 'release outer', before 'attach Guide inner'"
+  },
+  {
+   "move": 113,
+   "name": "Point94",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 113,
+   "name": "Point94",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "plank4"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 114,
+   "name": "Point95",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 115,
+   "name": "Point96",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 116,
+   "name": "Point97",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_2"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 117,
+   "name": "Point98",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_2"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 118,
+   "name": "Point99",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_2"
+    ],
+    [
+     "Guide inner",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 119,
+   "name": "Point100",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 119,
+   "name": "Point100",
+   "check": "parts",
+   "pairs": [
+    [
+     "Guide inner",
+     "link_3"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 120,
+   "name": "Point101",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'attach Guide inner', before 'release inner'"
+  },
+  {
+   "move": 121,
+   "name": "Point102",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release inner', before 'attach frame1, frame2 +18'"
+  },
+  {
+   "move": 122,
+   "name": "Point103",
+   "check": "fixtures",
+   "pairs": [
+    [
+     "Plank jig",
+     "link_4"
+    ],
+    [
+     "Plank jig",
+     "link_5"
+    ],
+    [
+     "Plank jig",
+     "link_6"
+    ]
+   ],
+   "context": "after 'release inner', before 'attach frame1, frame2 +18'"
+  }
+ ],
+ "clearance_mm": {
+  "1": 301.2,
+  "2": 281.2,
+  "3": 180.0,
+  "4": 138.0,
+  "5": 139.9,
+  "6": 200.0,
+  "7": 281.8,
+  "8": 299.5,
+  "9": 228.4,
+  "10": 226.4,
+  "11": 239.5,
+  "12": 241.3,
+  "13": 261.5,
+  "14": 282.4,
+  "15": 178.0,
+  "16": 138.0,
+  "17": 139.9,
+  "18": 200.0,
+  "19": 286.3,
+  "20": 299.5,
+  "21": 228.4,
+  "22": 226.4,
+  "23": 239.5,
+  "24": 241.3,
+  "25": 261.5,
+  "26": 280.0,
+  "27": 180.0,
+  "28": 138.0,
+  "29": 139.9,
+  "30": 200.0,
+  "31": 281.3,
+  "32": 299.5,
+  "33": 228.4,
+  "34": 226.4,
+  "35": 239.5,
+  "36": 241.3,
+  "37": 261.5,
+  "38": 285.1,
+  "39": 178.0,
+  "40": 138.0,
+  "41": 139.9,
+  "42": 200.0,
+  "43": 285.0,
+  "44": 299.5,
+  "45": 228.4,
+  "46": 226.4,
+  "47": 247.5,
+  "48": 241.5,
+  "49": 261.5,
+  "50": 287.8,
+  "51": 180.0,
+  "52": 138.0,
+  "53": 140.0,
+  "54": 200.0,
+  "55": 281.3,
+  "56": 299.5,
+  "57": 228.4,
+  "58": 226.4,
+  "59": 239.5,
+  "60": 241.3,
+  "61": 261.5,
+  "62": 283.8,
+  "63": 178.0,
+  "64": 138.0,
+  "65": 139.9,
+  "66": 200.0,
+  "67": 284.0,
+  "68": 299.5,
+  "69": 228.4,
+  "70": 226.4,
+  "71": 239.5,
+  "72": 241.3,
+  "73": 261.5,
+  "74": 322.2,
+  "75": 3.2,
+  "78": 7.2,
+  "79": 305.2,
+  "80": 246.5,
+  "81": 3.2,
+  "84": 6.7,
+  "85": 258.7,
+  "86": 4.1,
+  "89": 9.4,
+  "90": 231.1,
+  "91": 172.7,
+  "92": 133.6,
+  "93": 66.7,
+  "94": 61.8,
+  "95": 60.9,
+  "96": 111.6,
+  "97": 224.9,
+  "98": 3.2,
+  "102": 8.6,
+  "103": 31.4,
+  "104": 305.2,
+  "105": 246.5,
+  "106": 4.9,
+  "109": 6.7,
+  "110": 245.2,
+  "111": 3.5,
+  "115": 5.8,
+  "116": 36.7,
+  "117": 305.2,
+  "118": 246.5,
+  "119": 3.5,
+  "122": 7.0,
+  "123": 268.5,
+  "124": 294.0,
+  "125": 260.9,
+  "126": 235.8,
+  "127": 234.0,
+  "128": 332.0,
+  "129": 250.9,
+  "130": 245.0,
+  "131": 285.0,
+  "132": 367.5,
+  "133": 303.8
+ },
+ "mu1_vfix": [
+  2.1,
+  4.3,
+  2.93,
+  2.67,
+  3.09,
+  4.3,
+  1.97,
+  1.83,
+  1.66,
+  1.73,
+  1.68,
+  1.73,
+  1.97,
+  4.3,
+  2.93,
+  2.68,
+  3.09,
+  4.3,
+  2.0,
+  1.85,
+  1.68,
+  1.75,
+  1.7,
+  1.75,
+  2.0,
+  3.62,
+  2.61,
+  2.41,
+  2.74,
+  3.62,
+  1.79,
+  1.64,
+  1.48,
+  1.54,
+  1.5,
+  1.54,
+  1.79,
+  3.62,
+  2.61,
+  2.41,
+  2.74,
+  3.62,
+  2.04,
+  1.89,
+  1.72,
+  1.79,
+  1.74,
+  1.79,
+  2.04,
+  3.17,
+  2.36,
+  2.19,
+  2.47,
+  3.17,
+  1.85,
+  1.71,
+  1.55,
+  1.62,
+  1.58,
+  1.62,
+  1.85,
+  3.17,
+  2.36,
+  2.19,
+  2.47,
+  3.17,
+  2.08,
+  1.92,
+  1.74,
+  1.82,
+  1.77,
+  1.82,
+  2.08,
+  7.03,
+  2.74,
+  2.45,
+  2.46,
+  5.07,
+  5.08,
+  5.08,
+  2.47,
+  2.46,
+  2.74,
+  7.05,
+  3.45,
+  4.04,
+  4.26,
+  4.04,
+  3.5,
+  1.74,
+  1.77,
+  1.8,
+  1.86,
+  1.77,
+  2.14,
+  2.34,
+  7.03,
+  2.74,
+  2.45,
+  2.45,
+  2.48,
+  2.71,
+  6.51,
+  5.06,
+  5.06,
+  2.47,
+  2.45,
+  2.73,
+  7.01,
+  7.08,
+  2.74,
+  2.46,
+  2.54,
+  2.57,
+  3.1,
+  14.59,
+  5.08,
+  5.08,
+  2.48,
+  2.46,
+  2.74,
+  7.06,
+  2.62,
+  2.06,
+  1.95,
+  1.9,
+  2.19,
+  2.58,
+  1.97,
+  2.12,
+  3.63,
+  2.62,
+  2.1
+ ],
+ "kin_problems": [
+  [
+   "#125 line Point106",
+   [
+    "STORED JOINTS ARE ANOTHER POSTURE than the line ends in (max 180.0 deg): stored [-24.8, 7.0, -98.2, -178.8, 90.0, 75.1], robot [-24.8, 37.1, -116.6, -10.5, -90.0, 255.1]"
+   ]
+  ],
+  [
+   "#126 line Point107",
+   [
+    "STORED JOINTS ARE ANOTHER POSTURE than the line ends in (max 180.0 deg): stored [-24.8, 6.9, -101.5, -175.3, 90.0, 75.1], robot [-24.8, 37.7, -120.3, -7.3, -90.0, 255.1]"
+   ]
+  ]
+ ],
+ "definitions": {
+  "NEAR_MM": 100.0,
+  "TRAVERSE_MM": 100.0,
+  "LOW_MARGIN": 50.0,
+  "tallest_object_z": 255.1,
+  "step": 2.0
+ }
+}

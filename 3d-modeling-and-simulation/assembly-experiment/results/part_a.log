@@ -1,0 +1,12 @@
+PySide2 and/or tkinter is not present on the system. Please install PySide2: "python -m pip install PySide2" or "python -m pip install robodk[apps]"
+PySide2 and/or tkinter is not present on the system. Please install PySide2: "python -m pip install PySide2" or "python -m pip install robodk[apps]"
+v3     cycle 239.8 s, path 15.7 m, joints 8911.0 deg, collisions fx 0 / parts 5, clearance 3.0 mm, (56.5 s)
+v4     cycle 345.1 s, path 21.46 m, joints 10925.0 deg, collisions fx 0 / parts 7, clearance 3.0 mm, (82.7 s)
+v5     cycle 306.4 s, path 18.41 m, joints 8975.0 deg, collisions fx 0 / parts 3, clearance 3.0 mm, (63.1 s)
+v6     cycle 330.2 s, path 20.27 m, joints 10350.0 deg, collisions fx 0 / parts 2, clearance 3.0 mm, (95.7 s)
+v7     cycle 340.7 s, path 18.61 m, joints 9990.0 deg, collisions fx 29 / parts 25, clearance 3.2 mm, (41.8 s)
+v8     cycle 284.6 s, path 18.17 m, joints 8896.0 deg, collisions fx 0 / parts 2, clearance 2.0 mm, (35.4 s)
+v8x2   cycle 576.9 s, path 36.97 m, joints 18466.0 deg, collisions fx 0 / parts 4, clearance 2.0 mm, (73.3 s)
+v9     cycle 286.7 s, path 18.68 m, joints 9318.0 deg, collisions fx 0 / parts 0, clearance 2.0 mm, (36.1 s)
+v9x2   cycle 581.1 s, path 37.99 m, joints 19310.0 deg, collisions fx 0 / parts 2, clearance 2.0 mm, (67.9 s)
+v10    cycle 295.9 s, path 19.81 m, joints 9703.0 deg, collisions fx 0 / parts 0, clearance 2.0 mm, (50.5 s)
