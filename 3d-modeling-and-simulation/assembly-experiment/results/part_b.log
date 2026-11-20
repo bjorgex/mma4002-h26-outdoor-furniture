@@ -1,0 +1,25 @@
+leak check of /home/bjoerge/dev/assembly-blind: PASS (nothing found)
+34 objects -> design/cell.glb (99 kB), cell_layout.json
+iter_00: cycle 239.8 s (ramps 270.9 s), joints 8911.0 deg, TCP path 15.7 m, 120 moves (22 PTP), phases {"guide": 61.5, "planks": 124.5, "frame 1 + planks": 27.5, "home": 26.3}
+  rule violations 28: r1_collisions 5, r2_kinematics 0, r3_approach 18, r4_ptp_near 1, r5_clearance 4, r6_floating 0, r7_jigs 0, r8_bench 0, r_fixed 0
+  clearance min 3.0 mm (free moves 3.0 mm), max mu1 20.93, near-singular 54, jig parts 6 (2.65 l, longest 180.1 mm), step 2.0 mm, 43.3 s
+  HIT parts move #6 (Point6, after 'start', before 'attach Guide'): link_3/plank4
+  HIT parts move #7 (Point7, after 'start', before 'attach Guide'): link_3/plank4, link_3/plank5
+  HIT parts move #8 (Point8, after 'attach Guide', before 'release guide'): link_3/plank4, link_3/plank5
+  HIT parts move #9 (Point9, after 'attach Guide', before 'release guide'): link_3/plank4, link_3/plank5
+  HIT parts move #69 (Point56, after 'attach plank1', before 'release plank1'): plank1/plank2
+  r3_approach: grip Guide after move #7, in: move #7 not vertical above the event point
+  r3_approach: grip Guide after move #7, out: move #9 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: release guide after move #13, in: move #12 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: release guide after move #13, out: move #14 not vertical above the event point
+  r3_approach: grip plank3 after move #18, in: move #17 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: grip plank6 after move #30, in: move #29 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: grip plank2 after move #42, in: move #41 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: grip plank5 after move #54, in: move #53 (line, 100.0 mm/s) inside the last/first 50 mm
+  r3_approach: ... 10 more (score.json)
+  r4_ptp_near: PTP move #109 (Point82): starts/ends within 100 mm of a grip/release point; TCP < 100 mm above Base A
+  r5_clearance: free move #6 (Point6): clearance 3.0 mm < 10
+  r5_clearance: free move #15 (Point15): clearance 5.0 mm < 10
+  r5_clearance: free move #92 (Point14): clearance 3.0 mm < 10
+  r5_clearance: free move #101 (Point5): clearance 5.0 mm < 10
+VERDICT iter 00: BETTER than the best (may be kept)
