@@ -83,8 +83,18 @@ python score_run.py <program> <cell.glb> --label try1 any program + cell (Part B
   back changed judge files, at the end `log/` + `best/` go to `results/part_b/` (raw claude streams gzipped, shots of
   kept iterations only) and are committed + pushed from the server. Watch: `watch_server.ps1`.
 
+## Part B2: second blind run from Part B's best (2026-11-22)
+- Why: Part B hit its 30-iteration cap while still improving (iter 30 kept). B2 starts from Part B's best and carries
+  over its lessons (L01-L30), standing rules and toolbox.
+- Changes vs B, each with its reason in `report/part_b2_report.tex` section 1: 3 h wall-time budget (`run_part_b2.sh`,
+  `BUDGET_S`), no-keep streak 8, `judge_b2/` = Part B's judge + its own proposed fix (a Line's time includes tool
+  rotation at 50 deg/s: Part B best 112.9 -> 114.9 s) + a mandatory `## Reason` section and `reason` column,
+  `sandbox_src/AGENT_B2.md`, sandbox `make_sandbox_b2.py` (leak check allows lines Part B wrote itself).
+- Reports: `report/part_b_report.pdf`, `report/part_b2_report.pdf` (`report/build_figs.py part_b|part_b2`).
+
 ## Status
 - 2026-11-20: plan written. Next: v3 cell builder + `score_run.py` (Part A), then the sandbox.
 - 2026-11-20: Part A done (`results/versions.csv`). Part B built: judge with rule 6 + screenshots, judge re-check OK
   (v3, v10), sandbox + leak check PASS, harness smoke test, then the blind run launched on bj-hserver
   (`results/part_b.log`; stop: `kill $(cat ~/dev/assembly-blind/log/runner.pid)`). Next: `plots.py` from the logs.
+- 2026-11-22: Part B report written (`report/part_b_report.pdf`). Part B2 launched 00:16 on bj-hserver (3 h).

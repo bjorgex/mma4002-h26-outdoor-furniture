@@ -1,0 +1,86 @@
+\input{preamble.tex}
+\input{part_b2/numbers.tex}
+\input{part_b/numbers.tex}
+\fancyhead[L]{\small MMA4002 DAM -- Assembly experiment, Part B2 (second blind run, from Part B's best)}
+
+\title{\vspace{-14mm}\textbf{Assembly experiment, Part B2}\\[1mm]
+\large A second 3-hour blind run from Part B's best design --- what changed, why, and what it found}
+\author{Bjørge (report written by Claude from the run logs)}
+\date{Run: \pbtwotstart{} -- \pbtwotend{} on bj-hserver \quad Report: 2026-11-22}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section*{Summary}
+%%SUMMARY%%
+
+\section{Why a second run, and what changed in the experiment}
+Part B stopped at its 30-iteration cap while it was still improving (iteration 30 was kept), so ``how far can it
+go?'' was not answered. B2 continues from Part B's best design. Every change to the experiment, and the reason for it:
+
+\begin{table}[H]
+\centering\small
+\rowcolors{2}{rowlt}{white}
+\begin{tabular}{>{\raggedright}p{40mm} >{\raggedright}p{38mm} >{\raggedright\arraybackslash}p{84mm}}
+\toprule
+\rowcolor{hdrblue}\hdr{Change} & \hdr{Part B $\to$ B2} & \hdr{Reason}\\
+\midrule
+Start design & v3 $\to$ Part B's best (iter 30) & Part B ended on its cap, not on a plateau. Starting again from v3 would mostly repeat B.\\
+Budget & 30 iterations $\to$ 3\,h wall time & Your request. Late iterations in B took about 3--4\,min each, so a time budget is a fairer limit than a count, and it caps the cost.\\
+Stop after no-keep streak & 5 $\to$ 8 & Near the optimum gains are small and rarer; the agent needs more tries before a dead end is real.\\
+Judge: Line time & distance only $\to$ max(distance/speed, rotation/50\,deg/s) & Part B's own proposed judge fix (iter 11/30): a real controller limits tool rotation too, and 0\,s re-orientations are a loophole. Baseline re-scored with it (Part B best: 112.9 $\to$ \pbtwostartcycle\,s), so B2 is measured against the same judge.\\
+Written reason per change & in the hypothesis $\to$ mandatory \texttt{\#\# Reason} section + \texttt{reason} column & Part B gave its reasons only inside the hypothesis. B2 must name the evidence (a number, a shot, a lesson), the alternatives it rejected and the DFA principle, before it may score. The judge refuses to score without it.\\
+Memory & none $\to$ Part B's 30 lessons, 12 standing rules, 25 tools & Tests whether learning carries over between runs, and avoids paying again for the same mistakes.\\
+Brief & + ``where run B ended'' & Tells it B's own conclusion (about 70\,\% of the cycle is fixed slow legs and gripper waits), so it looks for structural changes, not only tenths of a second. Risk: this steers it, and the report says so.\\
+Kept the same & harness, permissions, hard rules, keep rule, model, speeds & So B and B2 can be compared directly.\\
+\bottomrule
+\end{tabular}
+\caption{Experiment-design changes from Part B to B2.}
+\end{table}
+
+\section{Result}
+%%RESULT%%
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\linewidth]{part_b2/fig_combined.png}
+\caption{The whole path: run B from v3 (orange, judge B) and run B2 (blue, judge B2, which adds Line rotation time:
++2.0\,s on the same design). Filled = kept, hollow = rejected.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\linewidth]{part_b2/fig_progress.png}
+\caption{Run B2 alone: every iteration (filled = kept, hollow = rejected, colour = change type) and the best so far.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.72\linewidth]{part_b2/fig_phases.png}
+\caption{Time per phase, start of B2 vs best of B2.}
+\end{figure}
+
+\section{What it changed, and why}
+The reason in each row is the agent's own \texttt{Reason} section (first sentences), written before the change was scored.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\linewidth]{part_b2/fig_waterfall.png}
+\caption{Waterfall of B2's kept changes (colour = change type).}
+\end{figure}
+
+\input{part_b2/iter_table.tex}
+
+%%PATTERNS%%
+
+\section{What it learnt}
+%%LESSONS%%
+
+\section*{Files}
+Logs: \texttt{results/part\_b2/log/} (\texttt{iterations.csv} with the \texttt{reason} column,
+\texttt{iter\_NN/notes.md}, \texttt{lessons.md}, \texttt{tool\_changes.md}, \texttt{summary.md}); best design:
+\texttt{results/part\_b2/best/}; judge: \texttt{judge\_b2/}; runner: \texttt{run\_part\_b2.sh}; figures:
+\texttt{report/build\_figs.py part\_b2}.
+
+\end{document}

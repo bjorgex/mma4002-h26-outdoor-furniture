@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt                              # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 RUN = sys.argv[1] if len(sys.argv) > 1 else "part_b"
-LOG = HERE.parent / "results" / RUN / "log"
+LOG = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE.parent / "results" / RUN / "log"   # argv[2]: a live copy
 OUT = HERE / RUN
 OUT.mkdir(exist_ok=True)
 TYPE_COL = {"program": "#E07B39", "layout": "#2F6FB5", "jig_cad": "#3F7D58", "tool": "#8E5BB5", "mixed": "#B5A42F",
@@ -191,7 +191,7 @@ def first_sentences(s, n=230):
     if len(s) <= n:
         return s
     cut = s[:n]
-    k = max(cut.rfind(". "), cut.rfind("; "))
+    k = cut.rfind(". ")
     return (cut[:k + 1] if k > 80 else cut.rstrip() + " ...")
 
 
@@ -199,7 +199,7 @@ lines = []
 lvl = base["cyc"]
 for r in rows[1:]:
     d = r["cyc"] - lvl if r["cyc"] is not None else None
-    why = reasons.get(str(r["it"])) or first_sentences(r.get("reason") or section(notes(r["it"]), "Reason"))
+    why = reasons.get(str(r["it"])) or first_sentences(r.get("reason") or section(notes(r["it"]), "Reason"), 330)
     res = ("kept" if r["keep"] else "rejected")
     rej = ""
     if not r["keep"] and r.get("reject_reason") and not reasons.get(str(r["it"])):
@@ -220,6 +220,8 @@ HEAD = (r"{\small" "\n" r"\rowcolors{2}{rowlt}{white}" "\n"
 t0 = next((e["t"] for e in events if e.get("event") == "run_start"), "")
 t1 = next((e["t"] for e in reversed(events) if e.get("event") in ("run_end", "decided")), "")
 les = (LOG / "lessons.md").read_text(encoding="utf-8")
+if RUN == "part_b2" and "# Run B2" in les:
+    les = les.split("# Run B2", 1)[1]                     # only this run's lessons
 n_les = len(re.findall(r"^## L\d+", les, re.M))
 n_again = len(re.findall(r"^## L\d+[^\n]*\bL\d+ again", les, re.M))
 lasts = [r for r in rows if r["keep"]]
@@ -240,3 +242,32 @@ PFX = {"part_b": "pb", "part_b2": "pbtwo"}[RUN]                # LaTeX macro nam
                                          for k, v in num.items()), encoding="utf-8")
 print(json.dumps(num, indent=1))
 print("cost per iter:", {k: round(v, 2) for k, v in cost.items()})
+
+# ---------------------------------------------------------------- B2 only: the whole path v3 -> B -> B2
+if RUN == "part_b2":
+    rb = list(csv.DictReader((HERE.parent / "results" / "part_b" / "log" / "iterations.csv").open(encoding="utf-8")))
+    fig, ax = plt.subplots(figsize=(8, 3.4))
+    for k, (rr, col, lab, off) in enumerate([(rb, "#E07B39", "run B (judge B)", 0),
+                                              (rows, "#2F6FB5", "run B2 (judge B2: + Line rotation time)",
+                                               len(rb) - 1)]):
+        cur, xs, ys = None, [], []
+        for r in rr:
+            c = float(r["cycle_s"]) if r["cycle_s"] else None
+            if r["kept"] == "True":
+                cur = c
+            xs.append(int(r["iteration"]) + off)
+            ys.append(cur)
+            if c is not None:
+                ax.scatter(int(r["iteration"]) + off, c, s=14, color=col if r["kept"] == "True" else "white",
+                           edgecolor=col, zorder=3)
+        ax.step(xs, ys, where="post", color=col, lw=1.4, label=lab)
+    ax.axvline(len(rb) - 1, color="#999", ls=":", lw=1)
+    ax.set_xlabel("iteration (B2 continues after B's iter 30)")
+    ax.set_ylabel("cycle time [s]")
+    ax.legend(fontsize=7)
+    ax.grid(alpha=.3)
+    fig.tight_layout()
+    fig.savefig(OUT / "fig_combined.png", dpi=170)
+    plt.close(fig)
+    # zoom on B2 only, the y range of B2
+    print("combined figure written")
