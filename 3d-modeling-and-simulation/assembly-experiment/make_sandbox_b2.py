@@ -25,6 +25,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import contextlib                                          # noqa: E402
+import io                                                  # noqa: E402
 from make_sandbox import JUDGE_FILES, leak_check, write    # noqa: E402
 
 
@@ -82,6 +84,29 @@ def build(src, root, force):
     print(f"built {root} from {src}")
 
 
+def b2_leak_check(root, src, skip_log=False):
+    """make_sandbox.leak_check, but a hit is allowed if the same line already exists in the Part B sandbox (src):
+    those are Part B's own words written blind (e.g. the TM5's built-in wrist 'camera', 'place halves'), not ideas
+    from the later human versions. Anything new (AGENT_B2.md, judge_b2) must still be clean."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        clean = leak_check(root, skip_log)
+    if clean:
+        print(buf.getvalue().strip())
+        return True
+    old = set()
+    for f in src.rglob("*"):
+        if f.is_file() and f.suffix in (".py", ".md", ".json", ".txt") and "__pycache__" not in f.parts:
+            old.update(ln.strip()[:140] for ln in retag(f.read_text(encoding="utf-8", errors="replace")).splitlines())
+    hits = [ln.strip() for ln in buf.getvalue().splitlines()[1:] if ln.strip()]
+    new = [h for h in hits if h.split(" in: ", 1)[-1].strip() not in old]
+    print(f"leak check of {root}: {len(hits)} hits, {len(hits) - len(new)} of them Part B's own lines (allowed), "
+          f"{len(new)} new: {'PASS' if not new else 'FAIL'}")
+    for h in new[:60]:
+        print("   ", h)
+    return not new
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--src", default=str(Path.home() / "dev" / "assembly-blind"))
@@ -93,7 +118,7 @@ def main():
     root = Path(a.root).expanduser()
     if not a.leak_check_only:
         build(Path(a.src).expanduser(), root, a.force)
-    raise SystemExit(0 if leak_check(root, a.skip_log) else 1)
+    raise SystemExit(0 if b2_leak_check(root, Path(a.src).expanduser(), a.skip_log) else 1)
 
 
 if __name__ == "__main__":
