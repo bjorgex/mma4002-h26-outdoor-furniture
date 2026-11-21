@@ -1,0 +1,172 @@
+\input{preamble.tex}
+\input{part_b/numbers.tex}
+\fancyhead[L]{\small MMA4002 DAM -- Assembly experiment, Part B (blind AI run from v3)}
+
+\title{\vspace{-14mm}\textbf{Assembly experiment, Part B}\\[1mm]
+\large A blind AI agent improves the bench cell from v3 --- what it did, why, and what it learnt}
+\author{Bjørge (report written by Claude from the run logs)}
+\date{Run: \pbtstart{} -- \pbtend{} on bj-hserver \quad Report: 2026-11-22}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section*{Summary}
+Starting from the first working bench cell (\textbf{v3}: \pbstartcycle{}\,s, \pbstartviol{} hard-rule violations), a
+headless Claude agent working blind (no access to our later versions) ran \pbniter{} iterations in about 1 h 47 min
+of wall time and reached a \textbf{legal cell at \pbbestcycle{}\,s} (iter \pbbestit{}), \textbf{\pbgainpct{}\,\% faster}
+than v3, with joint travel \pbstartjoints{} $\to$ \pbbestjoints{}\,deg and TCP path \pbstartpath{} $\to$ \pbbestpath{}\,m.
+It made the cell legal first (iter \pbfirstlegal{}, at a small time cost), then cut time almost only through
+program changes. One change dominates: \textbf{dropping the guide's trip to base A and back} (iter 25, $-47.5$\,s).
+\pbnkept{} of \pbniter{} iterations were kept, \pbnrej{} rejected. It logged \pbnlessons{} lessons
+(\pbnagain{} of them marked as a repeat of an earlier lesson), built 25 of its own tools, and proposed one fix to
+the judge (a Line's time ignored tool rotation), which is applied in run B2. Cost: about \$\pbcost{} of API use,
+\pbagentmin{} min of agent time. The run stopped because it hit the 30-iteration cap, \emph{not} because it ran out
+of ideas: the last kept change was iteration 30.
+
+\section{What was tested}
+\begin{itemize}
+\item \textbf{Question:} from v3, how far can an AI agent improve the automated assembly with our own simulation tools
+  (no RoboDK), and what kind of changes does it find?
+\item \textbf{Setup:} a sandbox on bj-hserver with v3's program and cell, the jig/bench CAD scripts and a
+  \textbf{frozen judge} (collision, kinematics, cycle time, manipulability; SHA-256 checked every minute). A
+  leak check made sure no later design ideas (v4--v10) were in the sandbox. One headless \texttt{claude -p}
+  session per iteration with \texttt{AGENT.md} as its brief.
+\item \textbf{It could change:} the program, the jig layout, the jig CAD (build123d), and its own tools. Not the
+  speeds, gripper, robot, TCP or the bench product.
+\item \textbf{Hard rules} (any violation = reject): r1 no collisions (2\,mm sampling), r2 reachable, r3 last/first
+  50\,mm vertical and slow, r4 no PTP near parts, r5 clearance $\ge$10\,mm, r6 released parts rest on something,
+  r7 jigs printable and on the plate, r8 bench assembled at the end.
+\item \textbf{Keep rule:} rank $=$ (fails a rule?, violations, cycle time, joint travel), lower is better.
+  Budget: 30 iterations, stop after 5 in a row without a keep.
+\item \textbf{Per iteration} the agent had to write a hypothesis with the expected $\Delta$ \emph{before} scoring,
+  look at the rendered screenshots before keeping, and log every problem as a lesson.
+\end{itemize}
+
+\section{Result}
+\begin{table}[H]
+\centering\small
+\rowcolors{2}{rowlt}{white}
+\begin{tabular}{l r r l}
+\toprule
+\rowcolor{hdrblue}\hdr{Metric} & \hdr{v3 (iter 00)} & \hdr{Best (iter \pbbestit)} & \hdr{Note}\\
+\midrule
+Cycle time, programmed speeds & \pbstartcycle\,s & \pbbestcycle\,s & $-$\pbgainpct\,\%\\
+Cycle time with ramps & 270.9\,s & 135.0\,s & trapezoid estimate\\
+Hard-rule violations & \pbstartviol & \pbbestviol & r1 5, r3 18, r4 1, r5 4 $\to$ 0\\
+Joint travel (sum J1--J6) & \pbstartjoints\,deg & \pbbestjoints\,deg & J6 1656 $\to$ 329, J1 593 $\to$ 189\\
+TCP path & \pbstartpath\,m & \pbbestpath\,m & \\
+Moves (PTP / Line) & 120 (22 / 98) & 84 (18 / 66) & \\
+Grips & 9 & 7 & guide grips gone\\
+Min clearance in free moves & 3.0\,mm & 41.5\,mm & rule: $\ge$10\,mm\\
+\bottomrule
+\end{tabular}
+\caption{Start vs best, both scored by the same frozen judge at 2\,mm.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\linewidth]{part_b/fig_progress.png}
+\caption{Every iteration (filled = kept, hollow = rejected, colour = change type) and the best so far. Iterations
+1--8 trade a little time for legality; 9--24 are steady program tuning; 25 removes the guide trip.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.72\linewidth]{part_b/fig_phases.png}
+\caption{Where the time goes. The guide phase disappears; the planks phase is now ~74\,\% fixed cost
+(50\,mm slow legs at 20\,mm/s and gripper waits), which is why later gains get small.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.49\linewidth]{../results/part_b/log/iter_00/topview.png}\hfill
+\includegraphics[width=.49\linewidth]{../results/part_b/log/iter_30/topview.png}
+\caption{Top view with the TCP path: v3 (left) and the best design (right). The long guide carries between base B
+and base A are gone, and the plank jig sits closer to base A.}
+\end{figure}
+
+\section{What it changed, and why}
+Part B's brief asked for a \emph{hypothesis} per iteration (what, why, expected $\Delta$), not a separate reason
+section; the reasons below are condensed from those hypotheses (\texttt{results/part\_b/log/iter\_NN/notes.md}). In
+run B2 a written \texttt{Reason} is a hard rule and goes into the iteration log.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\linewidth]{part_b/fig_waterfall.png}
+\caption{Waterfall of kept changes (bar = $\Delta$ cycle time, colour = change type). Iterations 1--5 add time
+(making it legal); iteration 25 is the big step.}
+\end{figure}
+
+\input{part_b/iter_table.tex}
+
+\subsection*{Patterns in its reasoning}
+\begin{itemize}
+\item \textbf{Legal first, then fast.} Iterations 1--8 each fixed the biggest group of violations, even when that
+  cost time (+8.1\,s over iterations 1--5, before iter 6 won it back). That follows the keep rule exactly.
+\item \textbf{Biggest phase first.} From iter 9 it attacked the largest phase (planks, then guide) and said so in
+  each hypothesis.
+\item \textbf{Mostly small, safe program edits.} 22 of 30 iterations were program-only; it made only 2 jig-CAD
+  changes, 1 layout move, 4 mixed changes and 1 pure tool change, so the cell's \emph{design} changed little.
+\item \textbf{The big win came late.} The guide trip (iter 25) was questioned only after 24 iterations of tuning the
+  moves inside it. Its own lesson L25 says it: ask whether a phase is needed before tuning it. A human DFA review
+  would ask that first.
+\item \textbf{Its predictions were good.} Most results landed within a few tenths of a second of the expected
+  $\Delta$; where they missed (iter 13, 26, 27) it found and logged the cause (a stricter r4 box, J6-bound PTPs).
+\end{itemize}
+
+\section{What it learnt (lessons log)}
+The agent wrote a lesson block (problem, cause, fix, rule) at once for every problem, re-read the log at the start of
+every iteration, and copied 12 lessons into \texttt{AGENT.md} as standing rules.
+
+\begin{table}[H]
+\centering\small
+\rowcolors{2}{rowlt}{white}
+\begin{tabular}{>{\raggedright}p{38mm} >{\raggedright}p{22mm} >{\raggedright\arraybackslash}p{95mm}}
+\toprule
+\rowcolor{hdrblue}\hdr{Kind} & \hdr{Lessons} & \hdr{Typical rule it learnt}\\
+\midrule
+Judge checks and margins & L01, L03, L14, L15, L22, L30 & Never aim at a threshold exactly (50.5\,mm legs); the 10\,mm screen misses thin-part r4 hits, screen at 2\,mm; read how the judge times a move before targeting it.\\
+PTP planning near parts & L13, L17, L23, L25, L27, L29 & Both ends of every PTP $\ge$100\,mm from \emph{all} grip/release points; a just-released part is an obstacle; fix a PTP-end hit by moving its start.\\
+Robot arm and wrist & L04, L06, L16, L19--L21, L24, L26, L28 & A PTP end lowers the whole swing (check the wrist mid-swing); probe IK and wrist branches before a change; J6 $\pm$360 keeps the pose.\\
+Parts and jig geometry & L05, L07, L09, L10, L12 & Measure a contact before fixing it; the judge's meshes are the truth, not the STEP; before cutting a jig surface, list every part that rests on it.\\
+Its own working environment & L02, L08, L11, L18 & Edit files with Edit/Write, one \texttt{./py} per call; append to logs with Edit, never overwrite (L18: it wiped its lessons once).\\
+\bottomrule
+\end{tabular}
+\caption{The 30 lessons grouped by kind.}
+\end{table}
+
+\textbf{Did it actually learn?} Partly. \pbnagain{} of the 30 lessons are marked as a repeat of an earlier one.
+The repeats cluster in two places: the sandbox's shell permissions (L02 again in L08 and L11: it kept trying
+chained or inline shell commands), and the r4 ``thin box'' over planks (L15, L22, L23 again in L25, L27, L29).
+For the first, the lesson stuck after the third time. For the second, each repeat was a \emph{new variant} of the same
+geometry trap (start vs end of the PTP, after a rotation), and each was caught by the 2\,mm score, never kept. So
+the lessons log worked as a safety net and a memory, but rules phrased for one case did not always transfer to the
+next case.
+
+\textbf{Tools it built.} 25 tool blocks in \texttt{tool\_changes.md} (e.g. \texttt{slow\_approach.py},
+\texttt{lower\_transit.py}, \texttt{side\_transit.py}, \texttt{home\_on\_path.py}, \texttt{j6\_wrap.py},
+\texttt{drop\_range.py}): each is a small program transformer, so every change is reproducible from the previous
+program. It also proposed one \textbf{judge fix}: a Line's time was its TCP distance only, so a pure re-orientation
+costs 0\,s. It noted that it did not exploit it. The fix is applied in B2 (+2.0\,s on this design).
+
+\section{Caveats for the DAM report}
+\begin{itemize}
+\item \textbf{The guide is no longer used as a placing aid.} Frame 1 already holds the planks upright alone in v3's
+  later steps, and no rule says the guide must visit base A, so the agent dropped the trip. On the real cell the
+  planks then go into frame 1 on robot accuracy alone; a trial insertion (or a cheap fixed guide on base A) should
+  confirm it. This is a real process trade-off, not just a faster program.
+\item \textbf{Simulated time only:} programmed speeds, no blending, no controller limits beyond the judge's model.
+\item \textbf{Not comparable to our own v4--v10 path in time:} our versions added functions (vision-found layout,
+  other gripper, two benches), and v10 scores 295.9\,s under Part A rules. The fair comparison is v3 $\to$ best
+  under one judge.
+\item \textbf{Blindness held:} the only ``outside'' file accesses (7 \texttt{leak\_risk} events) were the agent
+  reading its own large tool outputs in Claude's temp folder; the permissions denied those reads.
+\end{itemize}
+
+\section*{Files}
+Logs: \texttt{results/part\_b/log/} (\texttt{iterations.csv}, \texttt{iter\_NN/notes.md}, \texttt{lessons.md},
+\texttt{tool\_changes.md}, \texttt{summary.md}, \texttt{run.jsonl}); best design: \texttt{results/part\_b/best/};
+figures: \texttt{report/build\_figs.py part\_b}.
+
+\end{document}
