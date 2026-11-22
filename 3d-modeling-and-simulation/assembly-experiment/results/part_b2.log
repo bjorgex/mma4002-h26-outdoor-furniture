@@ -4,3 +4,11 @@ iter_00: cycle 114.9 s (ramps 137.2 s), joints 3670.0 deg, TCP path 7.82 m, 84 m
   rule violations 0: r1_collisions 0, r2_kinematics 0, r3_approach 0, r4_ptp_near 0, r5_clearance 0, r6_floating 0, r7_jigs 0, r8_bench 0, r_fixed 0
   clearance min 3.2 mm (free moves 41.5 mm), max mu1 30.09, near-singular 44, jig parts 6 (4.92 l, longest 180.2 mm), step 2.0 mm, 8.4 s
 VERDICT iter 00: BETTER than the best (may be kept)
+Created autostash: a2217ce
+error: Your local changes to the following files would be overwritten by checkout:
+	3d-modeling-and-simulation/assembly-experiment/results/part_b2.log
+Please commit your changes or stash them before you switch branches.
+Aborting
+Applied autostash.
+error: could not detach HEAD
+DONE
