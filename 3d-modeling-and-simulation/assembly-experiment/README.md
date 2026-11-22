@@ -98,3 +98,4 @@ python score_run.py <program> <cell.glb> --label try1 any program + cell (Part B
   (v3, v10), sandbox + leak check PASS, harness smoke test, then the blind run launched on bj-hserver
   (`results/part_b.log`; stop: `kill $(cat ~/dev/assembly-blind/log/runner.pid)`). Next: `plots.py` from the logs.
 - 2026-11-22: Part B report written (`report/part_b_report.pdf`). Part B2 launched 00:16 on bj-hserver (3 h).
+- 2026-11-22: Part B2 done (00:16-03:09, 53 iterations, ~$67): 114.9 s -> **89.8 s**, legal (iter 45). Planks now start in slots in base A (plank jigs gone). Ended on budget + no-keep streak. Report: `report/part_b2_report.pdf`.

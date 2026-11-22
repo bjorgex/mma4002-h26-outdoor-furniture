@@ -13,7 +13,19 @@
 \thispagestyle{fancy}
 
 \section*{Summary}
-%%SUMMARY%%
+Run B2 started from Part B's best design, re-scored with the stricter B2 judge (\pbtwostartcycle{}\,s), and ran
+\pbtwoniter{} iterations in just under 3 hours. It reached a \textbf{legal cell at \pbtwobestcycle{}\,s} (iter
+\pbtwobestit{}): \textbf{\pbtwogainpct{}\,\% faster} than its start, and 63\,\% faster than v3 (239.8\,s). Joint
+travel fell \pbtwostartjoints{} $\to$ \pbtwobestjoints{}\,deg, TCP path \pbtwostartpath{} $\to$ \pbtwobestpath{}\,m,
+moves \pbtwostartmoves{} $\to$ \pbtwobestmoves{}. \pbtwonkept{} of \pbtwoniter{} iterations were kept.
+\textbf{The biggest step was a design change, not a program change:} the planks now start in slots cut into base A,
+right in front of where they are placed, and both plank jigs are gone (iters 12, 14, 15, 24: $-$13.2\,s together). The
+rest came from hiding wrist turns inside Lines that had spare rotation time, and from trimming margins. The run
+ended on the time budget \emph{and} the 8-iteration no-keep streak (iters 46--53): this time it really ran out of
+ideas. Its own view: about 70\,s of the 89.8\,s is 28 slow 50\,mm legs plus 7\,s of gripper waits, so the next gain
+needs fewer grips/releases, not better moves. Every iteration has a written reason (evidence, rejected alternatives,
+DFA principle), and each Result states whether the reason held. Cost: about \$\pbtwocost{}, \pbtwoagentmin{} agent
+minutes. It logged \pbtwonlessons{} new lessons (\pbtwonagain{} marked ``again'').
 
 \section{Why a second run, and what changed in the experiment}
 Part B stopped at its 30-iteration cap while it was still improving (iteration 30 was kept), so ``how far can it
@@ -22,7 +34,7 @@ go?'' was not answered. B2 continues from Part B's best design. Every change to 
 \begin{table}[H]
 \centering\small
 \rowcolors{2}{rowlt}{white}
-\begin{tabular}{>{\raggedright}p{40mm} >{\raggedright}p{38mm} >{\raggedright\arraybackslash}p{84mm}}
+\begin{tabular}{>{\raggedright}p{40mm} >{\raggedright}p{38mm} >{\raggedright\arraybackslash}p{78mm}}
 \toprule
 \rowcolor{hdrblue}\hdr{Change} & \hdr{Part B $\to$ B2} & \hdr{Reason}\\
 \midrule
@@ -40,7 +52,35 @@ Kept the same & harness, permissions, hard rules, keep rule, model, speeds & So 
 \end{table}
 
 \section{Result}
-%%RESULT%%
+\begin{table}[H]
+\centering\small
+\rowcolors{2}{rowlt}{white}
+\begin{tabular}{l r r l}
+\toprule
+\rowcolor{hdrblue}\hdr{Metric} & \hdr{Start (B best)} & \hdr{Best (iter \pbtwobestit)} & \hdr{Note}\\
+\midrule
+Cycle time, programmed speeds & \pbtwostartcycle\,s & \pbtwobestcycle\,s & $-$\pbtwogainpct\,\% (v3: 239.8\,s)\\
+Cycle time with ramps & 137.2\,s & 107.4\,s & trapezoid estimate\\
+Hard-rule violations & \pbtwostartviol & \pbtwobestviol & legal all the way\\
+Joint travel (sum J1--J6) & \pbtwostartjoints\,deg & \pbtwobestjoints\,deg & J6 329 $\to$ 454 (turns moved into Lines)\\
+TCP path & \pbtwostartpath\,m & \pbtwobestpath\,m & planks start next to their places\\
+Moves (PTP / Line) & 84 (18 / 66) & 62 (6 / 56) & \\
+Grips & 7 & 7 & the fixed cost it could not remove\\
+Jig parts / volume & 6 / 4.92\,l & 5 / 4.69\,l & plank jigs gone, slots in base A\\
+Min clearance in free moves & 41.5\,mm & 30.7\,mm & rule: $\ge$10\,mm\\
+Phases (planks / frame / home) & 87.8 / 20.2 / 6.8\,s & 67.4 / 16.8 / 5.7\,s & \\
+\bottomrule
+\end{tabular}
+\caption{Start vs best, both scored by the B2 judge at 2\,mm.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.49\linewidth]{../results/part_b2/log/iter_00/topview.png}\hfill
+\includegraphics[width=.49\linewidth]{../results/part_b2/log/iter_45/topview.png}
+\caption{Top view with the TCP path: B2's start (left) and best (right). The plank jigs are gone; the planks start in
+slots in base A next to their place rows, so the TCP path is halved.}
+\end{figure}
 
 \begin{figure}[H]
 \centering
@@ -72,15 +112,74 @@ The reason in each row is the agent's own \texttt{Reason} section (first sentenc
 
 \input{part_b2/iter_table.tex}
 
-%%PATTERNS%%
+\subsection*{Patterns in its reasoning}
+\begin{itemize}
+\item \textbf{It measured before it changed.} Almost every Reason starts with a number from its own timing tool
+  (\texttt{move\_times2.py}, built in iter 01): which move is slowest and \emph{which joint limits it}. Part B mostly
+  argued from phases; B2 argued from single moves and their limiting joint.
+\item \textbf{Design changes came early this time.} B took 24 iterations to question a phase; B2 moved, reshaped and
+  then removed the plank jigs in iters 3--24 (layout, jig CAD and mixed changes: 12 of 53), and those gave most of the
+  gain. The ``where run B ended'' brief and B's lesson L25 probably pushed it there (see caveats).
+\item \textbf{It exploited the new judge rule honestly.} A Line now costs max(distance, rotation); a Line limited by
+  distance has free rotation time. It moved wrist turns from PTPs into such Lines (iters 02, 06--10, 17--23, 32), which
+  is a real controller effect, not a loophole.
+\item \textbf{Reasons were checked against results.} Each Result says whether the reason held. Predictions were mostly
+  within 0.1--0.5\,s; misses were explained (e.g. L58: lowering a Line end also changes the next PTP, gain 30\,\% lower).
+\item \textbf{The end was a real plateau.} Iters 34--40 only cut joint travel (the tie-break) at 89.9\,s, and 41--53
+  spent 13 iterations on one 0.1\,s idea (a J5 turn over base B blocked by the guide). Iter 45 made it legal by
+  notching an unused corner of the guide; the deeper cuts in 46--50 failed because a plank slot sits in the arm's sweep.
+\end{itemize}
 
 \section{What it learnt}
-%%LESSONS%%
+B2 started with Part B's 30 lessons and 12 standing rules and added L31--L78 (\pbtwonlessons{} lessons) and 18 tool
+blocks (\texttt{move\_times2}, \texttt{pre\_rot}, \texttt{turn\_toward}, \texttt{base\_a\_slots}, \texttt{shrink\_legs}, \ldots).
+
+\begin{table}[H]
+\centering\small
+\rowcolors{2}{rowlt}{white}
+\begin{tabular}{>{\raggedright}p{36mm} >{\raggedright}p{30mm} >{\raggedright\arraybackslash}p{80mm}}
+\toprule
+\rowcolor{hdrblue}\hdr{Kind} & \hdr{Lessons} & \hdr{Typical rule it learnt}\\
+\midrule
+Wrist turns and the guide & L34, L37, L40, L45, L50, L51, L56, L66--L68 & Turning J5 over base B folds link\_3 into the guide; near J5 = 0 the wrist swings (singularity). Probe the distance before a third blind try.\\
+Fixtures and jigs & L32, L41, L49, L52, L70--L74 & Print \emph{where} on the fixture the arm hits and ask if that material has a job; size a cut from the swept volume, not one contact point.\\
+Timing model and margins & L33, L38, L42, L55, L57--L59, L61, L64, L69 & The judge rounds to 0.1\,s, so check the exact total; a margin set once (0.5\,mm on slow legs) is a fixed cost worth re-sizing; a ``detour'' can be the next Line's rotation budget.\\
+Program edits & L43, L44, L46, L53, L54, L60 & A reorder can silently undo an older edit; a detour height outlives its reason.\\
+Working environment & L31, L36, L39, L47, L48, L53, L62, L63, L65 & Same as B: chained shell commands are denied; one \texttt{./py} per call.\\
+Budget at the end & L75--L78 & With under 10 minutes left, no idea was worth an iteration.\\
+\bottomrule
+\end{tabular}
+\caption{B2's 48 lessons grouped by kind.}
+\end{table}
+
+\textbf{Did the lessons from B carry over?} Partly, like in B. \pbtwonagain{} of 48 lessons are marked ``again'',
+and 8 of those repeat a \emph{Part B} lesson (L02, L04, L08, L11, L15, L21, L22). The shell-permission mistake from B
+(L02) came back six times (L31, L39, L47, L53, L63, L65): a written rule did not stop the habit. The geometry
+lessons from B (r4 boxes, J6 wrap, IK probing) were reused in reasons and mostly not repeated. Within B2, one trap
+repeated a lot: the guide vs link\_3 (L37 $\to$ L45 $\to$ L51 $\to$ L56 $\to$ L66 $\to$ L67), until L68/L70 changed
+the method (probe the contact point first). So the log works best when a lesson changes \emph{how} it checks, not
+only \emph{what} to avoid.
+
+\textbf{Judge gap found:} L32, fixtures overlapping each other are not checked (r1/r7 only check the robot and parts
+against fixtures). The agent did not use it: it kept a 4.9\,mm gap itself. Worth adding to the judge for a later run.
+
+\section{Caveats for the DAM report}
+\begin{itemize}
+\item \textbf{Planks are now loaded into base A.} The operator puts the six planks into slots in the same fixture
+  where frame 1 is assembled. That shortens the robot's work but moves handling to the person loading the cell, and
+  the slots must not get in the way of frame 1. Check that with the real fixture before using it.
+\item \textbf{The B2 brief steered it.} It was told where B ended (70\,\% fixed cost) and had B's lessons, so the
+  early design changes are partly our prompt, not only its own insight.
+\item \textbf{Same limits as B:} simulated time at programmed speeds, guide not used as a placing aid, not comparable
+  in time to our v4--v10.
+\item \textbf{Blindness held:} 23 \texttt{leak\_risk} events, all reads of its own tool outputs in Claude's temp
+  folder, all denied.
+\end{itemize}
 
 \section*{Files}
 Logs: \texttt{results/part\_b2/log/} (\texttt{iterations.csv} with the \texttt{reason} column,
 \texttt{iter\_NN/notes.md}, \texttt{lessons.md}, \texttt{tool\_changes.md}, \texttt{summary.md}); best design:
-\texttt{results/part\_b2/best/}; judge: \texttt{judge\_b2/}; runner: \texttt{run\_part\_b2.sh}; figures:
+\texttt{results/part\_b2/best/};\\ judge: \texttt{judge\_b2/}; runner: \texttt{run\_part\_b2.sh}; figures:
 \texttt{report/build\_figs.py part\_b2}.
 
 \end{document}
