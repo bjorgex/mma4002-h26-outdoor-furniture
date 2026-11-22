@@ -1,0 +1,6 @@
+leak check of /home/bjoerge/dev/assembly-blind-b2: 4 hits, 4 of them Part B's own lines (allowed), 0 new: PASS
+34 objects -> design/cell.glb (102 kB), cell_layout.json
+iter_00: cycle 114.9 s (ramps 137.2 s), joints 3670.0 deg, TCP path 7.82 m, 84 moves (18 PTP), phases {"planks": 87.8, "frame 1 + planks": 20.2, "home": 6.8}
+  rule violations 0: r1_collisions 0, r2_kinematics 0, r3_approach 0, r4_ptp_near 0, r5_clearance 0, r6_floating 0, r7_jigs 0, r8_bench 0, r_fixed 0
+  clearance min 3.2 mm (free moves 41.5 mm), max mu1 30.09, near-singular 44, jig parts 6 (4.92 l, longest 180.2 mm), step 2.0 mm, 8.4 s
+VERDICT iter 00: BETTER than the best (may be kept)

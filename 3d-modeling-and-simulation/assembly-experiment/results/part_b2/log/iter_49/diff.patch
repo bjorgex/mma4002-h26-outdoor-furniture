@@ -1,0 +1,55 @@
+diff -ruN -x __pycache__ -x '*.glb' best/cad/jig_parts.py design/cad/jig_parts.py
+--- best/cad/jig_parts.py	2026-11-22 02:55:52.526877466 +0100
++++ design/cad/jig_parts.py	2026-11-22 03:03:25.606942036 +0100
+@@ -120,10 +120,15 @@
+     # B2 iter 45: notch the far outer corner (top face on base B = local z 20) where link_3 passes at the flip end;
+     # no slot within 45 mm, the guide is never gripped any more.
+     (x0, y0, z0), (x1, y1, z1) = GUIDE_NOTCH
++    g = g - bd.Box(x1 - x0, y1 - y0, z1 - z0, align=(bd.Align.MIN,) * 3).translate((x0, y0, z0))
++    # B2 iter 48: far-edge notch sized from link_3's swept volume on the lift after the frame release
++    # (scratch/sweep48.py: x -11.8..57.4, y ..-46.7, z ..34.2); y stops at -53 for a 3.4 mm wall to the slot at y -49.6.
++    (x0, y0, z0), (x1, y1, z1) = GUIDE_EDGE_NOTCH
+     return g - bd.Box(x1 - x0, y1 - y0, z1 - z0, align=(bd.Align.MIN,) * 3).translate((x0, y0, z0))
+ 
+ 
+ GUIDE_NOTCH = ((63, -95, 15), (95, -62, 35))
++GUIDE_EDGE_NOTCH = ((-17, -95, 15), (64, -53, 40))
+ 
+ 
+ def plank_jig(size=None, slots=None):
+diff -ruN -x __pycache__ -x '*.glb' best/program.json design/program.json
+--- best/program.json	2026-11-22 02:55:55.754907383 +0100
++++ design/program.json	2026-11-22 03:03:25.606942036 +0100
+@@ -1433,20 +1433,20 @@
+    "name": "Point88htt",
+    "move": "line",
+    "joints": [
+-    16.78656,
+-    -55.10598,
+-    -61.91899,
+-    39.60457,
+-    122.99579,
+-    61.92266
++    15.205121445928366,
++    -55.84137166963615,
++    -62.27250139864337,
++    39.88310129936572,
++    117.8293255662448,
++    63.66804634264711
+    ],
+    "flange": [
+-    -749.5807,
+-    -288.9331,
+-    320.5,
+-    34.9195,
+-    3.3248,
+-    173.4947
++    -755.0237256020557,
++    -276.72162646891786,
++    312.95215308821366,
++    30.011794874091493,
++    1.1412295168548265,
++    172.10454003890848
+    ],
+    "speed": 100.0
+   },
