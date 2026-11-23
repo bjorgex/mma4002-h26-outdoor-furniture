@@ -1,0 +1,108 @@
+\section{Theory}
+% Course presentation pp.6-10: the report should tie together the four foundations
+% (Industry 4.0, Lean, modular product architecture, DFAA). Keep each short, cite the course
+% reading, and include only theory that Method/Discussion actually use.
+% ONE SHORT PARAGRAPH PER COURSE MODULE (Report plan R12). Outline shortened 2026-11-23: 5 -> 3 subsections;
+% "Lean and Industry 4.0" split in two the same day (Bjørge), so Theory has 4 subsections.
+
+\draftnote{%
+No earlier report has a theory section; the theory comes from the course reading (not read for the
+skeleton). One short paragraph per course module.}
+
+\subsection{Modular product architecture and product families}
+% Ulrich (1995): architecture types (integral/modular/hybrid), interfaces.
+% Harlou (2006): Product Family Master Plan (PFMP) - Customer View, Engineering View, part/interface
+% descriptions. Sources: course reading (Ulrich 1995, Harlou), lecture
+% "Product_architecture_and_modularization - 25.pptx".
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Integral: ``all the parts are dependent on each other''; modular: ``some sub modules can be removed or destroyed without breaking the entire system''. (A2 p.~5)
+    \item Platform + late differentiation: one standard platform, a small cheap part changes per customer. (QA ``The back socket is in every S1'')
+    \item The PFMP customer view and engineering view are the frame A2 used. (A2 pp.~4, 6)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Definitions from Ulrich 1995, Harlou and the week-42 lecture. The Ulrich text copy is empty (scan), so read the PDF.
+\end{itemize}}
+
+\subsection{Design for automatic assembly (DFA2)}
+% A4 brief item 3: "Describe the methodology ... Explain DFA2 methodology."
+% DFA2: product-level analysis (part count, functional analysis) + assembly-level rating of each
+% operation (feeding/orientation, gripping, insertion/joining), index and redesign loop.
+% Find-grasp-place-join (presentation p.9); jig/fixture principles (presentation p.16).
+% Sources: DFAA lecture week 39 (Paul Madapilly; slides not in course folder - get from Canvas),
+% MMA4002-DAM/3 Assignments/4 .../Reading list.md.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Nothing on DFA2 itself. Principles used by name: top-down handling, parts presented in assembly orientation (PB pp.~3, 5); ``fewer grips/releases, not better moves'' (PB2 p.~1).
+    \item Fixture rules: 3-2-1 locating, one datum, poka-yoke, lead-ins, access. (QA ``What makes a good jig'', table)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item The DFA2 method itself (Report plan R5.3). The week-39 lecture (Paul Madapilly, Kongsberg thrust-bearing case) is not in the course folder. \textbf{Biggest theory gap.}
+\end{itemize}}
+
+\subsection{Lean manufacturing}
+% Lean: customer value, the wastes, value stream mapping, takt time, flow/pull, jidoka,
+% "do not automate waste" (presentation p.7).
+% Sources: Rother & Shook "Learning to See"; Liker "The Toyota Way Fieldbook"; A3 report.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Muda: buffers sized for lead time, not ``a giant warehouse full of spares''. (A3 p.~3)
+    \item Jidoka: test automatically, stop the line, fix at the source. (A3 p.~4)
+    \item Value adding / necessary waste / unnecessary waste as green / orange / red. (A3 pp.~4--5)
+    \item Takt time: \(T_\mathrm{takt} = T_\mathrm{avail} / D\). (A3 p.~6)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Sources for the lean terms (Rother ``Learning to See'', Toyota Way Fieldbook).
+    \item One line on the lean games.
+\end{itemize}}
+
+\subsection{Industry 4.0}
+% Includes robot simulation, offline programming and machine vision. Two short paragraphs:
+% (1) Industry 4.0 and the digital-physical loop: enabling technologies actually used - cobots, AMR,
+%     additive/laser, simulation/digital twin, machine vision, connected data (presentation pp.6, 11).
+%     Sources: course Industry 4.0 papers (BCG 2015 "Future of Productivity", "Industry 4.0: state of the
+%     art and future trends", "Industry 4.0 implies lean manufacturing").
+% (2) Robot simulation, offline programming and machine vision - only what the cell needs: offline
+%     programming (RoboDK -> TMflow), reach/collision/cycle-time checks, hand-eye calibration,
+%     fiducial (ArUco) pose estimation.
+%     Sources: robot-cell/vision report/jig_vision_report.tex (method), robot-cell/tests/robot_sim/OWN_TOOL.md,
+%     3d-modeling-and-simulation/qa_notes.md (TMflow export, vision Q&As).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Nothing is written as theory. The practice is the simulator-to-robot loop (A5 script slide~5) and configurator \(\rightarrow\) order \(\rightarrow\) parts \(\rightarrow\) robots (A1 p.~5).
+    \item Vision: a jig move is a 4\,\(\times\)\,4 matrix, \(p_\mathrm{now} = T_\mathrm{move}\, p_\mathrm{taught}\) (shift \(x\), \(y\) + turn \(r_z\)). (VISD p.~1)
+    \item Calibration error cancels because every jig is measured against the taught-layout photo from the same camera. (VISD p.~4)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item The method paragraphs for ArUco, colour segmentation and SIFT + PnP, shortened. (VISD pp.~1--2)
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item An Industry 4.0 definition from the three course papers.
+    \item No notes exist from the week-44 topics (``selected Industry 4.0 topics'').
+    \item Manipulability and singularity need two lines (used at the IRB, explained in no report).
+\end{itemize}}

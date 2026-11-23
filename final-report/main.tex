@@ -1,0 +1,59 @@
+% Author - Jon Arnt Kårstad, NTNU IMT
+\documentclass{article}
+
+% Importing document settings from our file "packages.sty"
+\usepackage{packages}
+
+% Beginning of document
+\begin{document}
+
+% Inserting title page
+\import{./}{title}
+
+\vspace*{\fill}
+\begin{abstract}
+    \begin{quotation}
+        \noindent    
+        \import{./Sections}{Abstract}
+    \end{quotation}
+\end{abstract}
+\vspace*{\fill}
+
+
+\newpage
+
+% Defining front matter settings (Norsk: innstillinger for forord m.m.)
+\frontmatter
+
+% Inserting table of contents
+\tableofcontents
+
+% Inserting list of figures & list of tables
+\listoffigures
+\listoftables
+
+% Defining main matter settings (Norsk: innstillinger for hoveddelen av teksten)
+\mainmatter
+
+% Introduction explaining this LaTeX-template
+\import{./Sections/}{0Introduction}
+\import{./Sections/}{1Theory}
+\import{./Sections/}{2Method}
+\import{./Sections/}{3Discussion}
+\import{./Sections/}{4Conclusion}
+
+
+
+% Printing bibliography
+\newpage
+\printbibliography[heading = bibintoc, title = Bibliography]    % 'bibintoc' inserts our bibliography into the table of contents
+
+% Inserting appendix with separate settings
+\addappendix
+%\import{./Appendices/}{example_appendix}
+
+
+%\includepdf[pages=-]{Appendices/gripperKinematics.pdf}
+
+% End of document
+\end{document}

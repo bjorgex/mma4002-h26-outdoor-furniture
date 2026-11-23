@@ -1,0 +1,230 @@
+\section{Results and Discussion}
+% All numbers live here, in a few tables (decided 2026-11-23); Method only says how they were obtained.
+% The abstract takes its key numbers from this chapter. Same file name kept, so main.tex is unchanged.
+% Outline shortened 2026-11-23: 6 -> 4 subsections.
+
+\subsection{Results}
+% One table per theme, each row = a number with its source:
+%  - Cycle time per cell version (robot-cell/cycle_times.csv; v3 239.8 s -> final version; these are
+%    simulation times at programmed speeds, not real-robot measurements).
+%  - Assembly experiment, Part A/B (assembly-experiment/results/versions.csv, part_b_report.pdf:
+%    114.9 -> 89.8 s, 53 iterations).
+%  - DFA2 score initial vs. final design (score_run.py).
+%  - Jig vision accuracy (robot-cell/vision report/jig_vision_report.pdf).
+%  - Lean: takt 3.648 h/bench vs. cell cycle (A3 report + cycle_times.csv).
+%  - A2 indicators before/after (A2 brief pp.2-4: >= 4 indicators, one per category).
+
+\draftnote{%
+\textbf{Which ``cycle time'' is which.} No full bench cycle has been timed on the real robot. A3 times
+are estimates. VER and CT times are simulation path times at programmed speeds (no acceleration, no AMR).
+``With ramps'' adds a trapezoid speed profile. A mock run is the TMflow mock running the program.
+
+\textbf{Carry over}
+\begin{itemize}
+    \item Tables~\ref{tab:versions}, \ref{tab:experiment}, \ref{tab:vision} and \ref{tab:lean} below are real tables with the skeleton's numbers: keep, cut or restyle them. The source of every row is in a \% comment above the row in the .tex file.
+    \item Blind AI experiment, biggest single steps: guide trip to base A dropped, \(-47.5\)\,s (PB iter.~25); planks start in slots in base A, plank jigs gone, \(-13.2\)\,s (PB2 p.~1). Fixed cost left: \(\approx\)\,70\,s of the 89.8\,s is 28 slow 50\,mm legs + 7\,s gripper waits. (PB2 p.~1)
+    \item Vision, jigs moved (base A \(-44\)/\(+42\)\,mm, \(+11\)\textdegree; base B \(-29\)/\(-1\)\,mm, \(-2\)\textdegree): found within 0.26\,mm; V10 within 0.94\,mm (median 0.37\,mm) over 117 moves; V9 up to 91\,mm off and 5 moves collide. (VIS pp.~4--5)
+    \item Calibration in simulation: reprojection 0.048\,px; hand-eye 0.15\,mm / 0.08\textdegree. (VIS p.~3; VISD p.~5 Table~2)
+    \item Real robot, no full cycle: bridge Line moves of exactly 20\,mm and 50\,mm (TMB); taught plank pick reached to 0.01\,mm (NS \S0); the one-plank test stopped at the frame flip after a robot fault at 90\,\% speed (V11); camera 0.25\,px, hand-eye spread 0.34\,mm (CH).
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Both blind-agent runs in one curve (cycle time per iteration)}{PB2 Fig.~2; \path{3d-modeling-and-simulation/assembly-experiment/report/part_b2/fig_combined.png}}
+\begin{itemize}
+    \item VISD Table~1 (p.~2): its numbers are in Table~\ref{tab:vision}.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item A measured real-robot assembly time is missing (promised at the IRB, A5 script slide~8).
+    \item The A2 before/after table (Report plan R7) and the DFA2 scores are missing.
+    \item Cobot assembly time: A5 deck slide~4 says ``\(\approx\)\,6.5\,min cobot assembly (sim)'', no source found; VER has v9 286.7\,s (319.6\,s with ramps), A3 p.~7 estimates 5\,min, the mock run took 468.4\,s.
+    \item v8: 339.0--342.2\,s in CT (RoboDK) and ``about 333\,s'' in NS \S1, but 284.6\,s in VER (own tools). Quote VER, one scorer for v3--v10.
+    \item CT marks the v3 time 239.8\,s as \texttt{measure}; it is a simulation path time at programmed speeds (QA).
+    \item ``18 minutes'' manufacturing time (A2 p.~6) is A3's estimated 17.9\,min average work including rework (A3 p.~7).
+\end{itemize}}
+
+% ---- Table: cell versions. Source of the whole table: VER =
+% 3d-modeling-and-simulation/assembly-experiment/results/versions.csv (own tools, scored 20 Nov 2026).
+\begin{table}[H]
+    \centering
+    \caption{Assembly program versions scored with the group's own tools. All times are
+    \emph{simulated}: path time at programmed speeds (Cycle) and with a trapezoid speed profile (Ramps).
+    Path is the TCP path length, Collisions the number of part collisions. No acceleration limits of the controller, no AMR, no real-robot measurement.}
+    \label{tab:versions}
+    \small
+    \begin{tabular}{l p{44mm} r r r r r}
+        \hline
+        Version & What changed & Cycle [s] & Ramps [s] & Path [m] & Collisions & Grips \\
+        \hline
+        % VER row v3
+        v3  & one double-sided guide, guide trapped & 239.8 & 270.9 & 15.7 & 5 & 9 \\
+        % VER row v4
+        v4  & guide in two halves, parking pad, AMR hand-over & 345.1 & 385.3 & 21.46 & 7 & 12 \\
+        % VER row v8
+        v8  & Jig V3/V5 on T-slot profiles & 284.6 & 316.4 & 18.17 & 2 & 11 \\
+        % VER row v9
+        v9  & guide split V6 & 286.7 & 319.6 & 18.68 & 0 & 11 \\
+        % VER row v10
+        v10 & v9 moved to a camera-found layout & 295.9 & 329.3 & 19.81 & 0 & 11 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+% ---- Table: blind AI assembly experiment. Sources: PB p. 1 Table 1 (part_b_report.pdf) for the columns
+% "v3 start" and "Part B"; PB2 p. 2 Table 2 (part_b2_report.pdf) for the column "Part B2".
+\begin{table}[H]
+    \centering
+    \caption{Assembly experiment with a blind AI agent, starting from cell v3. All values are
+    \emph{simulated} (programmed speeds, no blending, no controller limits) and not comparable to
+    v4--v10, which do more (split guide, bench onto the AMR).}
+    \label{tab:experiment}
+    \small
+    \begin{tabular}{l r r r}
+        \hline
+        & v3 start & Part B best (iter.~30) & Part B2 best (iter.~45) \\
+        \hline
+        % v3: VER row v3 / PB p. 1 Table 1; Part B: PB p. 1 Table 1 (114.9 s = same program, B2 judge, PB2 p. 2); B2: PB2 p. 2 Table 2
+        Cycle, programmed speeds & 239.8\,s & 112.9\,s (114.9\,s with the B2 judge) & 89.8\,s \\
+        % PB p. 1 Table 1; PB2 p. 2 Table 2
+        Hard-rule violations & 28 & 0 & 0 \\
+        % PB p. 1 Table 1; PB2 p. 2 Table 2
+        Joint travel & 8911\textdegree & 3670\textdegree & 2285\textdegree \\
+        % PB p. 1 Table 1; PB2 p. 2 Table 2
+        TCP path & 15.7\,m & 7.82\,m & 3.75\,m \\
+        % PB p. 1 Table 1; PB2 p. 2 Table 2
+        Moves & 120 & 84 & 62 \\
+        % PB p. 1; PB2 p. 2
+        Iterations kept / run & -- & 29 / 30 & 36 / 53 \\
+        % PB p. 1; PB2 p. 2
+        Cost and run time & -- & \(\approx\)\,\$41, 106\,min & \(\approx\)\,\$67, 172\,min \\
+        \hline
+    \end{tabular}
+\end{table}
+
+% ---- Table: vision methods. Source: VISD p. 2 Table 1 (jig_vision_report_detailed.pdf); VIS pp. 1, 5.
+\begin{table}[H]
+    \centering
+    \caption{Error in the jig position found by three vision methods. \emph{Simulated} camera
+    (ideal lens model), 10 random layouts, not measured on the real robot.}
+    \label{tab:vision}
+    \small
+    \begin{tabular}{l r r r}
+        \hline
+        Method & Median error [mm] & Worst error [mm] & Time per photo [s] \\
+        \hline
+        % VISD p. 2 Table 1; VIS p. 1
+        ArUco markers & 0.14 & 0.5 & 0.2--0.4 \\
+        % VISD p. 2 Table 1
+        Colour segmentation & 0.5--0.9 & 4.3 & \(\approx\)\,20 \\
+        % VISD p. 2 Table 1
+        Features (SIFT + PnP) & 0.6--2.6 & 232 & \(\approx\)\,6 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+% ---- Table: lean, takt against cycle. Sources: A3 report pp. 6-7 (MMA4002___Assignment_3_Lean.pdf),
+% last row VER row v9.
+\begin{table}[H]
+    \centering
+    \caption{Takt time against the work per bench. The A3 values are \emph{estimates}, not measured;
+    the last row is a \emph{simulated} time.}
+    \label{tab:lean}
+    \small
+    \begin{tabular}{p{72mm} l l}
+        \hline
+        Quantity & Value & Kind \\
+        \hline
+        % A3 p. 6: 24 h - 0.5 h setup - 0.5 h stops - 4 x 0.5 h breaks = 20 h/day; 20 x 30.4 x 6 = 3648 h
+        Available time, 6 months at 20\,h/day & 3648\,h & assumption \\
+        % A3 p. 6
+        Demand \(D\) & 1000 benches & assumption \\
+        % A3 p. 6
+        Takt time & 3.648\,h/bench \(\approx\) 13\,133\,s & calculated \\
+        % A3 p. 7, Table 1
+        Fault-free cycle: transport 5\,min + assembly 5\,min + custom job 2\,min + QC 5\,min + packaging 10\,s & 1030\,s & estimate \\
+        % A3 p. 7
+        Average work per bench including rework & 17.9\,min & estimate \\
+        % A3 p. 7
+        Share of the available time used & \(\approx\)\,8\,\% & estimate \\
+        % VER row v9 (versions.csv)
+        Assembly step in simulation, v9 (with ramps) & 286.7\,s (319.6\,s) & simulated \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Discussion}
+% Results against the objectives: did the architecture give simpler, repeatable, scalable assembly
+% (A2 main question)? Before/after indicators; separate effects of architecture changes from local
+% process changes (A2 brief p.3, Phase 4 point 4). Sources: the Results tables above.
+% Trade-offs and limitations: customer variety vs. complexity vs. cycle time; 1:7.5 demonstrator vs.
+% full size; simulation vs. real robot; estimates vs. measurements in the lean model
+% (A2 brief p.3, Phase 4 point 5).
+% Sources: qa_notes.md (load/strength, printing at scale, interface trade-offs), vision report limitations.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item More function costs time: v3 239.8\,s \(\rightarrow\) v4 345.1\,s when the guide was split and the bench handed to the AMR. (VER; Table~\ref{tab:versions})
+    \item Blind-agent trade-offs: without the guide trip the planks enter frame 1 ``on robot accuracy alone''; planks in base-A slots ``moves handling to the person loading the cell''. (PB p.~7; PB2 p.~12)
+    \item Limits, simulation: times at ``programmed speeds, no blending, no controller limits''. (PB p.~7)
+    \item Limits, vision: ideal simulated camera, plane moves only. (VISD p.~5; VIS p.~8)
+    \item Limits, real cell differs from the model: Hand-E \(\approx\)\,2--3\textdegree{} tilted, base A/B swapped, rack \(\approx\)\,28\,mm off. (NS \S0; CH)
+    \item Full scale: a 95\,\(\times\)\,28\,mm plank over 1400\,mm gives 28\,MPa and 30\,mm deflection; needs a middle support or a 45\,mm plank. (QA ``Will the bench hold the load'')
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing new: refer to the tables in Results.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Needs the objectives list from the Introduction: one row per objective (target, result, source).
+    \item The QA strength numbers are for the October wooden-plank concept: check them against the V3 frame before quoting.
+\end{itemize}}
+
+\subsection{Review board feedback and recommendations for industrial production}
+% What the IRB said on 9 Nov and how it was (or will be) handled.
+% Sources: assignment-5-industrial-review-board-presentation/ (IRB presentation script.docx, deck);
+% the group's notes from the session (not in the repo yet).
+% Recommendations - A2 brief p.3, Phase 4 point 6: next improvement for repeated industrial production
+% (feeders/magazines, AMR integration, vision in the loop, QC step, ...).
+% Sources: robot-cell/Next steps.md, "AMR delivery plan.md", A3 report sec. 2.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Presented: 9 slides, website \(\rightarrow\) product \(\rightarrow\) factory flow \(\rightarrow\) simulation; the wow factor was the simulator-to-robot loop. (A5 deck)
+    \item Promised: full cycle on the real robot, guide split V6, two benches stacked on the AMR + docking. (A5 deck slide~8)
+    \item Recommendations: jidoka instead of end-of-line QC, and a conveyor instead of manual / AMR loading of magazines. (A3 pp.~3--5)
+    \item Fewer grips and releases is the next gain, not faster moves. (PB2 p.~1)
+    \item One cell covers 1000 benches in \(\approx\)\,8\,\% of the time: ``more orders are needed to use it''. (A3 p.~7)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item \textbf{The board's feedback is not written down anywhere}; it has to be recalled.
+    \item Pick one ``next improvement for repeated industrial production'' and argue it. (A2 brief phase 4.6)
+\end{itemize}}
+
+\subsection{Reflections}
+% A4 brief item 7: what we learnt and what could have been better (our learning, the course, Manulab).
+% Keep to a few lines: the group reflection is a separate deliverable (R10), point to it.
+% Sources: diary/, qa_notes.md, IRB feedback.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item ``We are still behind ... because we started pretty late''. (A1 p.~6)
+    \item Near misses: a Direct Move on the Tool tab instead of Base sent the robot down into the rack (E-stop); a wrist swing at 90\,\% speed faulted the robot. (CH; V11)
+    \item AI use to declare: sketches (A1 Fig.~1), website (A1 Fig.~6), VSM figure (A3 Fig.~2), Part B/B2 reports ``written by Claude from the run logs'' (PB p.~1).
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Keep it to a few lines and point to the separate group reflection.
+    \item Nothing is written on the course and Manulab (Report plan R5.7).
+\end{itemize}}

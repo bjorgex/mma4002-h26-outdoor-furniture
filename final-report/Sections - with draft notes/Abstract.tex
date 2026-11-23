@@ -1,0 +1,36 @@
+% ABSTRACT (write last, ~150-250 words). Skeleton only - see "Report plan.md".
+% PROFESSOR: the abstract is the most important part. It must say what the project is about, well and
+% compactly: a reader who only reads this paragraph should know the product, the automated process and the result.
+% One or two sentences each, in this order:
+%  - Problem/background: customisable outdoor bench family, scaled 1:7.5 demonstrator built in Manulab.
+%  - What was done: product family + modular frame/plank interface, DFA2 redesign, robot cell
+%    (Omron TM5-900, jig, RoboDK + own sim tools, TMflow), jig vision, AMR delivery, lean VSM, web configurator.
+%  - Key results with numbers (cycle time per cell version from robot-cell/cycle_times.csv,
+%    jig vision accuracy from robot-cell/vision report, assembly experiment 114.9 -> 89.8 s).
+%  - Main conclusion / recommendation for industrial production.
+%
+% ABSTRACT BUILDING BLOCKS (from MMA_FinalReport_Skelleton.md; facts to hold, not text to copy).
+% Source codes (A1, A2, VER, ...) are listed in the first draft note of Sections/0Introduction.tex.
+%  1. Product: an outdoor bench family for public spaces; customers (municipalities, larger companies,
+%     institutions) pay for the message the furniture gives. Idea: most people prefer traditional over
+%     contemporary architecture (Mouratidis 2026). (A1 p. 2, A2 p. 4)
+%  2. Family: 3 modules (bench frame 2 variants, plank 2 variants, interface 1 variant); bench or chair,
+%     with or without backrest (4 CAD models); the website adds a mark on the top plank.
+%     (A2 pp. 5, 8-9; index.html)
+%  3. Design for the robot: one frame, one plank section (25 x 5 mm on the demonstrator), one interface
+%     clip, no fasteners, all parts straight down; 0.2 mm play per side + chamfers lets the robot be
+%     +/- 2.7 mm off. (A5 script slide 3; QA "The planks are rigid")
+%  4. Demonstrator and process: scale 1:7.5, 3D-printed PLA, laser-cut wood planks tested;
+%     web configurator -> order -> cut and bend / print -> kit -> cobot assembly (Omron TM5-900 +
+%     Robotiq Hand-E) -> mark and check -> AMR delivery. (A5 deck slides 3-5; A1 pp. 4-5; A2 pp. 10-11)
+%  5. Lean: takt 3.648 h per bench (1000 benches in 6 months) against approx. 17.9 min of work per bench
+%     (estimates): approx. 8 % of the available time. (A3 pp. 6-7)
+%  6. One program for simulation and robot: simulator page -> Python bridge -> TMflow Listen node -> robot.
+%     Simulated assembly: first cell v3 239.8 s, current v9 286.7 s with more functions and 0 collisions;
+%     a blind AI agent got v3's task down to 89.8 s (-63 %). (A5 script slides 5-6; VER; PB2 p. 1)
+%  7. Vision: ArUco markers find the jigs to a median of 0.14 mm (worst 0.5 mm) in simulation; with the
+%     jigs moved up to 44 mm and turned 11 deg, program V10 lands within 0.94 mm where the taught V9
+%     misses by up to 91 mm. (VISD p. 1; VIS pp. 1, 4-5)
+%  8. Honest limit: the full cycle has not run on the real robot. Done on the robot: bridge and gripper,
+%     taught plank picks, a one-plank test, camera calibration. (TMB; NS sec. 0; V11; CH)
+% All times in blocks 5-7 are estimates or simulation times, not real-robot measurements: say so.

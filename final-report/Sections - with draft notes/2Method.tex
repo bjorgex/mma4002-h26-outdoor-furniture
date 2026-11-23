@@ -1,0 +1,200 @@
+\section{Method}
+% Method says HOW each part was done. The numbers go in "Results and Discussion" (Sections/3Discussion.tex),
+% decided 2026-11-23. Order follows A4 brief items 2-6. Outline shortened 2026-11-23: 9 -> 6 subsections;
+% "Lean and Industry 4.0 in the cell" split in two the same day (Bjørge), so Method has 7 subsections.
+
+\subsection{Product concept and product family}
+% Opens with TWO LINES on the design process - A4 brief item 3 (methodology used in the design process):
+% iterative design-build-test loop (presentation pp.10, 17); version timeline (concept family -> Bench V1
+% -> interface V2; cell v3 -> v11). Optional figure: timeline/process diagram.
+% Sources: A1 report sec. 3, diary/, git history, 3d-modeling-and-simulation/qa_notes.md (dated decision log).
+% Then the concept - A4 brief item 2 (concept design with sketches/3D models, features, main functions);
+% A1 brief sec. 1 (customer, at least five variants or continuous configuration, platform/modules/interfaces).
+% Earlier concept family (B1/B2/C1/C2/P1/P2, welded tube + planks) -> chosen bent flat-bar bench.
+% Variants: backrest none/high x decoration laser/shield, chosen in the web configurator.
+% Sources: A1 report secs. 1.2-1.4; concept-models/ (furniture.py, assemblies/*.stl);
+% MMA4002-DAM/3 Assignments/1 .../images (AI sketches, interface V1); index.html; A5 deck/media/p_*.jpg.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Design process in two lines: Sept concept and sketches \(\rightarrow\) Oct interface, RoboDK cells, A2, A3 \(\rightarrow\) early Nov jigs on T-slot profiles, v8 on the real robot, own simulator \(\rightarrow\) 9 Nov IRB \(\rightarrow\) 13--22 Nov vision, one-plank test, assembly experiment. (A1, QA, CT, NS, VIS, PB)
+    \item Lessons: ``Design the product and the cell together'', ``Fail in software first'', ``Simulation and real robot from one program''. (A5 deck slide~8)
+    \item CAD V3 products: bench, bench with no back, chair, chair with no back; the common platform is the planks. (A2 pp.~8--9; A1 p.~3)
+    \item Configurator choices: size (bench / chair = half length), backrest (none / high), mark on the top plank (none / laser-cut / logo shield). (\path{index.html})
+    \item Frame: ``one laser-cut flat bar, bent in a press brake''; the backrest arm is ``the only variant, the same bar bent further''. (A5 script slide~3)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Renders of the four products (bench, bench with no back, chair, chair with no back)}{A2 Fig.~8--11, pp.~8--9}
+\figplaceholder{Configurator variants: no backrest + laser mark, high backrest + laser mark, high backrest + logo shield}{\texttt{\detokenize{p_none_laser.jpg}}, \texttt{\detokenize{p_high_laser.jpg}}, \texttt{\detokenize{p_high_shield.jpg}} (MEDIA)}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Say which family is final: A1 had benches + planters + trash cans (p.~3), October had 6 products (QA), the built one is bench/chair \(\times\) backrest \(\times\) mark.
+    \item Report plan R9 needs at least five variants: count them (2\,\(\times\)\,2\,\(\times\)\,3 = 12 website configurations, counted for the skeleton).
+\end{itemize}}
+
+\subsection{Product architecture: customer and engineering views}
+% A2 brief p.4 "Connection to the final exam delivery": updated TARGET Customer View and Engineering
+% View that match the built and tested demonstrator; final module and interface definitions;
+% architecture class (integral/modular/hybrid) with evidence; interface map (type, critical
+% dimensions/tolerances, owner). Show what changed after testing - do not repeat A2 unchanged.
+% Sources: the group's A2 report (assignment-2-product-architectures/Deliverable/
+% MMA4002___Assignment_2_Product_Architectures.pdf); concept-models/furniture.py (shared part interface),
+% interface_options.py, interface_candidates.py, interface_test/; qa_notes.md (plank-end interface and
+% snap-fit Q&As).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item ``We have 3 modules. 1 bench frame module with 2 variations, 1 plank module with 2 variations and 1 variation of the interface module.'' One critical interface: plank to bench frame. (A2 pp.~5--6)
+    \item Redesign: the old wedge was held ``only using friction and plastic deformation''; ``two hooks was added to the interface to better lock it in place''. (A2 p.~7)
+    \item Wood planks were cut narrower than the PLA ones, ``so there wasn't enough friction to hold them to the frame''. (A2 p.~11)
+    \item Interface numbers: pocket 25.4\,\(\times\)\,5.4\,mm for a 25\,\(\times\)\,5\,mm plank (0.2\,mm per side); chamfers 1.5\,mm + 1\,mm give \(\approx\)\,\(\pm\)2.7\,mm capture. (QA ``The planks are rigid'')
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{PFMP customer and engineering views, redrawn}{A2 Fig.~1, 2, 4, 5, pp.~4 and 6}
+\figplaceholder{Old and new plank-to-frame interface}{A2 Fig.~6--7, p.~7}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item A2 p.~5 says ``largely based on an integral architecture'' but lists 3 modules: decide and argue it.
+    \item The engineering view lists ``Fasteners'' (the product has none); ``Variety is a future scope'' (A2 p.~6) is out of date.
+    \item Missing from A2 (Report plan R6, R7): indicator table with three trials; interface specification with tolerances verified on parts; before/after table; change log; result of the wider wood plank test.
+\end{itemize}}
+
+\subsection{DFA2: from the initial to the final design}
+% A4 brief item 4: apply DFA2 to the initial design. Initial design = Bench V1 + first cell (v3).
+% Part count / functional analysis, rating of each assembly operation, weak points found
+% (guide trapped between frames, forearm over standing planks, PTP moves near parts, ...).
+% A4 brief item 5: final design and what changed because of DFA2 (split guide, plank-end interface,
+% jig V5, camera-found layout, ...). Before/after table in the A2 brief p.4 format
+% (time, complexity, quality, flexibility + one own indicator).
+% Sources (initial): robot-cell/bench_cell_v3.py, cycle_times.csv (v3 row), assembly-experiment Part A
+% (results/versions.csv; column definitions in score_run.py), qa_notes.md (v3 -> v4 notes).
+% Sources (final): bench-cad/BenchInterfaceV2.STEP, BenchWOBackrestV2.STEP; jig-cad/ (Jig V2, Jig V5);
+% robot-cell/jig_v5.py, guide_split_v6.py; cycle_times.csv; A5 deck/media (bench_cad_*.png, guide_split.jpg).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item \textbf{No DFA2 analysis exists.}
+    \item Initial cell v3: one double-sided guide that stays trapped; 239.8\,s, 15.7\,m TCP path, 120 moves, 9 grips (simulation); 28 violations of the 8 hard rules. (VER row v3; PB p.~1)
+    \item Hardest step: frame 2 onto six free plank tops; planks in frame 1 alone can lean 2.3\textdegree, \(\approx\)\,10\,mm at the top. (QA ``The planks are rigid'')
+    \item Final product: frame V3 (one bent bar), plank 25\,\(\times\)\,5\,mm, interface clip with two hooks, no fasteners. (A5 script slide~3; A2 p.~7)
+    \item Guide split V6: the guide is cut in two; the new big half slides 200\,mm out without touching a plank (the old one blocked after 2.5\,mm). v9 uses it: 0 part collisions. (NS \S0e; VER row v9)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Top view of cell v3 with the TCP path}{PB Fig.~3, p.~3}
+\figplaceholder{Guide split V6, top view}{\path{3d-modeling-and-simulation/jig-cad/} \texttt{\detokenize{Jig V6 proposal/guide_split_v6_top.png}}}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item The DFA2 scoring of the initial and the final design (Report plan R5.4, R5.5). \textbf{Biggest gap in the report.}
+    \item Decide which design is ``initial'': the A2 bench with the wedge interface, or cell v3.
+    \item State whether V6 has been printed.
+\end{itemize}}
+
+\subsection{Process design and concurrent engineering}
+% The robot cell. A4 brief item 6: process design; how product and process were developed together.
+% A1 brief sec. 2: process map with laser cutting/3D printing, cobot assembly, AMR transport,
+% fixtures/jigs/grippers. Cell layout, jig and gripper, assembly sequence, offline programming
+% RoboDK -> TMflow, own sim tools (collision, cycle time, kinematics, manipulability), AMR delivery.
+% Sources: robot-cell/robot_cell.py, bench_cell_v*.py, bench_layout.png, bench_tmflow/,
+% "AMR delivery plan.md", amr_*.py, "TM bridge plan.md", tests/robot_sim/OWN_TOOL.md,
+% simulations-html/, A5 deck/media (cell_iso.jpg, sim_*.jpg, tmflow_*.png); A1 report sec. 2.1 (flow chart).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Flow: order \(\rightarrow\) cut and bend \(\rightarrow\) kit \(\rightarrow\) cobot assembly \(\rightarrow\) mark and check \(\rightarrow\) AMR delivery. (A5 deck slide~4)
+    \item Assembly stages: 5 planks rack \(\rightarrow\) frame 1; guide halves; frame 1 + planks turned over into frame 2; halves out; bench to AMR. (NS \S4)
+    \item The loop: ``simulator page \(\rightarrow\) Python bridge \(\rightarrow\) TMflow Listen node \(\rightarrow\) TM5-900 + Hand-E''; ``Same script for the mock and the real robot''. (A5 script slide~5)
+    \item Concurrent engineering: ``one plank and straight-down assembly \(\rightarrow\) one jig''; trapped guide, flip clearance, arm through the bench ``all found before the lab''. (A5 script slide~8)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Flow map of the production (fuller than A1 Fig.~4)}{A3 Fig.~1, p.~2}
+\figplaceholder{Cell layout}{\path{3d-modeling-and-simulation/robot-cell/bench_layout.png}}
+\figplaceholder{The TMflow mock running the program}{\texttt{\detokenize{tmflow_mock.png}} (MEDIA)}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Say both tools: RoboDK for v3--v7, own tool from v8. (EXP)
+    \item AMR delivery is a plan, not a result. (AMR)
+    \item Nothing is written on laser cutting, 3D printing or kitting as process steps (Report plan R9); A3 only has ``max 3.5\,h''.
+\end{itemize}}
+
+\subsection{Lean analysis of the production flow}
+% Lean (VSM) - A1 brief sec. 2 (customer value, flow, at least three sources of waste or risk); course
+% foundation 2. Value stream map, value-adding / necessary-waste colouring, takt time
+% (D = 1000 benches / 6 months), cycle time and rework model - update with the cell cycle times
+% instead of estimates.
+% Sources: A3 report (VSM, secs. 1-2); Miro board (VSM); robot-cell/cycle_times.csv.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Takt: 20\,h/day \(\times\) 30.4 \(\times\) 6 = 3648\,h; \(D = 1000\) \(\rightarrow\) 3.648\,h/bench \(\approx\) 13\,133\,s. (A3 p.~6)
+    \item Fault-free cycle 1030\,s = transport 5\,min + assembly 5\,min + custom job 2\,min + QC 5\,min + packaging 10\,s (estimates). (A3 p.~7)
+    \item With rework 17.9\,min/bench on average, \(\approx\)\,8\,\% of the available time. (A3 p.~7)
+    \item The numbers are in Table~\ref{tab:lean}.
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Value stream map with time ladder (made with Claude's help, as its caption says)}{A3 Fig.~2, p.~6}
+\begin{itemize}
+    \item A3 Table~1 (p.~7): its numbers are in Table~\ref{tab:lean}.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item The 5\,min assembly estimate is now backed by simulation (v9 286.7\,s, 319.6\,s with ramps; VER), not by the real robot; the other A3 times are still estimates.
+    \item Lean on the cell itself is not written: redundant plank push removed \(-11.9\)\,s, guide trip removed \(-47.5\)\,s. (PB)
+    \item No future-state map.
+    \item A3 contradicts itself: packaging fault rate 1/500 (Fig.~1 p.~2) or 5/100 (p.~7 text, Fig.~2 p.~6); QC time 20\,min (Fig.~2 box) or 5\,min (Fig.~2 ladder, Table~1 p.~7); load jig 10\,min (Fig.~2 box) or 5\,min (Fig.~1, Fig.~2 ladder).
+\end{itemize}}
+
+\subsection{Industry 4.0: vision, data and digital twin}
+% Industry 4.0 (vision, data, digital twin) - specialisation area / "wow factor" (A5 brief): jig
+% localisation with camera + ArUco markers, hand-eye calibration, sim-vs-real loop, configurator -> order data.
+% Sources: robot-cell/vision report/jig_vision_report.pdf (+ _detailed), tests/vision_lab/README.md,
+% tests/vision_lab/config_history.md, tests/vision_lab/results/, "Vision and gripper over Modbus plan.md",
+% index.html.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Goal: ``Before a run, the robot must know where each jig really stands.'' (VISD p.~1)
+    \item V10 = V9 with every taught point moved with its jig. (VIS p.~5)
+    \item Vision calibrates jig positions; grip points are still taught by hand. (CH)
+    \item Real robot, 20 Nov: TMflow vision job with External Detection; 13 poses, 0.25\,px, hand-eye spread 0.34\,mm. (CH)
+    \item Data links: Ethernet Slave 5891 (\(\approx\)\,100\,Hz), Modbus 502, Listen node 5890. (TMB)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Measured jig positions}{VIS Fig.~9, p.~4}
+\figplaceholder{Taught program V9 against V10 with the jigs moved}{VIS Fig.~10, p.~5}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item Use the 17 Nov set-up (3 markers; VIS p.~1), not the 5 markers of VISD; use CH for the TM camera; real TM landmark 50\,mm (22\,mm in the simulator, 30\,mm printed in VISD).
+    \item Real-robot vision accuracy has one number: a \(\approx\)\,10\,mm move read as 9.1\,mm. (CH)
+    \item Link to the course's Industry 4.0 papers, and say what ``digital twin'' means here.
+\end{itemize}}
+
+\subsection{Verification and measurements}
+% How results were measured: cycle time per cell version, collision/reach checks, real-robot runs,
+% interface fit tests, vision accuracy. A2 brief p.2: at least four indicators, three repeated trials
+% where practical. AI-agent assembly experiment (Part B/B2, 114.9 -> 89.8 s, 53 iterations) as a
+% comparison of improvement paths.
+% Sources: robot-cell/cycle_times.csv, tests/run_times.json, assembly-experiment/README.md,
+% assembly-experiment/report/part_b_report.pdf, part_b2_report.pdf; concept-models/interface_test/.
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Own tools: collision check (2\,mm sampling), kinematics / reach, cycle time, manipulability; one scorer for all versions v3--v10. (EXP; VER)
+    \item Part B / B2: sandboxed blind agent, frozen judge (SHA-256 checked), 8 hard rules, a written hypothesis per iteration. (PB p.~1; PB2 p.~1)
+    \item Real robot: teach tool and step tool (\texttt{\detokenize{step_run.py}}), every run starts with RELEASE, speed 10--20\,\%. (NS \S0, \S0b; V11)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse here; the result tables are in Results.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item No repeated trials (three per indicator) on the physical bench.
+    \item No press-fit or pull-out test of the clip (the QA values are estimates).
+\end{itemize}}

@@ -1,0 +1,114 @@
+% ---------------------------------------------------------------------------------------------
+% DRAFT-NOTE COMMANDS (used in all Sections files; defined once here, the first section imported).
+% Remove these two commands and all draft notes before hand-in.
+%   \draftnote{...}                 prints its content small and grey under a "DRAFT NOTE" label
+%   \figplaceholder{caption}{source} framed empty box for a figure that is to be reused
+% \providecommand: nothing happens if a command with the same name already exists.
+\providecommand{\draftnote}[1]{\par\begingroup\small\color{black!65}\raggedright
+    \expandafter\def\expandafter\UrlBreaks\expandafter{\UrlBreaks\do\-}% let \path{...} break at hyphens
+    \noindent\textsf{\textbf{DRAFT NOTE}} \textit{(write the text here, then delete this note)}\par
+    #1\par\endgroup}
+\providecommand{\figplaceholder}[2]{\par\noindent
+    \fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering
+        \vspace{5mm}\textsf{\textbf{FIGURE PLACEHOLDER}}\\[1mm] #1\\[1mm]
+        {\footnotesize Source: #2}\vspace{5mm}}}\par}
+% ---------------------------------------------------------------------------------------------
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+% NOTE: \section* comes from the Overleaf template. \subsection* + \addcontentsline keep the
+% subsections un-numbered (plain \subsection would print as 0.1, 0.2, ...).
+% Path shorthands used in all section comments are listed in "Report plan.md".
+% Outline shortened 2026-11-23: 5 -> 3 subsections, "Report structure" dropped.
+
+\draftnote{%
+\textbf{How to use the notes.} Every subsection has a note with three lists: \textbf{Carry over} (facts
+with numbers and source), \textbf{Reuse} (figures as framed boxes; the tables are built in Results) and
+\textbf{Fix / gap} (what is wrong, out of date or missing). Page numbers are PDF pages.
+
+\textbf{Source codes} (paths from the group repo root; the last five lines are under
+\path{3d-modeling-and-simulation/}):
+\begin{itemize}
+    \item A1: \path{assignment-1-manufacturing-demonstrator-concept/MMA4002_Manufacturing_Demonstrator_Concept.pdf} (Sept 2026)
+    \item A2: \path{assignment-2-product-architectures/Deliverable/MMA4002___Assignment_2_Product_Architectures.pdf} (Oct 2026)
+    \item A3: \path{assignment-3-lean/MMA4002___Assignment_3_Lean.pdf} (Oct 2026)
+    \item A5 deck / script: \path{assignment-5-industrial-review-board-presentation/MMA4002_IRB_Outdoor_Bench_v2.pptx} and \texttt{\detokenize{IRB presentation script.docx}} (9 Nov 2026); MEDIA: \path{deck/media/} in the same folder
+    \item VIS / VISD: \texttt{\detokenize{robot-cell/vision report/jig_vision_report.pdf}} (17 Nov) and \path{jig_vision_report_detailed.pdf} (13 Nov)
+    \item PB / PB2: \path{assembly-experiment/report/part_b_report.pdf} and \path{part_b2_report.pdf} (22 Nov); EXP: \path{assembly-experiment/README.md}
+    \item QA: \path{qa_notes.md} (dated Q\&A, 15--17 Oct)
+    \item CT: \path{robot-cell/cycle_times.csv} (RoboDK era, v3--v8); VER: \path{assembly-experiment/results/versions.csv} (v3--v10, own tools, 20 Nov)
+    \item CH: \path{robot-cell/tests/vision_lab/config_history.md}; V11: \path{robot-cell/tests/v11_1plank_RESUME.md} (real robot, 20 Nov)
+    \item NS: \texttt{\detokenize{robot-cell/Next steps.md}}; TMB: \texttt{\detokenize{robot-cell/TM bridge plan.md}}; AMR: \texttt{\detokenize{robot-cell/AMR delivery plan.md}}
+\end{itemize}}
+
+\subsection*{Background and problem statement}
+\addcontentsline{toc}{subsection}{Background and problem statement}
+% A4 brief item 1 (problem statement/background, details about the product).
+% Customer, user, application and customer need (buyer = municipality/landscape architect, user = the
+% public; "classy", traditional look). Why a configurable product family, why automated assembly.
+% Sources: A1 report sec. 1.1 (incl. Mouratidis 2026 ref.); index.html (configurator).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item ``The product concept chosen is family of `classy' and non-modernistic outdoor furniture with a focus on benches.'' The end user sits on it; the customer pays and cares more about the message than the price. (A1 p.~2)
+    \item ``most people questioned preferred traditional architecture over contemporary (Mouratidis 2026)''; hypothesis: the same holds for outdoor furniture. (A1 p.~2, reference p.~7)
+    \item Manufacturing question to borrow: ``How can the demonstrator's product architecture enable simpler, repeatable and scalable manufacturing while preserving required customer functions?'' (A2 brief p.~1)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{Four AI-generated concept sketches (label them as AI-generated)}{A1 Fig.~1, p.~2}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item A1 says price matters less, A2 p.~4 says ``affordable'': pick one.
+    \item No problem statement for the manufacturing side exists yet.
+\end{itemize}}
+
+\subsection*{The demonstrator, objective and scope}
+\addcontentsline{toc}{subsection}{The demonstrator, objective and scope}
+% Demonstrator - what was built in Manulab: scaled (1:7.5) bench, bent flat-bar frame + planks, backrest
+% and decoration variants, laser-cut + 3D-printed parts, cobot assembly cell, AMR delivery.
+% One overview figure (render or photo of demonstrator + cell).
+% Objective - A4 brief item 1 (objective of the report). Course question (A2 brief p.1): how the product
+% architecture enables simpler, repeatable and scalable manufacturing while keeping customer functions.
+% Scope - in: demonstrator, robot cell, lean model. Out: real-scale production line.
+% Sources: A1 report sec. 1.5; bench-cad/ (BenchInterfaceV2, BenchWOBackrestV2);
+% A5 deck/media/ (bench_cad_3d.png, cell_iso.jpg).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item A full-size bench is too large for Manulab, so the demonstrator is scaled 1:7.5, 3D-printed and/or laser-cut wood. (A1 p.~4; A5 deck slide~3)
+    \item Cell: Omron TM5-900, Robotiq Hand-E, T-slot plate with base A, base B, plank rack and a two-part guide; the AMR is an Omron LD-250 model in the simulation. (A5 script slide~5; VISD p.~1; NS \S0c)
+    \item Message: ``the product is designed for the robot, the cell for the product''. (A5 script slide~3)
+\end{itemize}
+\textbf{Reuse}
+\figplaceholder{CAD render of the bench}{\texttt{\detokenize{bench_cad_3d.png}} (MEDIA)}
+\figplaceholder{The robot cell, isometric view}{\texttt{\detokenize{cell_iso.jpg}} (MEDIA)}
+\figplaceholder{Photos of the printed benches}{A2 Fig.~18 and 20, pp.~12 and 14}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item The objectives are not written anywhere as a list. Candidates the sources can answer: family from few modules; assembly by one cobot without fasteners; one program for simulation and robot; capacity against takt; jig positions found by vision.
+    \item State the scope limits: scaled demonstrator, simulation times, AMR delivery planned but not run.
+    \item Say what was built and what was only simulated; A2 p.~15 still says ``Final demonstrator: Not yet finished''.
+\end{itemize}}
+
+\subsection*{Team and contributions}
+\addcontentsline{toc}{subsection}{Team and contributions}
+% Course presentation p.13 ("Document individual contributions"); A2 brief p.4 deliverable 8
+% (team contribution log). Short table: member - responsibility - contribution.
+% Sources: git log, diary/, A1 report sec. 3 (project plan, Jira).
+
+\draftnote{%
+\textbf{Carry over}
+\begin{itemize}
+    \item Authors on A1--A3: Bjørge Skjelbreid Djuve, John Isak Hammer (title pages).
+    \item IRB split: John Isak slides 2--4 and ``learned''; Bjørge slides 5--7 and ``next''. (A5 script)
+\end{itemize}
+\textbf{Reuse}
+\begin{itemize}
+    \item Nothing to reuse.
+\end{itemize}
+\textbf{Fix / gap}
+\begin{itemize}
+    \item A contribution table (Report plan R3) has to be written by hand: A2 has none, \path{diary/} is empty, and git commit counts under-count CAD and lab work.
+\end{itemize}}
