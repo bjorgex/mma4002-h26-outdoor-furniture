@@ -1,0 +1,5 @@
+{"moves": {"Base B": {"x": 0.0, "y": 7.3, "rz": 0.0,
+  "T_move": [[1, 0, 0, 0.0], [0, 1, 0, 7.3], [0, 0, 1, 0], [0, 0, 0, 1]],
+  "method": "hand-written test: v11 Base B (END base, v9/v10 'Base A') measured +7.3 mm in robot +Y, 2026-11-20"}},
+ "names": "v11 (Base A = start/guide base, Base B = end base)",
+ "note": "x y = the pivot's move (mm), rz deg; new point = T_move @ taught point"}

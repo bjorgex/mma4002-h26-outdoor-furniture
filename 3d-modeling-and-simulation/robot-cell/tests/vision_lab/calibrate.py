@@ -39,8 +39,40 @@ def board():
     return cv2.aruco.CharucoBoard(BOARD["squares"], BOARD["square_mm"], BOARD["marker_mm"], d)
 
 
+# Techman's own calibration plate (the one TMflow's calibration uses; used in the lab 2026-11-12/20): a chessboard,
+# 18 x 13 squares of 10 mm (Bjørge measured), a dot code in each white square, edges numbered 0-16 / 0-11 =
+# 17 x 12 inner corners. findChessboardCornersSB finds all of them through the dot codes (tested 2026-11-20).
+TM_PLATE = {"inner": (17, 12), "square_mm": 10.0}
+KIND = "charuco"                                  # set by --board
+
+
+def _tm_plate_corners(grey):
+    cols, rows = TM_PLATE["inner"]
+    ok, p = cv2.findChessboardCornersSB(grey, (cols, rows), flags=cv2.CALIB_CB_EXHAUSTIVE | cv2.CALIB_CB_ACCURACY)
+    if not ok:
+        return None
+    p = p.reshape(rows, cols, 2)
+    # 18 x 13 squares: turned 180 deg the colours swap, so the square diagonally outside corner [0,0] tells the
+    # order apart. Keep the order where that square is dark (as in the first lab photo, label corner 0/0).
+    def outside_dark(q):
+        c = q[0, 0] + 0.5 * (q[0, 0] - q[1, 1])
+        x, y = int(round(c[0])), int(round(c[1]))
+        h, w = grey.shape
+        if not (2 <= x < w - 2 and 2 <= y < h - 2):
+            return None
+        return grey[y - 2:y + 3, x - 2:x + 3].mean() < np.median(grey)
+    d = outside_dark(p)
+    if d is False or (d is None and outside_dark(p[::-1, ::-1]) is True):
+        p = p[::-1, ::-1]
+    s = TM_PLATE["square_mm"]
+    obj = np.array([[i * s, j * s, 0.0] for j in range(rows) for i in range(cols)], np.float32)
+    return obj, p.reshape(-1, 2).astype(np.float32)
+
+
 def detect(img):
     """-> (object points Nx3 mm in the board frame, image points Nx2 px) of the visible chessboard corners, or None."""
+    if KIND == "tm":
+        return _tm_plate_corners(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img)
     b = board()
     cc, ci, _, _ = cv2.aruco.CharucoDetector(b).detectBoard(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img)
     if ci is None or len(ci) < 6:
@@ -142,7 +174,11 @@ def main():
     ap.add_argument("path", help="calib_shots folder (intrinsics, handeye) or the board photo (fixed)")
     ap.add_argument("--camera", default=str(HERE / "camera.json"))
     ap.add_argument("--O", nargs=3, type=float); ap.add_argument("--X", nargs=3, type=float); ap.add_argument("--Y", nargs=3, type=float)
+    ap.add_argument("--board", choices=["charuco", "tm"], default="charuco",
+                    help="charuco = our printed board; tm = Techman's calibration plate (17x12 inner corners, 10 mm)")
     a = ap.parse_args()
+    global KIND
+    KIND = a.board
     cam = json.loads(Path(a.camera).read_text()) if Path(a.camera).exists() else {}
     if a.cmd == "intrinsics":
         cam.update(intrinsics(a.path))

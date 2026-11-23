@@ -1,0 +1,43 @@
+{
+ "note": "Positions set by hand on the real robot (FreeBot), 2026-11-20. The jig (end base) was turned 90 deg and the bench is now grabbed lower, so these replace the program's own poses. Waypoints 1-4 of the flip recording are ignored (Bj\u00f8rge).",
+ "points": {
+  "frame flip pick": {
+   "pose": [
+    -195.29,
+    -166.311,
+    167.189,
+    -83.065,
+    -0.289,
+    83.271
+   ],
+   "joints": [
+    26.956,
+    21.346,
+    -154.62,
+    -41.213,
+    123.791,
+    -2.224
+   ],
+   "time": "20:32:15"
+  },
+  "frame flip above guide": {
+   "pose": [
+    -311.477,
+    -107.946,
+    137.875,
+    96.762,
+    -0.746,
+    -171.099
+   ],
+   "joints": [
+    236.224,
+    9.801,
+    130.166,
+    34.584,
+    47.891,
+    177.842
+   ],
+   "time": "20:27:13"
+  }
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "note": "Flange poses jogged by hand on the real robot (TM base, mm/deg), 2026-11-20; v11_1plank names.",
+ "points": {
+  "plank pick": {
+   "flange": [
+    -239.82,
+    -33.0,
+    371.17,
+    -177.38,
+    0.22,
+    1.5
+   ],
+   "how": "by hand, saved on request",
+   "time": "2026-11-20 17:32"
+  }
+ }
+}

@@ -2,14 +2,21 @@
 
 Before every step it prints what comes next and waits for you:
     Enter / n      do it
-    s / q          stop (the robot stays where it is; TMflow stays in the Listen node)
+    q / stop       stop (the robot stays where it is; TMflow stays in the Listen node)
     x 2 / y -1 / z -0.5     nudge the flange by that many mm in the robot base frame (orientation kept)
+    j1 10 .. j6 -5          turn ONE joint that many degrees (joint move, max 60)
+    j                       show the joint bars (o = now, x = next step, ! = near a limit)
+    jgoto X Y Z RX RY RZ    JOINT move to that pose (no singularity; shows J1..J6 now -> target, y to move, 20 %)
+    delete                  delete the NEXT step for good (asks y to confirm; not GRIP/RELEASE)
+    set X Y Z RX RY RZ      change the NEXT step's target before it moves (Enter goes there, save keeps it)
+    goto X Y Z RX RY RZ     straight line (10 mm/s) to exactly that flange pose (robot base; max 150 mm / 60 deg away)
     rz 1 / rx -0.5 / ry 1   turn that many degrees about the base axis through the fingertips
                    (nudges and turns stay in effect for the next straight moves, also through GRIP/RELEASE, until a joint move or save)
     save           store where the robot is now as the LAST move's taught pose (teach.py --with-rotation),
                    rebuild tests/v8_moves.json and carry on with the new numbers
-    skip           skip the next step
+    s / skip       skip the next step
     open / close   open or close the gripper now (the next step stays the same; closing on air is allowed)
+    (open width: TMflow Variables ...SET1_var_release_pos, read by HANDE SET at program start; 10 = good for planks)
     step 74        jump to step 74 (see --list); the robot only moves when you press Enter, and it says how far
     b              back: undo the last move (straight line back to where it started, slow); not across a GRIP/RELEASE
     f              estimate the push force now (lifts 2 mm and back: pressing vs free joint torques)
@@ -17,7 +24,7 @@ Directions (standing across the plate, facing the robot): +Y = left, -X = toward
 
 TMflow: HandE_Bridge_v1 running and waiting in the Bridge Listen node, Manual mode, low project speed.
     python tests/step_run.py                       from the start (Home, RELEASE, stage 1 ...)
-    python tests/step_run.py --from "plank1 pick travel"
+    python tests/step_run.py --from "plank1 pick travel"     (or the step number: --from 8, see --list)
     python tests/step_run.py --from "plank1 pick travel" --to "plank1 place up"
     python tests/step_run.py --list                the step names
     python tests/step_run.py --cell v8x2 --from "reload the jig for bench 2"     the 2-bench program (v8x2_moves.json);
@@ -123,10 +130,29 @@ def view_release(parts=()):
     view(t="node", kind="release")
 
 
+def joint_bars(now, nxt=None, width=36):
+    """Each joint on a bar from its lower to its upper limit: o = now, x = the next step, | = 0, ! = < 20 deg from a
+    limit (2026-11-20, Bjørge: to see how close the joints are to the target and to the limits)."""
+    rows = []
+    for j, (lo, hi) in enumerate(K.LIMITS):
+        bar = ["·"] * width
+        pos = lambda v: min(width - 1, max(0, round((v - lo) / (hi - lo) * (width - 1))))   # noqa: E731
+        bar[pos(0)] = "|"
+        if nxt is not None:
+            bar[pos(nxt[j])] = "x"
+        bar[pos(now[j])] = "o" if nxt is None or pos(now[j]) != pos(nxt[j]) else "@"
+        near = min(now[j] - lo, hi - now[j]) < 20 or (nxt is not None and min(nxt[j] - lo, hi - nxt[j]) < 20)
+        tail = f"{now[j]:8.1f}" + (f" → {nxt[j]:8.1f}  ({nxt[j] - now[j]:+7.1f})" if nxt is not None else "")
+        rows.append(f"      J{j + 1} [{lo:+5d} {''.join(bar)} {hi:+5d}] {tail}{'  !' if near else ''}")
+    return "\n".join(rows)
+
+
 def describe(s):
     if "move" in s:
         f = s["flange"]
-        return f'{s["name"]:28s} {s["move"]:4s} to x {f[0]:7.1f}  y {f[1]:7.1f}  z {f[2]:6.1f}  (J6 {s["joints"][5]:6.1f})'
+        # one line: the pose as 'set X Y Z RX RY RZ' (copy it, change a number, paste) + J6
+        return (f'{s["name"]:28s} {s["move"]:4s}  set {" ".join(f"{v:.2f}" for v in f)}'
+                f'   (J6 {s["joints"][5]:.1f})')
     if "wait_ms" in s:
         return f'WAIT {s["wait_ms"] / 1000:.0f} s{"":21s} ({s.get("name", "")})'
     if "reload" in s:
@@ -160,6 +186,8 @@ def main():
     global VIEW, MOVES
     VIEW = a.view
     MOVES = HERE / f"{a.cell}_moves.json"
+    # 'save' teaches into the cell's own teach file (v8x2 -> v8, v9x2 -> v9: they share their base program's points)
+    teach_v = {"v8x2": "v8", "v9x2": "v9"}.get(a.cell, a.cell)
 
     steps = load()
     names = [s.get("name") or f'{s.get("gripper")} {i}' for i, s in enumerate(steps)]
@@ -167,22 +195,57 @@ def main():
         for i, s in enumerate(steps):
             print(f"{i:3d} st{s['stage']} {describe(s)}")
         return
-    i = names.index(a.start) if a.start else 0
-    last = names.index(a.stop) if a.stop else len(steps) - 1
+    pick = lambda v: int(v) if v.isdigit() else names.index(v)   # --from 8 or --from "plank above interface"
+    i = pick(a.start) if a.start else 0
+    last = pick(a.stop) if a.stop else len(steps) - 1
 
     print(f"robot {lt.IP}: connecting to the Bridge Listen node ...")
     b = hb.Bridge()
-    print(f"connected ({b.node}). Enter = next, s = stop, x|y|z <mm>, rx|ry|rz <deg>, b = back, step <n>, open, close, save, skip, f = force\n")
+    print(f"connected ({b.node}). Enter = next, s = skip, q = stop, x|y|z <mm>, rx|ry|rz <deg>, set|goto|jgoto X Y Z RX RY RZ, j1..j6 <deg>, j, delete, b = back, step <n>, open, close, save, f = force\n")
     done = names[i - 1] if i > 0 and "move" in steps[i - 1] else None   # what 'save' teaches (the last move)
     adj = np.eye(4)                                     # your nudges since the last GRIP/RELEASE/joint move:
     hist = []                                           # (step index, pose/joints before it) of each move done, for 'b'
     while i <= last:                                    # applied to the following straight-line targets too
         s = steps[i]
         print(f"[{i}] next: {describe(s)}")
+        if "move" in s:                                 # now / next / diff under each other (Bjørge, 2026-11-20)
+            try:
+                F, _, qn = state(2)
+                nx = s["flange"]
+                fmt = lambda v: " ".join(f"{x:8.2f}" for x in v)   # noqa: E731
+                d = [nx[k] - F[k] for k in range(3)] + [((nx[k] - F[k] + 180) % 360) - 180 for k in range(3, 6)]
+                print(f"      now   set {fmt(F)}\n      next  set {fmt(nx)}\n      diff      {fmt(d)}"
+                      f"   ({np.linalg.norm(d[:3]):.1f} mm)")
+                print(joint_bars(qn, s["joints"]))
+            except OSError:
+                pass
         cmd = input("> ").strip().lower()
-        if cmd in ("s", "q", "stop"):
+        if cmd == "j":                                  # joint bars now (2026-11-20, Bjørge)
+            _, _, qn = state(2)
+            print(joint_bars(qn, s["joints"] if "move" in s else None))
+            continue
+        m = re.fullmatch(r"j([1-6])\s*([-+]?\d*\.?\d+)", cmd)
+        if m:                                           # turn ONE joint (joint move, max 60 deg)
+            jn, dj = int(m.group(1)) - 1, float(m.group(2))
+            if abs(dj) > 60:
+                print("    at most 60 deg per joint turn")
+                continue
+            F, _, qn = state(2)
+            q = list(qn)
+            q[jn] += dj
+            lo, hi = K.LIMITS[jn]
+            if not lo + 2 <= q[jn] <= hi - 2:
+                print(f"    J{jn + 1} would go to {q[jn]:.1f} - outside its limits {lo}..{hi}; not moved")
+                continue
+            hist.append((i, list(F), list(qn)))
+            b.r.move(ptp(q, 20))
+            adj = np.eye(4)
+            _, _, qn = state(2)
+            print(joint_bars(qn, s["joints"] if "move" in s else None))
+            continue
+        if cmd in ("q", "stop"):                    # 2026-11-20: s = skip now (Bjørge), q = stop
             break
-        if cmd == "skip":
+        if cmd in ("s", "skip"):
             i += 1
             continue
         m = re.fullmatch(r"(?:step|goto|g)\s+(\d+)", cmd)
@@ -234,12 +297,102 @@ def main():
         if cmd == "f":
             force(b)
             continue
+        m = re.fullmatch(r"goto((?:\s+[-+]?\d*\.?\d+){6})", cmd)
+        if m:                                           # 2026-11-20 (Bjørge): straight to an exact pose, slowly
+            target = [float(v) for v in m.group(1).split()]
+            F, _, _ = state()
+            dist = float(np.linalg.norm(np.array(target[:3]) - F[:3]))
+            dang = max(abs(((target[k] - F[k] + 180) % 360) - 180) for k in range(3, 6))
+            if dist > 150 or dang > 60:
+                print(f"    goto: {dist:.0f} mm / {dang:.0f} deg away - too far for one straight move "
+                      "(max 150 mm / 60 deg); go closer first")
+                continue
+            print(f"    goto: straight line {dist:.1f} mm, {dang:.1f} deg, 10 mm/s ...")
+            b.r.move(line(target, 10))
+            G, _, _ = state()
+            adj = np.eye(4)                             # an exact pose: no nudges carried on
+            print(f"    now x {G[0]:.2f} y {G[1]:.2f} z {G[2]:.2f}  rx {G[3]:.2f} ry {G[4]:.2f} rz {G[5]:.2f}"
+                  "   ('save' stores it as the last move)")
+            continue
+        m = re.fullmatch(r"jgoto((?:\s+[-+]?\d*\.?\d+){6})", cmd)
+        if m:                                           # 2026-11-20: a straight 'set' line ran into a wrist singularity;
+            target = [float(v) for v in m.group(1).split()]   # a JOINT move to the same pose has no singularity problem
+            F, _, q_now = state(2)
+            seed = s["joints"] if "move" in s else list(q_now)    # the program's joint setup for the next step
+            q = K.ik(target, seed)
+            if q is None or not K.within_limits(q):
+                print("    jgoto: no reachable joint solution for that pose - not moved")
+                continue
+            names6 = ("J1", "J2", "J3", "J4", "J5", "J6")
+            print("    jgoto = JOINT move (a curve, not a straight line - the part swings; look around first), 20 %:")
+            for j in range(6):
+                print(f"      {names6[j]} {q_now[j]:8.1f} -> {q[j]:8.1f}   ({q[j] - q_now[j]:+.1f})")
+            if input("    move? y = yes, anything else = no: ").strip().lower() != "y":
+                print("    not moved")
+                continue
+            hist.append((i, list(F), list(q_now)))
+            b.r.move(ptp(q, 20))
+            G, _, _ = state(2)
+            adj = np.eye(4)
+            print(f"    now x {G[0]:.2f} y {G[1]:.2f} z {G[2]:.2f}  rx {G[3]:.2f} ry {G[4]:.2f} rz {G[5]:.2f}")
+            continue
+        if cmd == "delete":                           # 2026-11-20 (Bjørge): drop the NEXT step for good, after a y
+            if "move" not in s:
+                print("    delete: only moves can be deleted (not GRIP/RELEASE)")
+                continue
+            if input(f"    delete step [{i}] '{s['name']}' for good? y = yes, anything else = no: ").strip().lower() != "y":
+                print("    not deleted")
+                continue
+            dfile = HERE / f"{a.cell}_deleted.json"
+            d = json.loads(dfile.read_text(encoding="utf-8")) if dfile.exists() else {"deleted": []}
+            if s["name"] not in d["deleted"]:
+                d["deleted"].append(s["name"])
+            dfile.write_text(json.dumps(d, indent=1), encoding="utf-8")
+            print(f"    deleted '{s['name']}' (listed in {dfile.name}; the build skips it). Undo: remove it from that file.")
+            del steps[i]
+            names = [x.get("name") or f'{x.get("gripper")} {k}' for k, x in enumerate(steps)]
+            last -= 1
+            continue
+        m = re.fullmatch(r"set((?:\s+[-+]?\d*\.?\d+){6})", cmd)
+        if m:                                           # 2026-11-20 (Bjørge): change the NEXT step's target first
+            if "move" not in s:
+                print("    set: the next step is not a move")
+                continue
+            target = [float(v) for v in m.group(1).split()]
+            # 2026-11-20: a 'set' with a wrong angle swung the tool ~90 deg and faulted the robot. Checked against
+            # the STEP'S OWN target (not the current pose), so planned turns (frame flip, tilted approaches) are fine
+            # and only a change of > 150 mm / > 60 deg from the step's target, or a different joint setup, is refused.
+            plan = s.get("planned_set", s["flange"])
+            dist0 = float(np.linalg.norm(np.array(target[:3]) - np.array(plan[:3])))
+            dang0 = max(abs(((target[k] - plan[k] + 180) % 360) - 180) for k in range(3, 6))
+            if dist0 > 150 or dang0 > 60:
+                print(f"    set REFUSED: {dist0:.0f} mm / {dang0:.0f} deg from this step's own target "
+                      f"(max 150 mm / 60 deg). You typed: x {target[0]} y {target[1]} z {target[2]} "
+                      f"rx {target[3]} ry {target[4]} rz {target[5]} - check the order and signs")
+                continue
+            q = K.ik(target, s["joints"])
+            if q is None:
+                print("    set: the robot can't reach that pose - not changed")
+                continue
+            if max(abs(q[j] - s["joints"][j]) for j in range(6)) > 30:
+                print(f"    set REFUSED: the arm would need a different joint setup than this step (a joint turns "
+                      f"{max(abs(q[j] - s['joints'][j]) for j in range(6)):.0f} deg more) - not changed")
+                continue
+            s.setdefault("planned_set", list(s["flange"]))     # several sets in a row: still measured from the plan
+            s["flange"], s["joints"] = target, [float(v) for v in q]
+            adj = np.eye(4)                             # the new target is exact: no nudges added on top
+            F, _, _ = state()
+            dist = float(np.linalg.norm(np.array(target[:3]) - F[:3]))
+            print(f"    [{i}] {s['name']} now goes to x {target[0]:.2f} y {target[1]:.2f} z {target[2]:.2f}  "
+                  f"rx {target[3]:.2f} ry {target[4]:.2f} rz {target[5]:.2f}  (J6 {q[5]:.1f}), {dist:.0f} mm from here. "
+                  "Enter = go there; 'save' after it keeps it. (This run only until saved.)")
+            continue
         m = re.fullmatch(r"(r?)([xyz])\s*([-+]?\d*\.?\d+)", cmd)
         if m:
             F, tq0, _ = state()
             rot, ax, d = m.group(1) == "r", m.group(2), float(m.group(3))
-            if (rot and abs(d) > 10) or (not rot and abs(d) > 30):
-                print("    at most 30 mm / 10 deg per nudge")
+            if (rot and abs(d) > 60) or (not rot and abs(d) > 30):
+                print("    at most 30 mm / 60 deg per nudge")
                 continue
             if rot:                                     # about the base axis through the fingertips
                 D = rot_about(ax, d, tcp_point(F))
@@ -257,14 +410,16 @@ def main():
             if not done:
                 print("    nothing done yet to save")
                 continue
-            r = subprocess.run([sys.executable, str(HERE / "robot_sim" / "teach.py"), "v8", done, "--real",
-                                "--with-rotation", "--now"], cwd=RC, capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(HERE / "robot_sim" / "teach.py"), teach_v, done, "--real",
+                                "--with-rotation", "--now", "--max-mm", "300"], cwd=RC, capture_output=True, text=True)
             print("    " + "\n    ".join(l for l in (r.stdout + r.stderr).splitlines() if "stored" in l or "rror" in l
                                           or "refuse" in l) or "    (no output)")
-            r = subprocess.run([sys.executable, str(HERE / "robot_sim" / "teach.py"), "v8", "--rebuild"], cwd=RC,
+            r = subprocess.run([sys.executable, str(HERE / "robot_sim" / "teach.py"), teach_v, "--rebuild"], cwd=RC,
                                capture_output=True, text=True)
             steps = load()
             adj = np.eye(4)                             # the saved pose is in the program now
+            G, _, _ = state(2)
+            print(f"    saved '{done}' at   set {' '.join(f'{x:.2f}' for x in G)}")
             print("    program rebuilt" + ("" if r.returncode == 0 else f" - FAILED:\n{r.stdout[-600:]}{r.stderr[-600:]}"))
             continue
         if cmd not in ("", "n", "next"):

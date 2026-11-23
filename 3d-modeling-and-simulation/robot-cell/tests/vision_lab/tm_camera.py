@@ -93,8 +93,26 @@ def make_handler(a, cam):
                 log(f"  failed: {e}")
                 return self.answer({"message": str(e), "result": None}, 500)
             log(f"  image {img.shape[1]}x{img.shape[0]} ({where}), pose {p} -> {j}")
-            # Techman's ROS example answers like this; with no annotations, TMflow should find nothing and go on.
-            self.answer({"message": "success", "result": None, "annotations": []})
+            # TMflow's External Detection needs at least one object back, or the job fails ("make sure your object
+            # is detectable") and can't be saved. Answer with the OMRON/TM landmark(s) found in the raw image
+            # (landmark.py), in the box format of Techman's external-detection examples. Format not confirmed on
+            # TMflow 1.88: the answer is logged, so check TMflow's result against it.
+            ann = []
+            try:
+                from landmark import find_landmarks
+                for m in find_landmarks(img):
+                    c = m["corners"]
+                    up = c[0] - c[3]
+                    ann.append({"box_cx": round(float(m["centre"][0]), 1), "box_cy": round(float(m["centre"][1]), 1),
+                                "box_w": round(float(np.linalg.norm(c[1] - c[0])), 1),
+                                "box_h": round(float(np.linalg.norm(c[3] - c[0])), 1),
+                                "label": "landmark", "score": round(min(1.0, 0.5 + m["turn_score"]), 3),
+                                "rotation": round(float(np.degrees(np.arctan2(up[0], -up[1]))), 2)})
+            except Exception as e:
+                log(f"  landmark reader failed: {e}")
+            reply = {"message": "success", "result": None, "annotations": ann}
+            log(f"  answer: {json.dumps(reply)}")
+            self.answer(reply)
     return H
 
 
